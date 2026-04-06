@@ -1,0 +1,450 @@
+import { useState, useMemo } from "react";
+import { format, differenceInDays, startOfDay } from "date-fns";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { 
+  useListTasks, 
+  useUpdateTask, 
+  useDeleteTask, 
+  useCreateTask,
+  useBulkCreateTasks,
+  getListTasksQueryKey,
+  getGetShowQueryKey,
+  Show
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { 
+  CheckCircle2, Circle, Clock, Edit2, Trash2, 
+  Plus, Calendar as CalendarIcon, MessageSquare, AlertCircle,
+  ChevronDown, ChevronUp, Loader2
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { getUrgencyInfo, getCategoryColor, formatDate, subBusinessDays, addBusinessDays } from "@/lib/date-utils";
+import { useToast } from "@/hooks/use-toast";
+
+const PRESET_CATEGORIES = [
+  "Fire Marshal",
+  "ID Sign",
+  "Warehouse Manifest",
+  "Show Bucket",
+  "Vehicle Spotting",
+  "Electrical"
+];
+
+export function TaskList({ show }: { show: Show }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { data: tasks, isLoading } = useListTasks(show.id);
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
+
+  const [completedOpen, setCompletedOpen] = useState(false);
+
+  const groupedTasks = useMemo(() => {
+    if (!tasks) return { overdue: [], upcoming: [], completed: [] };
+    
+    const today = startOfDay(new Date());
+    const overdue = [];
+    const upcoming = [];
+    const completed = [];
+
+    for (const t of tasks) {
+      if (t.completed) {
+        completed.push(t);
+        continue;
+      }
+      
+      if (t.dueDate) {
+        const dueDate = startOfDay(new Date(t.dueDate));
+        if (differenceInDays(dueDate, today) < 0) {
+          overdue.push(t);
+        } else {
+          upcoming.push(t);
+        }
+      } else {
+        upcoming.push(t);
+      }
+    }
+
+    upcoming.sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
+
+    overdue.sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
+    
+    completed.sort((a, b) => {
+      if (!a.completedAt) return 1;
+      if (!b.completedAt) return -1;
+      return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+    });
+
+    return { overdue, upcoming, completed };
+  }, [tasks]);
+
+  const toggleTask = (taskId: number, currentCompleted: boolean) => {
+    updateTask.mutate({ 
+      showId: show.id, 
+      data: { completed: !currentCompleted } 
+    }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(show.id) });
+        queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });
+      }
+    });
+  };
+
+  const removeTask = (taskId: number) => {
+    deleteTask.mutate({ showId: show.id }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(show.id) });
+        queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });
+      }
+    });
+  };
+
+  if (isLoading) {
+    return <div className="space-y-4">
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-12 w-full" />
+    </div>;
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold tracking-tight">Tasks</h3>
+        <AddTaskDialog show={show} />
+      </div>
+
+      {groupedTasks.overdue.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-red-500 font-semibold uppercase tracking-wider text-sm">
+            <div className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+            </div>
+            Overdue
+          </div>
+          <div className="grid gap-2 border-red-500/20 border rounded-lg p-2 bg-red-500/5">
+            {groupedTasks.overdue.map(t => (
+              <TaskRow key={t.id} task={t} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {groupedTasks.upcoming.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-muted-foreground font-semibold uppercase tracking-wider text-sm">
+            <Clock className="h-4 w-4" />
+            Upcoming
+          </div>
+          <div className="grid gap-2">
+            {groupedTasks.upcoming.map(t => (
+              <TaskRow key={t.id} task={t} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {groupedTasks.upcoming.length === 0 && groupedTasks.overdue.length === 0 && (
+        <div className="text-center py-10 border-2 border-dashed rounded-lg text-muted-foreground">
+          No pending tasks.
+        </div>
+      )}
+
+      {groupedTasks.completed.length > 0 && (
+        <Collapsible open={completedOpen} onOpenChange={setCompletedOpen} className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-green-500 font-semibold uppercase tracking-wider text-sm">
+              <CheckCircle2 className="h-4 w-4" />
+              Completed
+            </div>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm">
+                {completedOpen ? "Hide" : "Show"} ({groupedTasks.completed.length})
+                {completedOpen ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="space-y-2 opacity-75">
+            {groupedTasks.completed.map(t => (
+              <TaskRow key={t.id} task={t} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  );
+}
+
+function TaskRow({ task, onToggle, onDelete }: { task: any, onToggle: () => void, onDelete: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const urgency = getUrgencyInfo(task.dueDate);
+
+  return (
+    <div className={`flex flex-col p-3 rounded-lg border bg-card transition-colors ${task.completed ? 'opacity-60' : 'hover:border-primary/30'}`}>
+      <div className="flex items-start gap-3">
+        <Checkbox 
+          checked={task.completed} 
+          onCheckedChange={onToggle}
+          className={`mt-1 ${task.completed ? 'data-[state=checked]:bg-green-500 data-[state=checked]:text-white border-green-500' : ''}`}
+        />
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`font-medium ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
+              {task.name}
+            </span>
+            {task.category && (
+              <Badge variant="outline" className={`${getCategoryColor(task.category)} border-transparent text-xs py-0 h-5`}>
+                {task.category}
+              </Badge>
+            )}
+            {task.notes && (
+              <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground" onClick={() => setExpanded(!expanded)}>
+                <MessageSquare className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-3 mt-1.5 text-xs">
+            {task.dueDate ? (
+              <div className={`flex items-center gap-1 font-medium ${task.completed ? 'text-muted-foreground' : urgency.textClass}`}>
+                <CalendarIcon className="h-3 w-3" />
+                {formatDate(task.dueDate)}
+                {!task.completed && urgency.daysRemaining !== null && (
+                  <span className="ml-1 opacity-80">
+                    ({Math.abs(urgency.daysRemaining)}d {urgency.daysRemaining < 0 ? 'ago' : 'left'})
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-muted-foreground">No due date</span>
+            )}
+            {task.dueDateRule && (
+              <span className="text-muted-foreground italic border-l pl-3 ml-1">
+                {task.dueDateRule}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={onDelete}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      
+      {expanded && task.notes && (
+        <div className="mt-3 ml-7 p-3 bg-muted/30 rounded-md text-sm border border-border/50 whitespace-pre-wrap">
+          {task.notes}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddTaskDialog({ show }: { show: Show }) {
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const createCustomTask = useCreateTask();
+  const bulkCreate = useBulkCreateTasks();
+
+  const customSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    category: z.string().optional(),
+    dueDate: z.string().optional(),
+    notes: z.string().optional()
+  });
+
+  const form = useForm<z.infer<typeof customSchema>>({
+    resolver: zodResolver(customSchema),
+    defaultValues: { name: "", category: "", dueDate: "", notes: "" }
+  });
+
+  const onSubmitCustom = (data: z.infer<typeof customSchema>) => {
+    createCustomTask.mutate({ showId: show.id, data }, {
+      onSuccess: () => {
+        toast({ title: "Task added" });
+        setOpen(false);
+        form.reset();
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(show.id) });
+        queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });
+      }
+    });
+  };
+
+  // Preset tasks logic
+  const presets = [
+    { cat: "Fire Marshal", name: "Initial Contact AE", requires: show.moveInDate, get date() { return format(subBusinessDays(new Date(show.moveInDate), 60), "yyyy-MM-dd"); }, rule: "60 cal days before move-in" },
+    { cat: "ID Sign", name: "Contact Client", requires: show.moveInDate, get date() { return format(subBusinessDays(new Date(show.moveInDate), 30), "yyyy-MM-dd"); }, rule: "30 cal days before move-in" },
+  ];
+
+  const [selectedPresets, setSelectedPresets] = useState<number[]>([]);
+
+  const togglePreset = (idx: number) => {
+    if (selectedPresets.includes(idx)) setSelectedPresets(selectedPresets.filter(i => i !== idx));
+    else setSelectedPresets([...selectedPresets, idx]);
+  };
+
+  const handleBulkAdd = () => {
+    const tasks = selectedPresets.map(idx => {
+      const p = presets[idx];
+      return { name: p.name, category: p.cat, dueDate: p.date, dueDateRule: p.rule };
+    });
+    
+    bulkCreate.mutate({ showId: show.id, data: { tasks } }, {
+      onSuccess: () => {
+        toast({ title: `${tasks.length} tasks added` });
+        setOpen(false);
+        setSelectedPresets([]);
+        queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(show.id) });
+        queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });
+      }
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm"><Plus className="mr-2 h-4 w-4" /> Add Task</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Add Tasks</DialogTitle>
+        </DialogHeader>
+        
+        <Tabs defaultValue="preset">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="preset">Preset Workflows</TabsTrigger>
+            <TabsTrigger value="custom">Custom Task</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="preset" className="space-y-4">
+            <div className="grid gap-2 border rounded-md p-4 max-h-[400px] overflow-y-auto">
+              {presets.map((p, idx) => (
+                <div key={idx} className={`flex items-start gap-3 p-3 rounded-md border ${!p.requires ? 'opacity-50 bg-muted/50' : 'hover:bg-accent cursor-pointer'}`} onClick={() => p.requires && togglePreset(idx)}>
+                  <Checkbox checked={selectedPresets.includes(idx)} disabled={!p.requires} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{p.name}</span>
+                      <Badge variant="outline" className={`text-[10px] py-0 h-4 ${getCategoryColor(p.cat)} border-transparent`}>{p.cat}</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {p.requires ? `${formatDate(p.date)} (${p.rule})` : 'Missing required show dates'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button onClick={handleBulkAdd} disabled={selectedPresets.length === 0 || bulkCreate.isPending}>
+                {bulkCreate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Add {selectedPresets.length} Tasks
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="custom">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitCustom)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Task Name *</FormLabel>
+                      <FormControl><Input {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {PRESET_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Due Date</FormLabel>
+                        <FormControl><Input type="date" {...field} /></FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl><Textarea className="resize-none" {...field} /></FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" disabled={createCustomTask.isPending}>
+                    {createCustomTask.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Add Custom Task
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}

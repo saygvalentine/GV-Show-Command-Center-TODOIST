@@ -3,20 +3,31 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Show Command Center API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: shows
+    description: Show management
+  - name: tasks
+    description: Task management
+  - name: eblasts
+    description: E-blast management
+  - name: links
+    description: Link management
+  - name: calendar
+    description: Calendar view
+  - name: dashboard
+    description: Dashboard data
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +35,454 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /shows:
+    get:
+      operationId: listShows
+      tags: [shows]
+      summary: List all shows
+      responses:
+        "200":
+          description: List of shows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Show"
+    post:
+      operationId: createShow
+      tags: [shows]
+      summary: Create a new show
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShowBody"
+      responses:
+        "201":
+          description: Created show
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Show"
+
+  /shows/{showId}:
+    get:
+      operationId: getShow
+      tags: [shows]
+      summary: Get a show by ID
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Show details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShowWithItems"
+        "404":
+          description: Show not found
+    put:
+      operationId: updateShow
+      tags: [shows]
+      summary: Update a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShowBody"
+      responses:
+        "200":
+          description: Updated show
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Show"
+    delete:
+      operationId: deleteShow
+      tags: [shows]
+      summary: Delete a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /shows/{showId}/tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List tasks for a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a task for a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskBody"
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /shows/{showId}/tasks/bulk:
+    post:
+      operationId: bulkCreateTasks
+      tags: [tasks]
+      summary: Bulk create tasks for a show (for preset tasks)
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tasks]
+              properties:
+                tasks:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CreateTaskBody"
+      responses:
+        "201":
+          description: Created tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
+  /shows/{showId}/tasks/{taskId}:
+    put:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskBody"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /shows/{showId}/eblasts:
+    get:
+      operationId: listEblasts
+      tags: [eblasts]
+      summary: List e-blasts for a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of e-blasts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Eblast"
+    post:
+      operationId: createEblast
+      tags: [eblasts]
+      summary: Create an e-blast for a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEblastBody"
+      responses:
+        "201":
+          description: Created e-blast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Eblast"
+
+  /shows/{showId}/eblasts/bulk:
+    post:
+      operationId: bulkCreateEblasts
+      tags: [eblasts]
+      summary: Bulk create e-blasts for a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [eblasts]
+              properties:
+                eblasts:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CreateEblastBody"
+      responses:
+        "201":
+          description: Created e-blasts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Eblast"
+
+  /shows/{showId}/eblasts/{eblastId}:
+    put:
+      operationId: updateEblast
+      tags: [eblasts]
+      summary: Update an e-blast
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: eblastId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEblastBody"
+      responses:
+        "200":
+          description: Updated e-blast
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Eblast"
+    delete:
+      operationId: deleteEblast
+      tags: [eblasts]
+      summary: Delete an e-blast
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: eblastId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /shows/{showId}/links:
+    get:
+      operationId: listLinks
+      tags: [links]
+      summary: List links for a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Link"
+    post:
+      operationId: createLink
+      tags: [links]
+      summary: Create a link for a show
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLinkBody"
+      responses:
+        "201":
+          description: Created link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Link"
+
+  /shows/{showId}/links/{linkId}:
+    delete:
+      operationId: deleteLink
+      tags: [links]
+      summary: Delete a link
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: linkId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /calendar:
+    get:
+      operationId: getCalendarEvents
+      tags: [calendar]
+      summary: Get all tasks and e-blasts for calendar view
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: showId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Calendar events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CalendarEvent"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary with overdue counts and next-up show
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +493,325 @@ components:
       required:
         - status
 
+    Show:
+      type: object
+      required: [id, name, moveInDate, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        moveInDate:
+          type: string
+          format: date
+        venue:
+          type: string
+          nullable: true
+        advanceWarehouseDate:
+          type: string
+          format: date
+          nullable: true
+        discountDeadline:
+          type: string
+          format: date
+          nullable: true
+        onlineOrderDeadline:
+          type: string
+          format: date
+          nullable: true
+        showStart:
+          type: string
+          format: date
+          nullable: true
+        dismantleDate:
+          type: string
+          format: date
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        taskCount:
+          type: integer
+        completedTaskCount:
+          type: integer
+        eblastCount:
+          type: integer
+        sentEblastCount:
+          type: integer
+        overdueCount:
+          type: integer
+        lastEblastName:
+          type: string
+          nullable: true
+        lastEblastDate:
+          type: string
+          nullable: true
+        exhibitorKitSent:
+          type: boolean
+        exhibitorKitDate:
+          type: string
+          nullable: true
+        fireMarshalStatus:
+          type: string
+          nullable: true
+        fireMarshalDate:
+          type: string
+          nullable: true
+        idSignStatus:
+          type: string
+          nullable: true
+
+    ShowWithItems:
+      allOf:
+        - $ref: "#/components/schemas/Show"
+        - type: object
+          properties:
+            tasks:
+              type: array
+              items:
+                $ref: "#/components/schemas/Task"
+            eblasts:
+              type: array
+              items:
+                $ref: "#/components/schemas/Eblast"
+            links:
+              type: array
+              items:
+                $ref: "#/components/schemas/Link"
+
+    CreateShowBody:
+      type: object
+      required: [name, moveInDate]
+      properties:
+        name:
+          type: string
+        moveInDate:
+          type: string
+          format: date
+        venue:
+          type: string
+          nullable: true
+        advanceWarehouseDate:
+          type: string
+          format: date
+          nullable: true
+        discountDeadline:
+          type: string
+          format: date
+          nullable: true
+        onlineOrderDeadline:
+          type: string
+          format: date
+          nullable: true
+        showStart:
+          type: string
+          format: date
+          nullable: true
+        dismantleDate:
+          type: string
+          format: date
+          nullable: true
+
+    Task:
+      type: object
+      required: [id, showId, name, completed, createdAt]
+      properties:
+        id:
+          type: integer
+        showId:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        dueDateRule:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateTaskBody:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        dueDateRule:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    UpdateTaskBody:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        dueDateRule:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+
+    Eblast:
+      type: object
+      required: [id, showId, name, sent, createdAt]
+      properties:
+        id:
+          type: integer
+        showId:
+          type: integer
+        name:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        dueDateRule:
+          type: string
+          nullable: true
+        sent:
+          type: boolean
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateEblastBody:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        dueDateRule:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    UpdateEblastBody:
+      type: object
+      properties:
+        name:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        dueDateRule:
+          type: string
+          nullable: true
+        sent:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+
+    Link:
+      type: object
+      required: [id, showId, title, url, createdAt]
+      properties:
+        id:
+          type: integer
+        showId:
+          type: integer
+        title:
+          type: string
+        url:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateLinkBody:
+      type: object
+      required: [title, url]
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+
+    CalendarEvent:
+      type: object
+      required: [id, type, showId, showName, name, date]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [task, eblast, movein]
+        showId:
+          type: integer
+        showName:
+          type: string
+        name:
+          type: string
+        date:
+          type: string
+          format: date
+        category:
+          type: string
+          nullable: true
+        done:
+          type: boolean
+
+    DashboardSummary:
+      type: object
+      required: [totalShows, totalOverdue, activeShows, archivedShows]
+      properties:
+        totalShows:
+          type: integer
+        activeShows:
+          type: integer
+        archivedShows:
+          type: integer
+        totalOverdue:
+          type: integer
+        nextUpShow:
+          $ref: "#/components/schemas/Show"
+          nullable: true

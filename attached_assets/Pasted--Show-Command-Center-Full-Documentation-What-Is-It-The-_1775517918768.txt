@@ -1,0 +1,198 @@
+# Show Command Center — Full Documentation
+
+## What Is It?
+
+The Show Command Center is a web application built for trade show project management. It is designed specifically for Exhibitor Services work at a General Service Contractor (GSC). Each "show" represents a trade show or event that needs to be prepared, tracked, and managed from initial setup through move-in day. The app tracks tasks, e-blast communications, and resource links for every show, all persisted in Firebase so the data is shared and available from any device.
+
+---
+
+## The Dashboard
+
+When you open the app, you land on the **Dashboard** — the main overview of all your active shows.
+
+### "Next Up" Banner
+At the top of the dashboard is a banner showing your most imminent show (the one with the earliest move-in date). It displays the show name and a large countdown number showing how many days until move-in.
+
+### Sort Controls
+You can sort your show cards three ways:
+- **Date** — Orders shows by move-in date, soonest first (default)
+- **Name** — Alphabetical order
+- **Overdue** — Shows with the most overdue tasks bubble to the top
+
+### Show Cards
+Each show is represented by a card in a 3-column grid. The card contains:
+
+- **Color bar** at the top — Color-coded to urgency (see Urgency System below)
+- **Show name and move-in date** — With optional venue
+- **Countdown** — A large number showing days until move-in
+- **Urgency badge** — A text label summarizing time status (e.g. DUE SOON, URGENT, ON TRACK)
+- **Status chips** — Small inline indicators showing:
+  - **Fire Marshal** — Whether the Fire Marshal / Floor Plan category tasks are In Progress or Submitted, with completion date if done
+  - **ID Signs** — Whether ID Sign Production tasks are In Progress or Ordered
+  - **Exhibitor Kit** — Whether the Exhibitor Kit Sent e-blast has been marked sent, with date
+  - **Last e-Blast** — The most recently checked-off e-blast, with the date it was sent
+- **Overdue alert** — A red pulsing dot with a count if any tasks or e-blasts are past their due date
+- **Progress bar** — Shows combined completion percentage across all tasks and e-blasts for that show
+
+Clicking a card opens the Show Detail view for that show.
+
+### Archived Shows
+Shows whose move-in date has already passed are automatically moved to a collapsible **Archived** section at the bottom of the dashboard. They are hidden by default and shown at reduced opacity when expanded.
+
+### Adding a New Show
+The **+ New Show** button opens a form to create a show. Fields include:
+- Show / Event name (required)
+- Move-In Date (required)
+- Venue (optional)
+- **Task Deadline dates** — Advance Warehouse, Discount Deadline, Online Order Deadline
+- **Show dates** — Show Start, Dismantle
+
+These reference dates are critical — they are used to auto-calculate due dates for preset tasks and e-blasts.
+
+---
+
+## The Urgency System
+
+Every show card and every task uses a color-coded urgency system based on how many days remain until the relevant date:
+
+| Days Remaining | Color | Label |
+|---|---|---|
+| Past (negative) | Gray | PAST |
+| 0–3 days | Red | DUE SOON |
+| 4–7 days | Amber | URGENT |
+| 8–14 days | Yellow | SOON |
+| 15–30 days | Green | ON TRACK |
+| 31+ days | Purple/Indigo | LATER |
+
+This system applies both to show move-in countdowns (on the card) and to individual task due dates (inside the show detail).
+
+---
+
+## The Calendar View
+
+The top navigation bar lets you switch between **Dashboard** and **Calendar**. The Calendar view shows all tasks and e-blasts plotted on a monthly calendar.
+
+- **Month navigation** — Arrow buttons to go back and forward by month
+- **Show filter** — A dropdown to filter the calendar to a single show or view all shows at once
+- **Day cells** — Each day shows color-coded chips for tasks/e-blasts due that day. Move-in dates are shown with a 📅 chip in indigo. If a day has more than 3 items, it shows a "+X more" indicator.
+- **Today highlight** — Today's date is highlighted with a dot and bold text
+- **Day detail panel** — Clicking any day with events opens a panel below the calendar listing all items due that day, what show they belong to, their category, and whether they are done. Each item has an **Open** button to jump directly to that show.
+
+---
+
+## Show Detail View
+
+Clicking a show card opens its detail view. At the top is the show's header card showing all its dates and a progress bar. Below that are three tabs: **Tasks**, **e-Blasts**, and **Links**.
+
+### Editing Show Details
+The **Edit Show Details** button on the header card opens an inline edit form where you can update the show name, venue, move-in date, and all reference dates (Advance Warehouse, Discount Deadline, Online Order Deadline, Show Start, Dismantle). Saving updates the show across all views and recalculates any relative task dates.
+
+### Deleting a Show
+A **Delete Show** button is available in the top-right of the detail view. It requires a confirmation step before permanently deleting the show and all its tasks, e-blasts, and links.
+
+---
+
+## Tasks Tab
+
+Tasks are the operational to-do items for a show. They are organized by category and tracked with due dates.
+
+### Task Display
+Tasks are grouped into three sections:
+1. **Overdue** — Tasks with a due date in the past that haven't been checked off. Shown at the top with a red pulsing dot.
+2. **Tasks (upcoming)** — Pending tasks sorted by due date, soonest first. Tasks with no due date appear at the bottom.
+3. **Completed** — Collapsed by default. Click to expand. Shows completion date and original due date.
+
+Each task row shows:
+- **Checkbox** — Click to mark complete (turns green). Click again to uncheck.
+- **Task name**
+- **Category badge** — Color-coded label for the task's category
+- **Due date line** — Shows the due date, days remaining or overdue, and the relative rule it was created from (e.g. "30 cal days before move-in")
+- **Notes icon** — If a task has notes, a 📝 icon appears. Clicking it expands the notes inline.
+- **Edit pencil** — Opens the task into an edit form
+- **✕ button** — Deletes the task
+
+### Adding Tasks — Preset Tasks
+The **+ Add Task** button opens a two-tab form. The **Preset Tasks** tab shows all pre-configured task templates organized by category:
+
+- **Fire Marshal / Floor Plan**
+  - Initial Contact Account Executive — 60 calendar days before move-in
+  - Check In / Submit — 30 business days before move-in
+  - Hard Deadline — 30 calendar days before move-in
+
+- **ID Sign Production**
+  - Contact Client / Give Deadline — 30 calendar days before move-in
+  - ID Sign Deadline — 12 business days before move-in
+  - Submit Order — 8 business days before move-in
+
+- **Warehouse Manifest**
+  - Contact Declared but Not Received — 3 business days before Advance Warehouse date
+
+- **Show Bucket**
+  - Get Bucket Due Dates & Quantities — 10 business days before move-in
+  - Create Carpet Plan — 1 calendar day after Online Order Deadline
+  - Add CC Tags to XBR List — 5 business days before move-in
+  - Finalize Carpet Plan — 5 business days before move-in
+  - Begin Bucket Creation — 5 business days before move-in
+  - Bucket Due Date — No preset date (manual entry)
+
+- **Vehicle Spotting**
+  - Send e-Blast for A.E Vehicle Spotting — 60 calendar days before move-in
+  - Check Vehicle Spotting / Provide To Beau — 40 calendar days before move-in
+  - Check Vehicle Spotting / Provide To Beau 2 — 30 business days before move-in
+
+- **Electrical**
+  - Contact Electrical Provider — 1 calendar day after Online Order Deadline
+
+Each preset shows the calculated due date based on the show's reference dates. If a required reference date hasn't been set on the show (e.g. no Advance Warehouse date), that preset is grayed out with a warning. You can select individual tasks or use "select all" / "deselect all" per category. All selected tasks are added at once when you click **Add Tasks**.
+
+### Adding Tasks — Custom Task
+The **Custom Task** tab lets you create a one-off task with:
+- Task name
+- Category (optional, select from the standard color-coded categories)
+- Due date — either a **specific date** or a **relative date** (e.g. "10 business days before Discount Deadline"). Relative dates show a preview of the computed date.
+- Notes (optional free text)
+
+### Editing a Task
+Click the task name or the pencil icon to edit. You can change the name, due date, and notes inline. Press Save or Cancel.
+
+---
+
+## e-Blasts Tab
+
+The e-Blasts tab tracks email communications sent to exhibitors. It works identically to Tasks but is color-coded in pink/magenta and uses the term "sent" instead of "completed."
+
+### Preset e-Blasts
+- **Exhibitor Kit Sent** — No preset date (manual, marks when the kit was emailed out)
+- **Send Discount Deadline eBlast #1** — 7 calendar days before Discount Deadline
+- **Send Discount Deadline eBlast #2** — 3 calendar days before Discount Deadline
+- **Send Online Order Deadline eBlast #1** — 7 calendar days before Online Order Deadline
+- **Send Online Order Deadline eBlast #2** — 3 calendar days before Online Order Deadline
+
+Presets requiring a reference date (Discount Deadline or Online Order Deadline) are grayed out if that date hasn't been set on the show. When the Exhibitor Kit Sent e-blast is checked off, it appears as a green status chip on the show card on the dashboard.
+
+### Custom e-Blast
+Works the same as a custom task — name, date (specific or relative to a reference date), and optional notes.
+
+---
+
+## Links Tab
+
+The Links tab stores reference URLs for the show, such as Box Drive folders, floor plan PDFs, or other documents.
+
+Each link has:
+- **Title** — A custom label you assign (e.g. "Floor Plan PDF", "Exhibitor Kit Folder")
+- **URL** — The full link (Box Drive or any URL)
+
+Links are displayed as clickable rows. Clicking the title opens the link in a new browser tab. Links can be deleted with the ✕ button. There is no limit on the number of links per show.
+
+---
+
+## Theme Toggle
+
+A toggle in the top-right switches between **Dark mode** (default, dark navy) and **Light mode** (white/gray). Your preference is saved to localStorage and remembered across sessions.
+
+---
+
+## Data Persistence
+
+All show data — tasks, e-blasts, links, completion status, notes, dates — is saved in **Firebase Firestore** under a top-level `shows` collection. There is no login required. The workspace is shared, meaning anyone with the app URL can view and edit shows. Data persists across browser sessions, devices, and page refreshes. Theme preference is the only thing stored locally in the browser.

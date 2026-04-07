@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, showsTable, tasksTable, eblastsTable, linksTable } from "@workspace/db";
-import { eq, sql, and, lt, gte, lte, isNotNull } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import {
   CreateShowBody,
   UpdateShowBody,
@@ -10,6 +10,30 @@ import {
 } from "@workspace/api-zod";
 
 const router = Router();
+
+const DATE_FIELDS = [
+  "moveInDate",
+  "advanceWarehouseDate",
+  "discountDeadline",
+  "onlineOrderDeadline",
+  "showStart",
+  "dismantleDate",
+] as const;
+
+function sanitizeDates(body: Record<string, unknown>): Record<string, unknown> {
+  const sanitized = { ...body };
+  for (const field of DATE_FIELDS) {
+    if (sanitized[field] === "" || sanitized[field] === undefined) {
+      sanitized[field] = null;
+    }
+  }
+  return sanitized;
+}
+
+function toDateStr(d: Date | null | undefined): string | null {
+  if (!d) return null;
+  return d.toISOString().split("T")[0];
+}
 
 function computeShowStats(
   show: typeof showsTable.$inferSelect,
@@ -91,13 +115,24 @@ router.get("/", async (req, res): Promise<void> => {
 });
 
 router.post("/", async (req, res): Promise<void> => {
-  const parsed = CreateShowBody.safeParse(req.body);
+  const parsed = CreateShowBody.safeParse(sanitizeDates(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
-  const [show] = await db.insert(showsTable).values(parsed.data).returning();
+  const values = {
+    name: parsed.data.name,
+    moveInDate: toDateStr(parsed.data.moveInDate)!,
+    venue: parsed.data.venue ?? null,
+    advanceWarehouseDate: toDateStr(parsed.data.advanceWarehouseDate),
+    discountDeadline: toDateStr(parsed.data.discountDeadline),
+    onlineOrderDeadline: toDateStr(parsed.data.onlineOrderDeadline),
+    showStart: toDateStr(parsed.data.showStart),
+    dismantleDate: toDateStr(parsed.data.dismantleDate),
+  };
+
+  const [show] = await db.insert(showsTable).values(values).returning();
   res.status(201).json({ ...show, taskCount: 0, completedTaskCount: 0, eblastCount: 0, sentEblastCount: 0, overdueCount: 0, lastEblastName: null, lastEblastDate: null, exhibitorKitSent: false, exhibitorKitDate: null, fireMarshalStatus: null, fireMarshalDate: null, idSignStatus: null });
 });
 
@@ -128,15 +163,26 @@ router.put("/:showId", async (req, res): Promise<void> => {
     return;
   }
 
-  const parsed = UpdateShowBody.safeParse(req.body);
+  const parsed = UpdateShowBody.safeParse(sanitizeDates(req.body));
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
 
+  const values = {
+    name: parsed.data.name,
+    moveInDate: toDateStr(parsed.data.moveInDate)!,
+    venue: parsed.data.venue ?? null,
+    advanceWarehouseDate: toDateStr(parsed.data.advanceWarehouseDate),
+    discountDeadline: toDateStr(parsed.data.discountDeadline),
+    onlineOrderDeadline: toDateStr(parsed.data.onlineOrderDeadline),
+    showStart: toDateStr(parsed.data.showStart),
+    dismantleDate: toDateStr(parsed.data.dismantleDate),
+  };
+
   const [show] = await db
     .update(showsTable)
-    .set(parsed.data)
+    .set(values)
     .where(eq(showsTable.id, params.data.showId))
     .returning();
 

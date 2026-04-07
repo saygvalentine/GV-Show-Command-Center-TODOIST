@@ -103,7 +103,8 @@ export function EblastList({ show }: { show: Show }) {
 
   const toggleStatus = (id: number, currentSent: boolean) => {
     updateEblast.mutate({ 
-      showId: show.id, 
+      showId: show.id,
+      eblastId: id,
       data: { sent: !currentSent } 
     }, {
       onSuccess: () => {
@@ -114,7 +115,7 @@ export function EblastList({ show }: { show: Show }) {
   };
 
   const remove = (id: number) => {
-    deleteEblast.mutate({ showId: show.id }, {
+    deleteEblast.mutate({ showId: show.id, eblastId: id }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListEblastsQueryKey(show.id) });
         queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });

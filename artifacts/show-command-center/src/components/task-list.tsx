@@ -113,7 +113,8 @@ export function TaskList({ show }: { show: Show }) {
 
   const toggleTask = (taskId: number, currentCompleted: boolean) => {
     updateTask.mutate({ 
-      showId: show.id, 
+      showId: show.id,
+      taskId,
       data: { completed: !currentCompleted } 
     }, {
       onSuccess: () => {
@@ -124,7 +125,7 @@ export function TaskList({ show }: { show: Show }) {
   };
 
   const removeTask = (taskId: number) => {
-    deleteTask.mutate({ showId: show.id }, {
+    deleteTask.mutate({ showId: show.id, taskId }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(show.id) });
         queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });

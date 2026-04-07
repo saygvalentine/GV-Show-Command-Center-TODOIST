@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { format, differenceInDays, startOfDay } from "date-fns";
+import React, { useState, useMemo } from "react";
+import { format, differenceInDays, startOfDay, subDays, addDays } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -452,9 +452,39 @@ function AddTaskDialog({ show }: { show: Show }) {
   };
 
   // Preset tasks logic
-  const presets = [
-    { cat: "Fire Marshal", name: "Initial Contact AE", requires: show.moveInDate, get date() { return format(subBusinessDays(new Date(show.moveInDate), 60), "yyyy-MM-dd"); }, rule: "60 cal days before move-in" },
-    { cat: "ID Sign", name: "Contact Client", requires: show.moveInDate, get date() { return format(subBusinessDays(new Date(show.moveInDate), 30), "yyyy-MM-dd"); }, rule: "30 cal days before move-in" },
+  const mi = new Date(show.moveInDate);
+  const aw = show.advanceWarehouseDate ? new Date(show.advanceWarehouseDate as string) : null;
+  const ood = show.onlineOrderDeadline ? new Date(show.onlineOrderDeadline as string) : null;
+
+  const presets: { cat: string; name: string; requires: unknown; date: string; rule: string }[] = [
+    // ── Fire Marshal / Floor Plan ──────────────────────────────────────
+    { cat: "Fire Marshal", name: "Initial Contact Account Executive", requires: show.moveInDate, date: format(subDays(mi, 60), "yyyy-MM-dd"), rule: "60 cal days before move-in" },
+    { cat: "Fire Marshal", name: "Check In / Submit", requires: show.moveInDate, date: format(subBusinessDays(mi, 30), "yyyy-MM-dd"), rule: "30 biz days before move-in" },
+    { cat: "Fire Marshal", name: "Hard Deadline", requires: show.moveInDate, date: format(subDays(mi, 30), "yyyy-MM-dd"), rule: "30 cal days before move-in" },
+
+    // ── ID Sign Production ─────────────────────────────────────────────
+    { cat: "ID Sign", name: "Contact Client / Give Deadline", requires: show.moveInDate, date: format(subDays(mi, 30), "yyyy-MM-dd"), rule: "30 cal days before move-in" },
+    { cat: "ID Sign", name: "ID Sign Deadline", requires: show.moveInDate, date: format(subBusinessDays(mi, 12), "yyyy-MM-dd"), rule: "12 biz days before move-in" },
+    { cat: "ID Sign", name: "Submit Order", requires: show.moveInDate, date: format(subBusinessDays(mi, 8), "yyyy-MM-dd"), rule: "8 biz days before move-in" },
+
+    // ── Warehouse Manifest ─────────────────────────────────────────────
+    { cat: "Warehouse Manifest", name: "Contact Declared but Not Received", requires: show.advanceWarehouseDate, date: aw ? format(subBusinessDays(aw, 3), "yyyy-MM-dd") : "", rule: "3 biz days before Advance Warehouse" },
+
+    // ── Show Bucket ────────────────────────────────────────────────────
+    { cat: "Show Bucket", name: "Get Bucket Due Dates & Quantities", requires: show.moveInDate, date: format(subBusinessDays(mi, 10), "yyyy-MM-dd"), rule: "10 biz days before move-in" },
+    { cat: "Show Bucket", name: "Create Carpet Plan", requires: show.onlineOrderDeadline, date: ood ? format(addDays(ood, 1), "yyyy-MM-dd") : "", rule: "1 cal day after Online Order Deadline" },
+    { cat: "Show Bucket", name: "Add CC Tags to XBR List", requires: show.moveInDate, date: format(subBusinessDays(mi, 5), "yyyy-MM-dd"), rule: "5 biz days before move-in" },
+    { cat: "Show Bucket", name: "Finalize Carpet Plan", requires: show.moveInDate, date: format(subBusinessDays(mi, 5), "yyyy-MM-dd"), rule: "5 biz days before move-in" },
+    { cat: "Show Bucket", name: "Begin Bucket Creation", requires: show.moveInDate, date: format(subBusinessDays(mi, 5), "yyyy-MM-dd"), rule: "5 biz days before move-in" },
+    { cat: "Show Bucket", name: "Bucket Due Date", requires: true, date: "", rule: "Manual entry — set due date after adding" },
+
+    // ── Vehicle Spotting ───────────────────────────────────────────────
+    { cat: "Vehicle Spotting", name: "Send e-Blast for A.E. Vehicle Spotting", requires: show.moveInDate, date: format(subDays(mi, 60), "yyyy-MM-dd"), rule: "60 cal days before move-in" },
+    { cat: "Vehicle Spotting", name: "Check Vehicle Spotting / Provide To Beau", requires: show.moveInDate, date: format(subDays(mi, 40), "yyyy-MM-dd"), rule: "40 cal days before move-in" },
+    { cat: "Vehicle Spotting", name: "Check Vehicle Spotting / Provide To Beau 2", requires: show.moveInDate, date: format(subBusinessDays(mi, 30), "yyyy-MM-dd"), rule: "30 biz days before move-in" },
+
+    // ── Electrical ─────────────────────────────────────────────────────
+    { cat: "Electrical", name: "Contact Electrical Provider", requires: show.onlineOrderDeadline, date: ood ? format(addDays(ood, 1), "yyyy-MM-dd") : "", rule: "1 cal day after Online Order Deadline" },
   ];
 
   const [selectedPresets, setSelectedPresets] = useState<number[]>([]);
@@ -467,7 +497,7 @@ function AddTaskDialog({ show }: { show: Show }) {
   const handleBulkAdd = () => {
     const tasks = selectedPresets.map(idx => {
       const p = presets[idx];
-      return { name: p.name, category: p.cat, dueDate: p.date, dueDateRule: p.rule };
+      return { name: p.name, category: p.cat, dueDate: p.date || undefined, dueDateRule: p.rule };
     });
     
     bulkCreate.mutate({ showId: show.id, data: { tasks } }, {
@@ -498,26 +528,57 @@ function AddTaskDialog({ show }: { show: Show }) {
           </TabsList>
           
           <TabsContent value="preset" className="space-y-4">
-            <div className="grid gap-2 border rounded-md p-4 max-h-[400px] overflow-y-auto">
-              {presets.map((p, idx) => (
-                <div key={idx} className={`flex items-start gap-3 p-3 rounded-md border ${!p.requires ? 'opacity-50 bg-muted/50' : 'hover:bg-accent cursor-pointer'}`} onClick={() => p.requires && togglePreset(idx)}>
-                  <Checkbox checked={selectedPresets.includes(idx)} disabled={!p.requires} />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{p.name}</span>
-                      <Badge variant="outline" className={`text-[10px] py-0 h-4 ${getCategoryColor(p.cat)} border-transparent`}>{p.cat}</Badge>
+            <div className="border rounded-md max-h-[420px] overflow-y-auto">
+              {(() => {
+                const rows: React.ReactNode[] = [];
+                let lastCat = "";
+                presets.forEach((p, idx) => {
+                  if (p.cat !== lastCat) {
+                    lastCat = p.cat;
+                    rows.push(
+                      <div key={`hdr-${p.cat}`} className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest sticky top-0 ${getCategoryColor(p.cat)} bg-opacity-20 border-b`}>
+                        {p.cat}
+                      </div>
+                    );
+                  }
+                  rows.push(
+                    <div
+                      key={idx}
+                      className={`flex items-start gap-3 px-3 py-2.5 border-b last:border-b-0 ${!p.requires ? 'opacity-40 cursor-not-allowed' : 'hover:bg-accent cursor-pointer'} ${selectedPresets.includes(idx) ? 'bg-accent/60' : ''}`}
+                      onClick={() => p.requires && togglePreset(idx)}
+                    >
+                      <Checkbox checked={selectedPresets.includes(idx)} disabled={!p.requires} className="mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <span className="font-medium text-sm block">{p.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {!p.requires
+                            ? "Missing required show date"
+                            : p.date
+                            ? `${formatDate(p.date)} · ${p.rule}`
+                            : p.rule}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {p.requires ? `${formatDate(p.date)} (${p.rule})` : 'Missing required show dates'}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                });
+                return rows;
+              })()}
             </div>
-            <div className="flex justify-end pt-2">
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                onClick={() => {
+                  const available = presets.map((_, i) => i).filter(i => presets[i].requires);
+                  if (selectedPresets.length === available.length) setSelectedPresets([]);
+                  else setSelectedPresets(available);
+                }}
+              >
+                {selectedPresets.length === presets.filter(p => p.requires).length ? "Deselect all" : "Select all"}
+              </button>
               <Button onClick={handleBulkAdd} disabled={selectedPresets.length === 0 || bulkCreate.isPending}>
                 {bulkCreate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add {selectedPresets.length} Tasks
+                Add {selectedPresets.length} Task{selectedPresets.length !== 1 ? "s" : ""}
               </Button>
             </div>
           </TabsContent>

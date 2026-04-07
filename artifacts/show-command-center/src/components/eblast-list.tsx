@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { format, differenceInDays, startOfDay } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
-  CheckCircle2, Clock, Trash2, 
+  CheckCircle2, Clock, Trash2, Edit2,
   Plus, Calendar as CalendarIcon, MessageSquare,
   ChevronDown, ChevronUp, Loader2, Mail
 } from "lucide-react";
@@ -148,7 +148,7 @@ export function EblastList({ show }: { show: Show }) {
           </div>
           <div className="grid gap-2 border-red-500/20 border rounded-lg p-2 bg-red-500/5">
             {grouped.overdue.map(e => (
-              <EblastRow key={e.id} item={e} onToggle={() => toggleStatus(e.id, e.sent)} onDelete={() => remove(e.id)} />
+              <EblastRow key={e.id} item={e} showId={show.id} onToggle={() => toggleStatus(e.id, e.sent)} onDelete={() => remove(e.id)} />
             ))}
           </div>
         </div>
@@ -162,7 +162,7 @@ export function EblastList({ show }: { show: Show }) {
           </div>
           <div className="grid gap-2">
             {grouped.upcoming.map(e => (
-              <EblastRow key={e.id} item={e} onToggle={() => toggleStatus(e.id, e.sent)} onDelete={() => remove(e.id)} />
+              <EblastRow key={e.id} item={e} showId={show.id} onToggle={() => toggleStatus(e.id, e.sent)} onDelete={() => remove(e.id)} />
             ))}
           </div>
         </div>
@@ -190,7 +190,7 @@ export function EblastList({ show }: { show: Show }) {
           </div>
           <CollapsibleContent className="space-y-2 opacity-75">
             {grouped.sent.map(e => (
-              <EblastRow key={e.id} item={e} onToggle={() => toggleStatus(e.id, e.sent)} onDelete={() => remove(e.id)} />
+              <EblastRow key={e.id} item={e} showId={show.id} onToggle={() => toggleStatus(e.id, e.sent)} onDelete={() => remove(e.id)} />
             ))}
           </CollapsibleContent>
         </Collapsible>
@@ -199,37 +199,88 @@ export function EblastList({ show }: { show: Show }) {
   );
 }
 
-function EblastRow({ item, onToggle, onDelete }: { item: any, onToggle: () => void, onDelete: () => void }) {
+const editEblastSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  dueDate: z.string().optional(),
+  dueDateRule: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+function EblastRow({ item, showId, onToggle, onDelete }: { item: any, showId: number, onToggle: () => void, onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const urgency = getUrgencyInfo(item.dueDate);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const updateEblast = useUpdateEblast();
+
+  const form = useForm<z.infer<typeof editEblastSchema>>({
+    resolver: zodResolver(editEblastSchema),
+    defaultValues: {
+      name: item.name,
+      dueDate: item.dueDate ? String(item.dueDate).split("T")[0] : "",
+      dueDateRule: item.dueDateRule ?? "",
+      notes: item.notes ?? "",
+    },
+  });
+
+  const openEdit = () => {
+    form.reset({
+      name: item.name,
+      dueDate: item.dueDate ? String(item.dueDate).split("T")[0] : "",
+      dueDateRule: item.dueDateRule ?? "",
+      notes: item.notes ?? "",
+    });
+    setEditOpen(true);
+  };
+
+  const onEditSubmit = (data: z.infer<typeof editEblastSchema>) => {
+    updateEblast.mutate(
+      { showId, eblastId: item.id, data },
+      {
+        onSuccess: () => {
+          toast({ title: "e-Blast updated" });
+          setEditOpen(false);
+          queryClient.invalidateQueries({ queryKey: getListEblastsQueryKey(showId) });
+          queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(showId) });
+        },
+        onError: () => toast({ title: "Error updating e-Blast", variant: "destructive" }),
+      }
+    );
+  };
 
   return (
-    <div className={`flex flex-col p-3 rounded-lg border bg-card transition-colors ${item.sent ? 'opacity-60' : 'hover:border-pink-500/30'}`}>
+    <div className={`group flex flex-col p-3 rounded-lg border bg-card transition-colors ${item.sent ? 'opacity-60' : 'hover:border-pink-500/30'}`}>
       <div className="flex items-start gap-3">
-        <Checkbox 
-          checked={item.sent} 
+        <Checkbox
+          checked={item.sent}
           onCheckedChange={onToggle}
           className={`mt-1 ${item.sent ? 'data-[state=checked]:bg-pink-500 data-[state=checked]:text-white border-pink-500' : ''}`}
         />
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`font-medium ${item.sent ? 'line-through text-muted-foreground' : ''}`}>
               {item.name}
             </span>
-            {item.notes && (
-              <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground" onClick={() => setExpanded(!expanded)}>
+            {item.notes && !expanded && (
+              <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground" onClick={() => setExpanded(true)}>
                 <MessageSquare className="h-3 w-3" />
               </Button>
             )}
           </div>
-          
-          <div className="flex items-center gap-3 mt-1.5 text-xs">
-            {item.dueDate ? (
-              <div className={`flex items-center gap-1 font-medium ${item.sent ? 'text-muted-foreground' : urgency.textClass}`}>
+
+          <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs">
+            {item.sent && item.sentAt ? (
+              <div className="flex items-center gap-1 font-medium text-pink-500">
+                <Mail className="h-3 w-3" />
+                Sent {format(new Date(item.sentAt), "MMM d, yyyy")}
+              </div>
+            ) : item.dueDate ? (
+              <div className={`flex items-center gap-1 font-medium ${urgency.textClass}`}>
                 <CalendarIcon className="h-3 w-3" />
                 {formatDate(item.dueDate)}
-                {!item.sent && urgency.daysRemaining !== null && (
+                {urgency.daysRemaining !== null && (
                   <span className="ml-1 opacity-80">
                     ({Math.abs(urgency.daysRemaining)}d {urgency.daysRemaining < 0 ? 'ago' : 'left'})
                   </span>
@@ -239,7 +290,7 @@ function EblastRow({ item, onToggle, onDelete }: { item: any, onToggle: () => vo
               <span className="text-muted-foreground">No due date</span>
             )}
             {item.dueDateRule && (
-              <span className="text-muted-foreground italic border-l pl-3 ml-1">
+              <span className="text-muted-foreground italic border-l pl-3">
                 {item.dueDateRule}
               </span>
             )}
@@ -247,15 +298,89 @@ function EblastRow({ item, onToggle, onDelete }: { item: any, onToggle: () => vo
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md border-pink-500/20">
+              <DialogHeader>
+                <DialogTitle className="text-pink-500 flex items-center gap-2">
+                  <Mail className="h-4 w-4" /> Edit e-Blast
+                </DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>e-Blast Name *</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="dueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Due Date</FormLabel>
+                          <FormControl><Input type="date" {...field} /></FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dueDateRule"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Due Date Rule</FormLabel>
+                          <FormControl><Input placeholder="e.g. 7 days before..." {...field} /></FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl><Textarea className="resize-none" rows={3} {...field} /></FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" type="button" onClick={() => setEditOpen(false)}>Cancel</Button>
+                    <Button type="submit" disabled={updateEblast.isPending} className="bg-pink-600 hover:bg-pink-700">
+                      {updateEblast.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+
           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={onDelete}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
-      
+
       {expanded && item.notes && (
         <div className="mt-3 ml-7 p-3 bg-muted/30 rounded-md text-sm border border-border/50 whitespace-pre-wrap">
-          {item.notes}
+          <div className="flex justify-between items-start gap-2">
+            <span>{item.notes}</span>
+            <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 text-muted-foreground" onClick={() => setExpanded(false)}>
+              <ChevronUp className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       )}
     </div>

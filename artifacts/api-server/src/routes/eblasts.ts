@@ -87,7 +87,10 @@ router.put("/:eblastId", async (req, res): Promise<void> => {
     return;
   }
 
-  const parsed = UpdateEblastBody.safeParse(req.body);
+  const body = { ...req.body };
+  if (body.dueDate === "") body.dueDate = null;
+
+  const parsed = UpdateEblastBody.safeParse(body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;

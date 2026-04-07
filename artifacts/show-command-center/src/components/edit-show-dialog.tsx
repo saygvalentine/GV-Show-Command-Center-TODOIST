@@ -1,8 +1,6 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { Plus, Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,7 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useCreateShow, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
+import { useUpdateShow, getGetShowQueryKey, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 
 const showSchema = z.object({
@@ -40,63 +38,94 @@ const showSchema = z.object({
 
 type ShowFormValues = z.infer<typeof showSchema>;
 
-export function AddShowDialog() {
+interface Show {
+  id: number;
+  name: string;
+  moveInDate: string | Date;
+  venue?: string | null;
+  advanceWarehouseDate?: string | Date | null;
+  discountDeadline?: string | Date | null;
+  onlineOrderDeadline?: string | Date | null;
+  showStart?: string | Date | null;
+  dismantleDate?: string | Date | null;
+}
+
+function toInputDate(val: string | Date | null | undefined): string {
+  if (!val) return "";
+  if (val instanceof Date) return val.toISOString().split("T")[0];
+  // already a YYYY-MM-DD string
+  return String(val).split("T")[0];
+}
+
+interface EditShowDialogProps {
+  show: Show;
+}
+
+export function EditShowDialog({ show }: EditShowDialogProps) {
   const [open, setOpen] = useState(false);
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  const createShow = useCreateShow();
-  
+  const updateShow = useUpdateShow();
+
   const form = useForm<ShowFormValues>({
     resolver: zodResolver(showSchema),
     defaultValues: {
-      name: "",
-      moveInDate: "",
-      venue: "",
-      advanceWarehouseDate: "",
-      discountDeadline: "",
-      onlineOrderDeadline: "",
-      showStart: "",
-      dismantleDate: "",
+      name: show.name,
+      moveInDate: toInputDate(show.moveInDate),
+      venue: show.venue ?? "",
+      advanceWarehouseDate: toInputDate(show.advanceWarehouseDate),
+      discountDeadline: toInputDate(show.discountDeadline),
+      onlineOrderDeadline: toInputDate(show.onlineOrderDeadline),
+      showStart: toInputDate(show.showStart),
+      dismantleDate: toInputDate(show.dismantleDate),
     },
   });
 
+  // Reset form values when show data changes
+  useEffect(() => {
+    form.reset({
+      name: show.name,
+      moveInDate: toInputDate(show.moveInDate),
+      venue: show.venue ?? "",
+      advanceWarehouseDate: toInputDate(show.advanceWarehouseDate),
+      discountDeadline: toInputDate(show.discountDeadline),
+      onlineOrderDeadline: toInputDate(show.onlineOrderDeadline),
+      showStart: toInputDate(show.showStart),
+      dismantleDate: toInputDate(show.dismantleDate),
+    });
+  }, [show]);
+
   const onSubmit = (data: ShowFormValues) => {
-    createShow.mutate({ data }, {
-      onSuccess: (newShow) => {
-        toast({ title: "Show created successfully" });
+    updateShow.mutate({ showId: show.id, data }, {
+      onSuccess: () => {
+        toast({ title: "Show updated successfully" });
         setOpen(false);
-        form.reset();
-        
+        queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });
         queryClient.invalidateQueries({ queryKey: getListShowsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-        
-        setLocation(`/shows/${newShow.id}`);
       },
       onError: (error) => {
         toast({
-          title: "Error creating show",
+          title: "Error updating show",
           description: error instanceof Error ? error.message : "Unknown error",
           variant: "destructive",
         });
-      }
+      },
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Show
+        <Button variant="outline" size="icon" data-testid="button-edit-show">
+          <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Show</DialogTitle>
+          <DialogTitle>Edit Show Details</DialogTitle>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -112,7 +141,7 @@ export function AddShowDialog() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="moveInDate"
@@ -126,7 +155,7 @@ export function AddShowDialog() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="venue"
@@ -140,7 +169,7 @@ export function AddShowDialog() {
                 </FormItem>
               )}
             />
-            
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -183,7 +212,7 @@ export function AddShowDialog() {
                 </FormItem>
               )}
             />
-            
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -212,14 +241,14 @@ export function AddShowDialog() {
                 )}
               />
             </div>
-            
-            <div className="pt-4 flex justify-end gap-2">
+
+            <div className="pt-2 flex justify-end gap-2">
               <Button variant="outline" type="button" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createShow.isPending}>
-                {createShow.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Show
+              <Button type="submit" disabled={updateShow.isPending}>
+                {updateShow.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
               </Button>
             </div>
           </form>

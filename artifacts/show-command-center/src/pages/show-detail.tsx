@@ -9,12 +9,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, MapPin, Edit, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { UrgencyBadge } from "@/components/urgency-badge";
 import { getUrgencyInfo, formatDate } from "@/lib/date-utils";
 import { TaskList } from "@/components/task-list";
 import { EblastList } from "@/components/eblast-list";
 import { LinkList } from "@/components/link-list";
+import { EditShowDialog } from "@/components/edit-show-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -91,6 +92,7 @@ export default function ShowDetail() {
           </Button>
           <h1 className="text-2xl font-bold tracking-tight">Show Details</h1>
           <div className="ml-auto flex gap-2">
+            <EditShowDialog show={show} />
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="icon">

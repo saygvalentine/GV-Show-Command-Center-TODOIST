@@ -87,7 +87,11 @@ router.put("/:taskId", async (req, res): Promise<void> => {
     return;
   }
 
-  const parsed = UpdateTaskBody.safeParse(req.body);
+  const body = { ...req.body };
+  if (body.dueDate === "") body.dueDate = null;
+  if (body.category === "none" || body.category === "") body.category = null;
+
+  const parsed = UpdateTaskBody.safeParse(body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;

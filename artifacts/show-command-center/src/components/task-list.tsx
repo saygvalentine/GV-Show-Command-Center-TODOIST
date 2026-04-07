@@ -159,7 +159,7 @@ export function TaskList({ show }: { show: Show }) {
           </div>
           <div className="grid gap-2 border-red-500/20 border rounded-lg p-2 bg-red-500/5">
             {groupedTasks.overdue.map(t => (
-              <TaskRow key={t.id} task={t} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+              <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
             ))}
           </div>
         </div>
@@ -173,7 +173,7 @@ export function TaskList({ show }: { show: Show }) {
           </div>
           <div className="grid gap-2">
             {groupedTasks.upcoming.map(t => (
-              <TaskRow key={t.id} task={t} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+              <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
             ))}
           </div>
         </div>
@@ -201,7 +201,7 @@ export function TaskList({ show }: { show: Show }) {
           </div>
           <CollapsibleContent className="space-y-2 opacity-75">
             {groupedTasks.completed.map(t => (
-              <TaskRow key={t.id} task={t} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+              <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
             ))}
           </CollapsibleContent>
         </Collapsible>
@@ -210,19 +210,68 @@ export function TaskList({ show }: { show: Show }) {
   );
 }
 
-function TaskRow({ task, onToggle, onDelete }: { task: any, onToggle: () => void, onDelete: () => void }) {
+const editTaskSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  category: z.string().optional(),
+  dueDate: z.string().optional(),
+  dueDateRule: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: number, onToggle: () => void, onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const urgency = getUrgencyInfo(task.dueDate);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const updateTask = useUpdateTask();
+
+  const form = useForm<z.infer<typeof editTaskSchema>>({
+    resolver: zodResolver(editTaskSchema),
+    defaultValues: {
+      name: task.name,
+      category: task.category ?? "",
+      dueDate: task.dueDate ? String(task.dueDate).split("T")[0] : "",
+      dueDateRule: task.dueDateRule ?? "",
+      notes: task.notes ?? "",
+    },
+  });
+
+  const openEdit = () => {
+    form.reset({
+      name: task.name,
+      category: task.category ?? "",
+      dueDate: task.dueDate ? String(task.dueDate).split("T")[0] : "",
+      dueDateRule: task.dueDateRule ?? "",
+      notes: task.notes ?? "",
+    });
+    setEditOpen(true);
+  };
+
+  const onEditSubmit = (data: z.infer<typeof editTaskSchema>) => {
+    updateTask.mutate(
+      { showId, taskId: task.id, data },
+      {
+        onSuccess: () => {
+          toast({ title: "Task updated" });
+          setEditOpen(false);
+          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(showId) });
+          queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(showId) });
+        },
+        onError: () => toast({ title: "Error updating task", variant: "destructive" }),
+      }
+    );
+  };
 
   return (
-    <div className={`flex flex-col p-3 rounded-lg border bg-card transition-colors ${task.completed ? 'opacity-60' : 'hover:border-primary/30'}`}>
+    <div className={`group flex flex-col p-3 rounded-lg border bg-card transition-colors ${task.completed ? 'opacity-60' : 'hover:border-primary/30'}`}>
       <div className="flex items-start gap-3">
-        <Checkbox 
-          checked={task.completed} 
+        <Checkbox
+          checked={task.completed}
           onCheckedChange={onToggle}
           className={`mt-1 ${task.completed ? 'data-[state=checked]:bg-green-500 data-[state=checked]:text-white border-green-500' : ''}`}
         />
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`font-medium ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
@@ -233,19 +282,24 @@ function TaskRow({ task, onToggle, onDelete }: { task: any, onToggle: () => void
                 {task.category}
               </Badge>
             )}
-            {task.notes && (
-              <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground" onClick={() => setExpanded(!expanded)}>
+            {task.notes && !expanded && (
+              <Button variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground" onClick={() => setExpanded(true)}>
                 <MessageSquare className="h-3 w-3" />
               </Button>
             )}
           </div>
-          
-          <div className="flex items-center gap-3 mt-1.5 text-xs">
-            {task.dueDate ? (
-              <div className={`flex items-center gap-1 font-medium ${task.completed ? 'text-muted-foreground' : urgency.textClass}`}>
+
+          <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs">
+            {task.completed && task.completedAt ? (
+              <div className="flex items-center gap-1 font-medium text-green-500">
+                <CheckCircle2 className="h-3 w-3" />
+                Done {format(new Date(task.completedAt), "MMM d, yyyy")}
+              </div>
+            ) : task.dueDate ? (
+              <div className={`flex items-center gap-1 font-medium ${urgency.textClass}`}>
                 <CalendarIcon className="h-3 w-3" />
                 {formatDate(task.dueDate)}
-                {!task.completed && urgency.daysRemaining !== null && (
+                {urgency.daysRemaining !== null && (
                   <span className="ml-1 opacity-80">
                     ({Math.abs(urgency.daysRemaining)}d {urgency.daysRemaining < 0 ? 'ago' : 'left'})
                   </span>
@@ -255,7 +309,7 @@ function TaskRow({ task, onToggle, onDelete }: { task: any, onToggle: () => void
               <span className="text-muted-foreground">No due date</span>
             )}
             {task.dueDateRule && (
-              <span className="text-muted-foreground italic border-l pl-3 ml-1">
+              <span className="text-muted-foreground italic border-l pl-3">
                 {task.dueDateRule}
               </span>
             )}
@@ -263,15 +317,103 @@ function TaskRow({ task, onToggle, onDelete }: { task: any, onToggle: () => void
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Task</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Task Name *</FormLabel>
+                        <FormControl><Input {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="None" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              {PRESET_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="dueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Due Date</FormLabel>
+                          <FormControl><Input type="date" {...field} /></FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="dueDateRule"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Due Date Rule</FormLabel>
+                        <FormControl><Input placeholder="e.g. 30 cal days before move-in" {...field} /></FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes</FormLabel>
+                        <FormControl><Textarea className="resize-none" rows={3} {...field} /></FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" type="button" onClick={() => setEditOpen(false)}>Cancel</Button>
+                    <Button type="submit" disabled={updateTask.isPending}>
+                      {updateTask.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+
           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={onDelete}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
-      
+
       {expanded && task.notes && (
         <div className="mt-3 ml-7 p-3 bg-muted/30 rounded-md text-sm border border-border/50 whitespace-pre-wrap">
-          {task.notes}
+          <div className="flex justify-between items-start gap-2">
+            <span>{task.notes}</span>
+            <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 text-muted-foreground" onClick={() => setExpanded(false)}>
+              <ChevronUp className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       )}
     </div>

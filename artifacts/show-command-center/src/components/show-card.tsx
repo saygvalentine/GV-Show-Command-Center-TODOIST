@@ -1,10 +1,9 @@
 import { Link } from "wouter";
 import { format, differenceInDays, startOfDay } from "date-fns";
-import { Calendar, MapPin, AlertCircle, FileText, CheckCircle2, ChevronRight, Mail } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Show } from "@workspace/api-client-react";
 import { getUrgencyInfo, formatDate } from "@/lib/date-utils";
 import { UrgencyBadge } from "./urgency-badge";
@@ -75,23 +74,15 @@ export function ShowCard({ show }: ShowCardProps) {
                 ID Sign: {show.idSignStatus}
               </Badge>
             )}
-            {show.exhibitorKitSent && (
+            {show.exhibitorKitSent && show.exhibitorKitDate && (
               <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                Kit: {formatDate(show.exhibitorKitDate)}
+                XBR Kit Sent: {formatDate(show.exhibitorKitDate)}
               </Badge>
             )}
-            {show.lastEblastName && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20 truncate max-w-[150px]">
-                    <Mail className="h-3 w-3 mr-1" />
-                    {show.lastEblastName}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Sent: {formatDate(show.lastEblastDate)}
-                </TooltipContent>
-              </Tooltip>
+            {show.lastEblastDate && (
+              <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20">
+                Last e-Blast Sent: {formatDate(show.lastEblastDate)}
+              </Badge>
             )}
           </div>
           

@@ -47,8 +47,7 @@ router.get("/summary", async (req, res): Promise<void> => {
       return new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime();
     });
     const lastEblast = sentEblasts[0];
-
-    const exhibitorKit = eblasts.find((e) => e.name === "Exhibitor Kit Sent" && e.sent);
+    const oldestEblast = sentEblasts[sentEblasts.length - 1];
 
     const fireMarshalTasks = tasks.filter((t) => t.category === "Fire Marshal / Floor Plan");
     let fireMarshalStatus = null;
@@ -77,10 +76,9 @@ router.get("/summary", async (req, res): Promise<void> => {
       eblastCount: eblasts.length,
       sentEblastCount: sentEblasts.length,
       overdueCount: overdueTasks.length + overdueEblasts.length,
-      lastEblastName: lastEblast?.name ?? null,
       lastEblastDate: lastEblast?.sentAt?.toISOString() ?? null,
-      exhibitorKitSent: !!exhibitorKit,
-      exhibitorKitDate: exhibitorKit?.sentAt?.toISOString() ?? null,
+      exhibitorKitSent: sentEblasts.length > 0,
+      exhibitorKitDate: oldestEblast?.sentAt?.toISOString() ?? null,
       fireMarshalStatus,
       fireMarshalDate,
       idSignStatus,

@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useUpdateShow, getGetShowQueryKey, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { VenueSelect } from "@/components/venue-select";
 
 const showSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -163,7 +164,7 @@ export function EditShowDialog({ show }: EditShowDialogProps) {
                 <FormItem>
                   <FormLabel>Venue</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Las Vegas Convention Center" {...field} />
+                    <VenueSelect value={field.value} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

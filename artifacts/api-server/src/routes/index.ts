@@ -8,6 +8,7 @@ import calendarRouter from "./calendar";
 import dashboardRouter from "./dashboard";
 import exportRouter from "./export";
 import officeTasksRouter from "./officeTasks";
+import venuesRouter from "./venues";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use("/calendar", calendarRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/export", exportRouter);
 router.use("/office-tasks", officeTasksRouter);
+router.use("/venues", venuesRouter);
 
 export default router;

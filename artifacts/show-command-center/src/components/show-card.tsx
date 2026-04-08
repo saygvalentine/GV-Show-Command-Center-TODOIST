@@ -46,9 +46,9 @@ export function ShowCard({ show }: ShowCardProps) {
               )}
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className="flex flex-col items-center gap-2 shrink-0">
             <UrgencyBadge dateStr={show.moveInDate} />
-            <div className="text-right">
+            <div className="text-center">
               <span className={`text-4xl font-bold tracking-tighter ${urgency.textClass}`}>
                 {Math.abs(daysUntil)}
               </span>

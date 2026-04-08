@@ -22,6 +22,8 @@ tags:
     description: Calendar view
   - name: dashboard
     description: Dashboard data
+  - name: officetasks
+    description: Office task management
 paths:
   /healthz:
     get:
@@ -439,6 +441,96 @@ paths:
         "204":
           description: Deleted
 
+  /office-tasks:
+    get:
+      operationId: listOfficeTasks
+      tags: [officetasks]
+      summary: List all office tasks with optional filters
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of office tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OfficeTask"
+    post:
+      operationId: createOfficeTask
+      tags: [officetasks]
+      summary: Create a new office task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOfficeTaskBody"
+      responses:
+        "201":
+          description: Created office task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfficeTask"
+
+  /office-tasks/{taskId}:
+    put:
+      operationId: updateOfficeTask
+      tags: [officetasks]
+      summary: Update an office task
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOfficeTaskBody"
+      responses:
+        "200":
+          description: Updated office task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfficeTask"
+        "404":
+          description: Office task not found
+    delete:
+      operationId: deleteOfficeTask
+      tags: [officetasks]
+      summary: Delete an office task
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Office task not found
+
   /calendar:
     get:
       operationId: getCalendarEvents
@@ -778,17 +870,19 @@ components:
 
     CalendarEvent:
       type: object
-      required: [id, type, showId, showName, name, date]
+      required: [id, type, name, date]
       properties:
         id:
           type: integer
         type:
           type: string
-          enum: [task, eblast, movein]
+          enum: [task, eblast, movein, officetask]
         showId:
           type: integer
+          nullable: true
         showName:
           type: string
+          nullable: true
         name:
           type: string
         date:
@@ -798,6 +892,87 @@ components:
           type: string
           nullable: true
         done:
+          type: boolean
+        priority:
+          type: string
+          nullable: true
+        officeTaskId:
+          type: integer
+          nullable: true
+
+    OfficeTask:
+      type: object
+      required: [id, title, priority, status, completed, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+        status:
+          type: string
+        category:
+          type: string
+          nullable: true
+        completed:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateOfficeTaskBody:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+        status:
+          type: string
+        category:
+          type: string
+          nullable: true
+
+    UpdateOfficeTaskBody:
+      type: object
+      properties:
+        title:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        priority:
+          type: string
+        status:
+          type: string
+        category:
+          type: string
+          nullable: true
+        completed:
           type: boolean
 
     DashboardSummary:

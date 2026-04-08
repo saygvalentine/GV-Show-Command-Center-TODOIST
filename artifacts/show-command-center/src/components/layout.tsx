@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Moon, Sun, LayoutDashboard, Calendar, Search } from "lucide-react";
+import { Moon, Sun, LayoutDashboard, Search, CheckSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
             <Link href="/calendar" className={`transition-colors hover:text-foreground/80 ${location === "/calendar" ? "text-foreground" : "text-foreground/60"}`}>
               Calendar
+            </Link>
+            <Link href="/office-tasks" className={`flex items-center gap-1.5 transition-colors hover:text-foreground/80 ${location === "/office-tasks" ? "text-foreground" : "text-foreground/60"}`}>
+              <CheckSquare className="h-3.5 w-3.5" />
+              Office Tasks
             </Link>
           </nav>
 

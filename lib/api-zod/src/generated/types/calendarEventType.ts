@@ -13,4 +13,5 @@ export const CalendarEventType = {
   task: "task",
   eblast: "eblast",
   movein: "movein",
+  officetask: "officetask",
 } as const;

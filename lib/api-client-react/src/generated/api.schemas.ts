@@ -128,17 +128,52 @@ export const CalendarEventType = {
   task: "task",
   eblast: "eblast",
   movein: "movein",
+  officetask: "officetask",
 } as const;
 
 export interface CalendarEvent {
   id: number;
   type: CalendarEventType;
-  showId: number;
-  showName: string;
+  showId?: number | null;
+  showName?: string | null;
   name: string;
   date: string;
   category?: string | null;
   done?: boolean;
+  priority?: string | null;
+  officeTaskId?: number | null;
+}
+
+export interface OfficeTask {
+  id: number;
+  title: string;
+  notes?: string | null;
+  dueDate?: string | null;
+  priority: string;
+  status: string;
+  category?: string | null;
+  completed: boolean;
+  completedAt?: string | null;
+  createdAt: string;
+}
+
+export interface CreateOfficeTaskBody {
+  title: string;
+  notes?: string | null;
+  dueDate?: string | null;
+  priority?: string;
+  status?: string;
+  category?: string | null;
+}
+
+export interface UpdateOfficeTaskBody {
+  title?: string;
+  notes?: string | null;
+  dueDate?: string | null;
+  priority?: string;
+  status?: string;
+  category?: string | null;
+  completed?: boolean;
 }
 
 export interface DashboardSummary {
@@ -155,6 +190,12 @@ export type BulkCreateTasksBody = {
 
 export type BulkCreateEblastsBody = {
   eblasts: CreateEblastBody[];
+};
+
+export type ListOfficeTasksParams = {
+  status?: string;
+  priority?: string;
+  category?: string;
 };
 
 export type GetCalendarEventsParams = {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, showsTable, tasksTable, eblastsTable } from "@workspace/db";
+import { db, showsTable, tasksTable, eblastsTable, officeTasksTable } from "@workspace/db";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { GetCalendarEventsQueryParams } from "@workspace/api-zod";
 
@@ -27,13 +27,15 @@ router.get("/", async (req, res): Promise<void> => {
   const shows = await db.select().from(showsTable);
   const events: {
     id: number;
-    type: "task" | "eblast" | "movein";
-    showId: number;
-    showName: string;
+    type: "task" | "eblast" | "movein" | "officetask";
+    showId: number | null;
+    showName: string | null;
     name: string;
     date: string;
     category: string | null;
     done: boolean;
+    priority?: string | null;
+    officeTaskId?: number | null;
   }[] = [];
 
   for (const show of shows) {
@@ -102,6 +104,35 @@ router.get("/", async (req, res): Promise<void> => {
         date: eblast.dueDate,
         category: null,
         done: eblast.sent,
+      });
+    }
+  }
+
+  // Office tasks (only if no show filter)
+  if (!showId) {
+    const officeTasks = await db
+      .select()
+      .from(officeTasksTable)
+      .where(
+        and(
+          gte(officeTasksTable.dueDate, startDate),
+          lte(officeTasksTable.dueDate, endDate)
+        )
+      );
+
+    for (const ot of officeTasks) {
+      if (!ot.dueDate) continue;
+      events.push({
+        id: ot.id + 2000000,
+        type: "officetask",
+        showId: null,
+        showName: null,
+        name: ot.title,
+        date: ot.dueDate,
+        category: ot.category,
+        done: ot.completed,
+        priority: ot.priority,
+        officeTaskId: ot.id,
       });
     }
   }

@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
 import Calendar from "@/pages/calendar";
 import ShowDetail from "@/pages/show-detail";
+import OfficeTasks from "@/pages/office-tasks";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -16,6 +17,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/calendar" component={Calendar} />
+      <Route path="/office-tasks" component={OfficeTasks} />
       <Route path="/shows/:id" component={ShowDetail} />
       <Route component={NotFound} />
     </Switch>

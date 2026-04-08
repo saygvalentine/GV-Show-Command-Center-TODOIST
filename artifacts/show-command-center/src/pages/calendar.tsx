@@ -1,27 +1,33 @@
 import { useState, useMemo } from "react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, startOfDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Loader2, Download } from "lucide-react";
-import { useGetCalendarEvents, useListShows } from "@workspace/api-client-react";
+import { ChevronLeft, ChevronRight, Loader2, Download, CheckCircle2, Circle } from "lucide-react";
+import { useGetCalendarEvents, useListShows, useUpdateOfficeTask, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(startOfDay(new Date()));
   const [selectedShowId, setSelectedShowId] = useState<string>("all");
   const [selectedDay, setSelectedDay] = useState<Date | null>(startOfDay(new Date()));
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const month = currentDate.getMonth() + 1;
   const year = currentDate.getFullYear();
 
   const { data: shows } = useListShows();
-  const { data: events, isLoading } = useGetCalendarEvents(
+  const { data: events, isLoading, refetch: refetchCalendar } = useGetCalendarEvents(
     { month, year, showId: selectedShowId !== "all" ? Number(selectedShowId) : undefined },
     { query: { queryKey: ["calendar-events", month, year, selectedShowId] } }
   );
+
+  const updateOfficeTask = useUpdateOfficeTask();
 
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
@@ -36,6 +42,19 @@ export default function Calendar() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const handleToggleOfficeTask = (officeTaskId: number, currentDone: boolean) => {
+    updateOfficeTask.mutate(
+      { taskId: officeTaskId, data: { completed: !currentDone } },
+      {
+        onSuccess: () => {
+          refetchCalendar();
+          queryClient.invalidateQueries({ queryKey: getListOfficeTasksQueryKey() });
+        },
+        onError: () => toast({ title: "Failed to update task", variant: "destructive" }),
+      }
+    );
   };
 
   const daysInMonth = eachDayOfInterval({
@@ -66,7 +85,18 @@ export default function Calendar() {
       case "movein": return "bg-primary/20 text-primary border-primary/30";
       case "eblast": return "bg-pink-500/20 text-pink-500 border-pink-500/30";
       case "task": return "bg-blue-500/20 text-blue-500 border-blue-500/30";
+      case "officetask": return "bg-purple-500/20 text-purple-500 border-purple-500/30";
       default: return "bg-gray-500/20 text-gray-500 border-gray-500/30";
+    }
+  };
+
+  const getEventTypeLabel = (type: string) => {
+    switch (type) {
+      case "movein": return "Move-In";
+      case "eblast": return "E-Blast";
+      case "task": return "Task";
+      case "officetask": return "Office";
+      default: return type;
     }
   };
 
@@ -188,10 +218,10 @@ export default function Calendar() {
                 selectedDayEvents.map(e => (
                   <div key={e.id} className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div className="flex items-start justify-between gap-2">
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant="outline" className={`uppercase text-[10px] px-1.5 py-0 ${getEventColor(e.type, e.done)}`}>
-                            {e.type}
+                            {getEventTypeLabel(e.type)}
                           </Badge>
                           {e.category && (
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0">
@@ -202,10 +232,31 @@ export default function Calendar() {
                         <h4 className={`text-sm font-medium ${e.done ? 'line-through text-muted-foreground' : ''}`}>
                           {e.name}
                         </h4>
-                        <Link href={`/shows/${e.showId}`} className="text-xs text-primary hover:underline mt-1 block">
-                          {e.showName}
-                        </Link>
+                        {e.type !== "officetask" && e.showName && (
+                          <Link href={`/shows/${e.showId}`} className="text-xs text-primary hover:underline mt-1 block">
+                            {e.showName}
+                          </Link>
+                        )}
+                        {e.type === "officetask" && (
+                          <Link href="/office-tasks" className="text-xs text-purple-500 hover:underline mt-1 block">
+                            Office Task
+                          </Link>
+                        )}
                       </div>
+                      {e.type === "officetask" && e.officeTaskId != null && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={() => handleToggleOfficeTask(e.officeTaskId!, !!e.done)}
+                          disabled={updateOfficeTask.isPending}
+                        >
+                          {e.done
+                            ? <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            : <Circle className="h-4 w-4 text-muted-foreground" />
+                          }
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))

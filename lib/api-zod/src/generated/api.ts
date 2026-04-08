@@ -404,6 +404,78 @@ export const DeleteLinkParams = zod.object({
 });
 
 /**
+ * @summary List all office tasks with optional filters
+ */
+export const ListOfficeTasksQueryParams = zod.object({
+  status: zod.coerce.string().optional(),
+  priority: zod.coerce.string().optional(),
+  category: zod.coerce.string().optional(),
+});
+
+export const ListOfficeTasksResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  notes: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
+  priority: zod.string(),
+  status: zod.string(),
+  category: zod.string().nullish(),
+  completed: zod.boolean(),
+  completedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListOfficeTasksResponse = zod.array(ListOfficeTasksResponseItem);
+
+/**
+ * @summary Create a new office task
+ */
+export const CreateOfficeTaskBody = zod.object({
+  title: zod.string(),
+  notes: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
+  priority: zod.string().optional(),
+  status: zod.string().optional(),
+  category: zod.string().nullish(),
+});
+
+/**
+ * @summary Update an office task
+ */
+export const UpdateOfficeTaskParams = zod.object({
+  taskId: zod.coerce.number(),
+});
+
+export const UpdateOfficeTaskBody = zod.object({
+  title: zod.string().optional(),
+  notes: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
+  priority: zod.string().optional(),
+  status: zod.string().optional(),
+  category: zod.string().nullish(),
+  completed: zod.boolean().optional(),
+});
+
+export const UpdateOfficeTaskResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  notes: zod.string().nullish(),
+  dueDate: zod.coerce.date().nullish(),
+  priority: zod.string(),
+  status: zod.string(),
+  category: zod.string().nullish(),
+  completed: zod.boolean(),
+  completedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete an office task
+ */
+export const DeleteOfficeTaskParams = zod.object({
+  taskId: zod.coerce.number(),
+});
+
+/**
  * @summary Get all tasks and e-blasts for calendar view
  */
 export const GetCalendarEventsQueryParams = zod.object({
@@ -414,13 +486,15 @@ export const GetCalendarEventsQueryParams = zod.object({
 
 export const GetCalendarEventsResponseItem = zod.object({
   id: zod.number(),
-  type: zod.enum(["task", "eblast", "movein"]),
-  showId: zod.number(),
-  showName: zod.string(),
+  type: zod.enum(["task", "eblast", "movein", "officetask"]),
+  showId: zod.number().nullish(),
+  showName: zod.string().nullish(),
   name: zod.string(),
   date: zod.coerce.date(),
   category: zod.string().nullish(),
   done: zod.boolean().optional(),
+  priority: zod.string().nullish(),
+  officeTaskId: zod.number().nullish(),
 });
 export const GetCalendarEventsResponse = zod.array(
   GetCalendarEventsResponseItem,

@@ -10,10 +10,12 @@ import type { CalendarEventType } from "./calendarEventType";
 export interface CalendarEvent {
   id: number;
   type: CalendarEventType;
-  showId: number;
-  showName: string;
+  showId?: number | null;
+  showName?: string | null;
   name: string;
   date: Date;
   category?: string | null;
   done?: boolean;
+  priority?: string | null;
+  officeTaskId?: number | null;
 }

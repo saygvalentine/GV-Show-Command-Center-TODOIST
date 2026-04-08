@@ -7,6 +7,7 @@ import linksRouter from "./links";
 import calendarRouter from "./calendar";
 import dashboardRouter from "./dashboard";
 import exportRouter from "./export";
+import officeTasksRouter from "./officeTasks";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use("/shows/:showId/links", linksRouter);
 router.use("/calendar", calendarRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/export", exportRouter);
+router.use("/office-tasks", officeTasksRouter);
 
 export default router;

@@ -6,6 +6,7 @@ import eblastsRouter from "./eblasts";
 import linksRouter from "./links";
 import calendarRouter from "./calendar";
 import dashboardRouter from "./dashboard";
+import exportRouter from "./export";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use("/shows/:showId/eblasts", eblastsRouter);
 router.use("/shows/:showId/links", linksRouter);
 router.use("/calendar", calendarRouter);
 router.use("/dashboard", dashboardRouter);
+router.use("/export", exportRouter);
 
 export default router;

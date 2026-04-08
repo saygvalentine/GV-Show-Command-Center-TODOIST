@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, startOfDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Download } from "lucide-react";
 import { useGetCalendarEvents, useListShows } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,18 @@ export default function Calendar() {
 
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+
+  const handleExport = () => {
+    const params = new URLSearchParams();
+    if (selectedShowId !== "all") params.set("showId", selectedShowId);
+    const url = `/api/export/ics${params.toString() ? `?${params}` : ""}`;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
 
   const daysInMonth = eachDayOfInterval({
     start: startOfMonth(currentDate),
@@ -78,17 +90,23 @@ export default function Calendar() {
             </div>
           </div>
 
-          <Select value={selectedShowId} onValueChange={setSelectedShowId}>
-            <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Filter by Show" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Shows</SelectItem>
-              {shows?.map(s => (
-                <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={selectedShowId} onValueChange={setSelectedShowId}>
+              <SelectTrigger className="w-[250px]">
+                <SelectValue placeholder="Filter by Show" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Shows</SelectItem>
+                {shows?.map(s => (
+                  <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={handleExport} title={selectedShowId === "all" ? "Export all shows to calendar" : "Export selected show to calendar"}>
+              <Download className="h-4 w-4 mr-2" />
+              Export .ics
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6 items-start">

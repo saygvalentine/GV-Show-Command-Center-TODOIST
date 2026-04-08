@@ -65,17 +65,37 @@ export function ShowCard({ show }: ShowCardProps) {
           {/* Status Chips */}
           <div className="flex flex-wrap gap-2">
             {(show.fireMarshalStatus || show.fireMarshalDate) && (
-              <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                FM: {show.fireMarshalStatus || formatDate(show.fireMarshalDate)}
-              </Badge>
+              show.fireMarshalStatus === "Submitted" ? (
+                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                  FM: Submitted
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 flex items-center gap-1.5">
+                  <div className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                  </div>
+                  FM: {show.fireMarshalStatus || formatDate(show.fireMarshalDate)}
+                </Badge>
+              )
             )}
             {show.idSignStatus && (
-              <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-                ID Sign: {show.idSignStatus}
-              </Badge>
+              show.idSignStatus === "Ordered" ? (
+                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                  ID Sign: Ordered
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 flex items-center gap-1.5">
+                  <div className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                  </div>
+                  ID Sign: {show.idSignStatus}
+                </Badge>
+              )
             )}
             {show.exhibitorKitSent && show.exhibitorKitDate && (
-              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+              <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20">
                 XBR Kit Sent: {formatDate(show.exhibitorKitDate)}
               </Badge>
             )}

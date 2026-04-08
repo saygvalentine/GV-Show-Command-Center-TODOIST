@@ -1,5 +1,15 @@
 import { addDays, subDays, isWeekend, format, differenceInDays, isBefore, startOfDay } from "date-fns";
 
+/**
+ * Parses a "YYYY-MM-DD" date string as local midnight.
+ * Using new Date("YYYY-MM-DD") would parse as UTC midnight, which shifts
+ * the date back one day in negative-offset (e.g. US) timezones.
+ */
+export function parseDateStr(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export function addBusinessDays(date: Date, amount: number): Date {
   let currentDate = date;
   let addedDays = 0;
@@ -23,13 +33,14 @@ export function subBusinessDays(date: Date, amount: number): Date {
 
 export function formatDate(dateStr?: string | null): string {
   if (!dateStr) return "-";
-  return format(new Date(dateStr), "MMM d, yyyy");
+  const d = dateStr.includes("T") ? new Date(dateStr) : parseDateStr(dateStr);
+  return format(d, "MMM d, yyyy");
 }
 
 export function getUrgencyInfo(targetDateStr?: string | null) {
   if (!targetDateStr) return { color: "default", label: "NO DATE", daysRemaining: null };
   
-  const target = startOfDay(new Date(targetDateStr));
+  const target = startOfDay(targetDateStr.includes("T") ? new Date(targetDateStr) : parseDateStr(targetDateStr));
   const today = startOfDay(new Date());
   
   const diff = differenceInDays(target, today);

@@ -60,7 +60,7 @@ function computeShowStats(
   const oldestEblast = sentEblasts[sentEblasts.length - 1];
 
   // Fire Marshal status
-  const fireMarshalTasks = tasks.filter((t) => t.category === "Fire Marshal / Floor Plan");
+  const fireMarshalTasks = tasks.filter((t) => t.category === "Fire Marshal");
   let fireMarshalStatus: string | null = null;
   let fireMarshalDate: string | null = null;
   if (fireMarshalTasks.length > 0) {
@@ -77,7 +77,7 @@ function computeShowStats(
   }
 
   // ID Sign status
-  const idSignTasks = tasks.filter((t) => t.category === "ID Sign Production");
+  const idSignTasks = tasks.filter((t) => t.category === "ID Sign");
   let idSignStatus: string | null = null;
   if (idSignTasks.length > 0) {
     const allDone = idSignTasks.every((t) => t.completed);

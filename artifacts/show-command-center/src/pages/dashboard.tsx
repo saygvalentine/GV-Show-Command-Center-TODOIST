@@ -20,7 +20,7 @@ import {
 import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatDate } from "@/lib/date-utils";
+import { formatDate, parseDateStr } from "@/lib/date-utils";
 
 type SortOption = "date-asc" | "date-desc" | "name" | "overdue";
 
@@ -35,14 +35,14 @@ export default function Dashboard() {
   const activeShows = useMemo(() => {
     if (!shows) return [];
     return shows.filter(s => {
-      const moveIn = startOfDay(new Date(s.moveInDate));
+      const moveIn = startOfDay(parseDateStr(s.moveInDate));
       return differenceInDays(moveIn, today) >= 0;
     }).sort((a, b) => {
       if (sortBy === "date-asc") {
-        return new Date(a.moveInDate).getTime() - new Date(b.moveInDate).getTime();
+        return parseDateStr(a.moveInDate).getTime() - parseDateStr(b.moveInDate).getTime();
       }
       if (sortBy === "date-desc") {
-        return new Date(b.moveInDate).getTime() - new Date(a.moveInDate).getTime();
+        return parseDateStr(b.moveInDate).getTime() - parseDateStr(a.moveInDate).getTime();
       }
       if (sortBy === "name") {
         return a.name.localeCompare(b.name);
@@ -57,9 +57,9 @@ export default function Dashboard() {
   const archivedShows = useMemo(() => {
     if (!shows) return [];
     return shows.filter(s => {
-      const moveIn = startOfDay(new Date(s.moveInDate));
+      const moveIn = startOfDay(parseDateStr(s.moveInDate));
       return differenceInDays(moveIn, today) < 0;
-    }).sort((a, b) => new Date(b.moveInDate).getTime() - new Date(a.moveInDate).getTime());
+    }).sort((a, b) => parseDateStr(b.moveInDate).getTime() - parseDateStr(a.moveInDate).getTime());
   }, [shows, today]);
 
   return (
@@ -87,7 +87,7 @@ export default function Dashboard() {
             
             <div className="text-center bg-background rounded-lg p-4 shadow-sm border min-w-[200px]">
               <div className="text-5xl font-black text-primary">
-                {Math.abs(differenceInDays(startOfDay(new Date(summary.nextUpShow.moveInDate)), today))}
+                {Math.abs(differenceInDays(startOfDay(parseDateStr(summary.nextUpShow.moveInDate)), today))}
               </div>
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">
                 Days Until Move-in

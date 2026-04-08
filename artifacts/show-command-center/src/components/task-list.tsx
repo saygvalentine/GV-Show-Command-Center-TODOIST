@@ -43,7 +43,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { getUrgencyInfo, getCategoryColor, formatDate, subBusinessDays, addBusinessDays } from "@/lib/date-utils";
+import { getUrgencyInfo, getCategoryColor, formatDate, parseDateStr, subBusinessDays, addBusinessDays } from "@/lib/date-utils";
 import { useToast } from "@/hooks/use-toast";
 
 const PRESET_CATEGORIES = [
@@ -79,7 +79,7 @@ export function TaskList({ show }: { show: Show }) {
       }
       
       if (t.dueDate) {
-        const dueDate = startOfDay(new Date(t.dueDate));
+        const dueDate = startOfDay(parseDateStr(t.dueDate));
         if (differenceInDays(dueDate, today) < 0) {
           overdue.push(t);
         } else {
@@ -93,13 +93,13 @@ export function TaskList({ show }: { show: Show }) {
     upcoming.sort((a, b) => {
       if (!a.dueDate) return 1;
       if (!b.dueDate) return -1;
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      return parseDateStr(a.dueDate).getTime() - parseDateStr(b.dueDate).getTime();
     });
 
     overdue.sort((a, b) => {
       if (!a.dueDate) return 1;
       if (!b.dueDate) return -1;
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      return parseDateStr(a.dueDate).getTime() - parseDateStr(b.dueDate).getTime();
     });
     
     completed.sort((a, b) => {
@@ -120,7 +120,8 @@ export function TaskList({ show }: { show: Show }) {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(show.id) });
         queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });
-      }
+      },
+      onError: () => toast({ title: "Failed to update task", variant: "destructive" }),
     });
   };
 
@@ -129,7 +130,8 @@ export function TaskList({ show }: { show: Show }) {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(show.id) });
         queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });
-      }
+      },
+      onError: () => toast({ title: "Failed to delete task", variant: "destructive" }),
     });
   };
 

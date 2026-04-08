@@ -49,7 +49,7 @@ router.get("/summary", async (req, res): Promise<void> => {
     const lastEblast = sentEblasts[0];
     const oldestEblast = sentEblasts[sentEblasts.length - 1];
 
-    const fireMarshalTasks = tasks.filter((t) => t.category === "Fire Marshal / Floor Plan");
+    const fireMarshalTasks = tasks.filter((t) => t.category === "Fire Marshal");
     let fireMarshalStatus = null;
     let fireMarshalDate = null;
     if (fireMarshalTasks.length > 0) {
@@ -63,7 +63,7 @@ router.get("/summary", async (req, res): Promise<void> => {
       }
     }
 
-    const idSignTasks = tasks.filter((t) => t.category === "ID Sign Production");
+    const idSignTasks = tasks.filter((t) => t.category === "ID Sign");
     let idSignStatus = null;
     if (idSignTasks.length > 0) {
       idSignStatus = idSignTasks.every((t) => t.completed) ? "Ordered" : "In Progress";

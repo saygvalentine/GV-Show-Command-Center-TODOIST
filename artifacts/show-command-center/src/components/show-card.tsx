@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Show } from "@workspace/api-client-react";
-import { getUrgencyInfo, formatDate } from "@/lib/date-utils";
+import { getUrgencyInfo, formatDate, parseDateStr } from "@/lib/date-utils";
 import { UrgencyBadge } from "./urgency-badge";
 
 interface ShowCardProps {
@@ -18,7 +18,7 @@ export function ShowCard({ show }: ShowCardProps) {
   const completedItems = (show.completedTaskCount || 0) + (show.sentEblastCount || 0);
   const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
   
-  const moveInDate = startOfDay(new Date(show.moveInDate));
+  const moveInDate = startOfDay(parseDateStr(show.moveInDate));
   const today = startOfDay(new Date());
   const daysUntil = differenceInDays(moveInDate, today);
   

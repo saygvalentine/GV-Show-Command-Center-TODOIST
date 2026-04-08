@@ -181,7 +181,7 @@ export default function Calendar() {
                         
                         <div className="mt-1 space-y-1">
                           {dayEvents.slice(0, 3).map(e => (
-                            <div key={e.id} className={`text-xs px-1.5 py-0.5 rounded truncate border ${getEventColor(e.type, e.done)}`} title={e.name}>
+                            <div key={`${e.type}-${e.id}`} className={`text-xs px-1.5 py-0.5 rounded truncate border ${getEventColor(e.type, e.done)}`} title={e.name}>
                               {e.name}
                             </div>
                           ))}
@@ -216,7 +216,7 @@ export default function Calendar() {
                 </div>
               ) : (
                 selectedDayEvents.map(e => (
-                  <div key={e.id} className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
+                  <div key={`${e.type}-${e.id}`} className="p-3 rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">

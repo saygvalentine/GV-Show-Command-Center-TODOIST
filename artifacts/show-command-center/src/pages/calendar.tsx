@@ -39,7 +39,7 @@ export default function Calendar() {
     if (!events) return {};
     const map: Record<string, typeof events> = {};
     events.forEach(e => {
-      const dateStr = format(new Date(e.date), "yyyy-MM-dd");
+      const dateStr = e.date;
       if (!map[dateStr]) map[dateStr] = [];
       map[dateStr].push(e);
     });

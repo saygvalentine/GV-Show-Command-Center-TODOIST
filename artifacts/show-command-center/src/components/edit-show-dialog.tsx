@@ -121,7 +121,7 @@ export function EditShowDialog({ show }: EditShowDialogProps) {
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Edit Show Details</DialogTitle>
         </DialogHeader>

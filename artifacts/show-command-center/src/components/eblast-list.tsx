@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { format, differenceInDays, startOfDay } from "date-fns";
+import { format, differenceInDays, startOfDay, subDays } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -304,7 +304,7 @@ function EblastRow({ item, showId, onToggle, onDelete }: { item: any, showId: nu
                 <Edit2 className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md border-pink-500/20">
+            <DialogContent className="max-w-md border-pink-500/20" aria-describedby={undefined}>
               <DialogHeader>
                 <DialogTitle className="text-pink-500 flex items-center gap-2">
                   <Mail className="h-4 w-4" /> Edit e-Blast
@@ -419,7 +419,7 @@ function AddEblastDialog({ show }: { show: Show }) {
 
   const presets = [
     { name: "Exhibitor Kit Sent", requires: true, date: "", rule: "" },
-    { name: "Discount Deadline eBlast #1", requires: show.discountDeadline, get date() { return format(subBusinessDays(new Date(show.discountDeadline!), 7), "yyyy-MM-dd"); }, rule: "7 cal days before Discount Deadline" },
+    { name: "Discount Deadline eBlast #1", requires: show.discountDeadline, get date() { return format(subDays(new Date(show.discountDeadline!), 7), "yyyy-MM-dd"); }, rule: "7 cal days before Discount Deadline" },
   ];
 
   const [selectedPresets, setSelectedPresets] = useState<number[]>([]);
@@ -451,7 +451,7 @@ function AddEblastDialog({ show }: { show: Show }) {
       <DialogTrigger asChild>
         <Button size="sm" className="bg-pink-600 hover:bg-pink-700 text-white"><Plus className="mr-2 h-4 w-4" /> Add e-Blast</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl border-pink-500/30">
+      <DialogContent className="max-w-2xl border-pink-500/30" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="text-pink-500 flex items-center gap-2"><Mail className="h-5 w-5"/> Add e-Blasts</DialogTitle>
         </DialogHeader>

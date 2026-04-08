@@ -42,12 +42,13 @@ function computeShowStats(
 ) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split("T")[0];
 
   const overdueTasks = tasks.filter(
-    (t) => !t.completed && t.dueDate && new Date(t.dueDate) < today
+    (t) => !t.completed && t.dueDate && t.dueDate < todayStr
   );
   const overdueEblasts = eblasts.filter(
-    (e) => !e.sent && e.dueDate && new Date(e.dueDate) < today
+    (e) => !e.sent && e.dueDate && e.dueDate < todayStr
   );
 
   const sentEblasts = eblasts.filter((e) => e.sent).sort((a, b) => {

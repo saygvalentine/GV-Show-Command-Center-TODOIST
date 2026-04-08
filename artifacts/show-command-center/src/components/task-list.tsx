@@ -323,7 +323,7 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
                 <Edit2 className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md" aria-describedby={undefined}>
               <DialogHeader>
                 <DialogTitle>Edit Task</DialogTitle>
               </DialogHeader>
@@ -516,7 +516,7 @@ function AddTaskDialog({ show }: { show: Show }) {
       <DialogTrigger asChild>
         <Button size="sm"><Plus className="mr-2 h-4 w-4" /> Add Task</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Add Tasks</DialogTitle>
         </DialogHeader>

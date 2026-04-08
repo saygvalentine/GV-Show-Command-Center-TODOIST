@@ -83,7 +83,7 @@ export function LinkList({ showId }: { showId: number }) {
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="mr-2 h-4 w-4" /> Add Link</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Add Link</DialogTitle>
             </DialogHeader>
@@ -203,7 +203,7 @@ function LinkRow({ link, showId, onDelete }: { link: any, showId: number, onDele
               <Edit2 className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Edit Link</DialogTitle>
             </DialogHeader>

@@ -419,7 +419,7 @@ function AddEblastDialog({ show }: { show: Show }) {
 
   const presets = [
     { name: "Exhibitor Kit Sent", requires: true, date: "", rule: "" },
-    { name: "Discount Deadline eBlast #1", requires: show.discountDeadline, get date() { return format(subDays(new Date(show.discountDeadline!), 7), "yyyy-MM-dd"); }, rule: "7 cal days before Discount Deadline" },
+    { name: "Discount Deadline eBlast #1", requires: show.discountDeadline, get date() { return format(subDays(parseDateStr(show.discountDeadline!), 7), "yyyy-MM-dd"); }, rule: "7 cal days before Discount Deadline" },
   ];
 
   const [selectedPresets, setSelectedPresets] = useState<number[]>([]);

@@ -454,9 +454,9 @@ function AddTaskDialog({ show }: { show: Show }) {
   };
 
   // Preset tasks logic
-  const mi = new Date(show.moveInDate);
-  const aw = show.advanceWarehouseDate ? new Date(show.advanceWarehouseDate as string) : null;
-  const ood = show.onlineOrderDeadline ? new Date(show.onlineOrderDeadline as string) : null;
+  const mi = parseDateStr(show.moveInDate);
+  const aw = show.advanceWarehouseDate ? parseDateStr(show.advanceWarehouseDate as string) : null;
+  const ood = show.onlineOrderDeadline ? parseDateStr(show.onlineOrderDeadline as string) : null;
 
   const presets: { cat: string; name: string; requires: unknown; date: string; rule: string }[] = [
     // ── Fire Marshal / Floor Plan ──────────────────────────────────────

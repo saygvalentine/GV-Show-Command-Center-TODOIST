@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Calendar, MapPin, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { UrgencyBadge } from "@/components/urgency-badge";
-import { getUrgencyInfo, formatDate } from "@/lib/date-utils";
+import { getUrgencyInfo, formatDate, parseDateStr } from "@/lib/date-utils";
 import { TaskList } from "@/components/task-list";
 import { EblastList } from "@/components/eblast-list";
 import { LinkList } from "@/components/link-list";
@@ -66,7 +66,7 @@ export default function ShowDetail() {
   const totalItems = (show.taskCount || 0) + (show.eblastCount || 0);
   const completedItems = (show.completedTaskCount || 0) + (show.sentEblastCount || 0);
   const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
-  const daysUntil = differenceInDays(startOfDay(new Date(show.moveInDate)), startOfDay(new Date()));
+  const daysUntil = differenceInDays(startOfDay(parseDateStr(show.moveInDate)), startOfDay(new Date()));
 
   const handleDelete = () => {
     deleteShow.mutate({ showId }, {

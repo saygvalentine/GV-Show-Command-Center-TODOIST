@@ -42,6 +42,13 @@ async function runMigrations() {
   await db.execute(sql`
     ALTER TABLE shows ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}'
   `);
+  // Fix legacy category names stored in the database before the rename
+  await db.execute(sql`
+    UPDATE tasks SET category = 'Fire Marshal' WHERE category = 'Fire Marshal / Floor Plan'
+  `);
+  await db.execute(sql`
+    UPDATE tasks SET category = 'ID Sign' WHERE category = 'ID Sign Production'
+  `);
   logger.info("Migrations complete");
 }
 

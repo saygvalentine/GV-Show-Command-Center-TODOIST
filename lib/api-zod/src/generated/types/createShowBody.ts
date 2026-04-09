@@ -15,4 +15,5 @@ export interface CreateShowBody {
   onlineOrderDeadline?: Date | null;
   showStart?: Date | null;
   dismantleDate?: Date | null;
+  tags?: string[];
 }

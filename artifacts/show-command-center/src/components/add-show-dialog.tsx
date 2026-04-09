@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { Plus, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,9 +23,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useCreateShow, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { VenueSelect } from "@/components/venue-select";
+
+export const SHOW_TAGS = [
+  "FM",
+  "e-Blasts",
+  "ID Signs",
+  "Carpet Plan",
+  "Vehicle Spotting",
+  "Electrician Contact",
+  "Manifest Check",
+  "Bucket",
+] as const;
 
 const showSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -43,6 +54,7 @@ type ShowFormValues = z.infer<typeof showSchema>;
 
 export function AddShowDialog() {
   const [open, setOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -63,12 +75,19 @@ export function AddShowDialog() {
     },
   });
 
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
   const onSubmit = (data: ShowFormValues) => {
-    createShow.mutate({ data }, {
+    createShow.mutate({ data: { ...data, tags: selectedTags } as any }, {
       onSuccess: (newShow) => {
         toast({ title: "Show created successfully" });
         setOpen(false);
         form.reset();
+        setSelectedTags([]);
         
         queryClient.invalidateQueries({ queryKey: getListShowsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
@@ -86,14 +105,14 @@ export function AddShowDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { form.reset(); setSelectedTags([]); } }}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
           Add Show
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md" aria-describedby={undefined}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Add New Show</DialogTitle>
         </DialogHeader>
@@ -212,6 +231,21 @@ export function AddShowDialog() {
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div>
+              <p className="text-sm font-medium mb-2">Tags</p>
+              <div className="grid grid-cols-2 gap-2">
+                {SHOW_TAGS.map((tag) => (
+                  <label key={tag} className="flex items-center gap-2 cursor-pointer select-none">
+                    <Checkbox
+                      checked={selectedTags.includes(tag)}
+                      onCheckedChange={() => toggleTag(tag)}
+                    />
+                    <span className="text-sm">{tag}</span>
+                  </label>
+                ))}
+              </div>
             </div>
             
             <div className="pt-4 flex justify-end gap-2">

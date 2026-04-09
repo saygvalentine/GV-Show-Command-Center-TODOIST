@@ -9,9 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, MapPin, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Trash2, CheckCircle2, AlertCircle, Tag } from "lucide-react";
 import { UrgencyBadge } from "@/components/urgency-badge";
 import { getUrgencyInfo, formatDate, parseDateStr } from "@/lib/date-utils";
+import { Badge } from "@/components/ui/badge";
 import { TaskList } from "@/components/task-list";
 import { EblastList } from "@/components/eblast-list";
 import { LinkList } from "@/components/link-list";
@@ -160,6 +161,17 @@ export default function ShowDetail() {
                     <div className="font-medium">{formatDate(show.showStart)} - {formatDate(show.dismantleDate)}</div>
                   </div>
                 </div>
+
+                {show.tags && show.tags.length > 0 && (
+                  <div className="pt-4 border-t flex flex-wrap gap-2 items-center">
+                    <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
+                    {show.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs font-semibold">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col items-end justify-between min-w-[200px] border-l pl-6">

@@ -27,6 +27,7 @@ export const ListShowsResponseItem = zod.object({
   onlineOrderDeadline: zod.coerce.date().nullish(),
   showStart: zod.coerce.date().nullish(),
   dismantleDate: zod.coerce.date().nullish(),
+  tags: zod.array(zod.string()).optional(),
   createdAt: zod.coerce.date(),
   taskCount: zod.number().optional(),
   completedTaskCount: zod.number().optional(),
@@ -55,6 +56,7 @@ export const CreateShowBody = zod.object({
   onlineOrderDeadline: zod.coerce.date().nullish(),
   showStart: zod.coerce.date().nullish(),
   dismantleDate: zod.coerce.date().nullish(),
+  tags: zod.array(zod.string()).optional(),
 });
 
 /**
@@ -75,6 +77,7 @@ export const GetShowResponse = zod
     onlineOrderDeadline: zod.coerce.date().nullish(),
     showStart: zod.coerce.date().nullish(),
     dismantleDate: zod.coerce.date().nullish(),
+    tags: zod.array(zod.string()).optional(),
     createdAt: zod.coerce.date(),
     taskCount: zod.number().optional(),
     completedTaskCount: zod.number().optional(),
@@ -152,6 +155,7 @@ export const UpdateShowBody = zod.object({
   onlineOrderDeadline: zod.coerce.date().nullish(),
   showStart: zod.coerce.date().nullish(),
   dismantleDate: zod.coerce.date().nullish(),
+  tags: zod.array(zod.string()).optional(),
 });
 
 export const UpdateShowResponse = zod.object({
@@ -164,6 +168,7 @@ export const UpdateShowResponse = zod.object({
   onlineOrderDeadline: zod.coerce.date().nullish(),
   showStart: zod.coerce.date().nullish(),
   dismantleDate: zod.coerce.date().nullish(),
+  tags: zod.array(zod.string()).optional(),
   createdAt: zod.coerce.date(),
   taskCount: zod.number().optional(),
   completedTaskCount: zod.number().optional(),

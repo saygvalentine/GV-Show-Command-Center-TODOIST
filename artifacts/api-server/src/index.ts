@@ -39,6 +39,9 @@ async function runMigrations() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+  await db.execute(sql`
+    ALTER TABLE shows ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}'
+  `);
   logger.info("Migrations complete");
 }
 

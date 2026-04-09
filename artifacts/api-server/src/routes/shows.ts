@@ -129,6 +129,7 @@ router.post("/", async (req, res): Promise<void> => {
     onlineOrderDeadline: toDateStr(parsed.data.onlineOrderDeadline),
     showStart: toDateStr(parsed.data.showStart),
     dismantleDate: toDateStr(parsed.data.dismantleDate),
+    tags: parsed.data.tags ?? [],
   };
 
   const [show] = await db.insert(showsTable).values(values).returning();
@@ -177,6 +178,7 @@ router.put("/:showId", async (req, res): Promise<void> => {
     onlineOrderDeadline: toDateStr(parsed.data.onlineOrderDeadline),
     showStart: toDateStr(parsed.data.showStart),
     dismantleDate: toDateStr(parsed.data.dismantleDate),
+    tags: parsed.data.tags ?? [],
   };
 
   const [show] = await db

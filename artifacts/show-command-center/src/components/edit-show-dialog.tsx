@@ -22,9 +22,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUpdateShow, getGetShowQueryKey, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { VenueSelect } from "@/components/venue-select";
+import { SHOW_TAGS } from "@/components/add-show-dialog";
 
 const showSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -49,12 +51,12 @@ interface Show {
   onlineOrderDeadline?: string | Date | null;
   showStart?: string | Date | null;
   dismantleDate?: string | Date | null;
+  tags?: string[];
 }
 
 function toInputDate(val: string | Date | null | undefined): string {
   if (!val) return "";
   if (val instanceof Date) return val.toISOString().split("T")[0];
-  // already a YYYY-MM-DD string
   return String(val).split("T")[0];
 }
 
@@ -64,6 +66,7 @@ interface EditShowDialogProps {
 
 export function EditShowDialog({ show }: EditShowDialogProps) {
   const [open, setOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>(show.tags ?? []);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const updateShow = useUpdateShow();
@@ -82,7 +85,6 @@ export function EditShowDialog({ show }: EditShowDialogProps) {
     },
   });
 
-  // Reset form values when show data changes
   useEffect(() => {
     form.reset({
       name: show.name,
@@ -94,10 +96,17 @@ export function EditShowDialog({ show }: EditShowDialogProps) {
       showStart: toInputDate(show.showStart),
       dismantleDate: toInputDate(show.dismantleDate),
     });
+    setSelectedTags(show.tags ?? []);
   }, [show]);
 
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
   const onSubmit = (data: ShowFormValues) => {
-    updateShow.mutate({ showId: show.id, data }, {
+    updateShow.mutate({ showId: show.id, data: { ...data, tags: selectedTags } as any }, {
       onSuccess: () => {
         toast({ title: "Show updated successfully" });
         setOpen(false);
@@ -241,6 +250,21 @@ export function EditShowDialog({ show }: EditShowDialogProps) {
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div>
+              <p className="text-sm font-medium mb-2">Tags</p>
+              <div className="grid grid-cols-2 gap-2">
+                {SHOW_TAGS.map((tag) => (
+                  <label key={tag} className="flex items-center gap-2 cursor-pointer select-none">
+                    <Checkbox
+                      checked={selectedTags.includes(tag)}
+                      onCheckedChange={() => toggleTag(tag)}
+                    />
+                    <span className="text-sm">{tag}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="pt-2 flex justify-end gap-2">

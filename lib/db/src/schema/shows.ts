@@ -1,4 +1,5 @@
 import { pgTable, text, serial, timestamp, date } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -12,6 +13,7 @@ export const showsTable = pgTable("shows", {
   onlineOrderDeadline: date("online_order_deadline"),
   showStart: date("show_start"),
   dismantleDate: date("dismantle_date"),
+  tags: text("tags").array().notNull().default(sql`'{}'`),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -200,24 +200,24 @@ export default function ShowDetail() {
         </Card>
 
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent mb-6">
+          <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-background mb-6 sticky top-14 z-40">
             <TabsTrigger 
               value="tasks" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 font-semibold text-base"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background px-6 py-3 font-semibold text-base"
             >
               Tasks
               {show.taskCount ? <span className="ml-2 bg-muted px-2 py-0.5 rounded-full text-xs">{show.taskCount}</span> : null}
             </TabsTrigger>
             <TabsTrigger 
               value="eblasts" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-pink-500 data-[state=active]:bg-transparent px-6 py-3 font-semibold text-base data-[state=active]:text-pink-500"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-pink-500 data-[state=active]:bg-background px-6 py-3 font-semibold text-base data-[state=active]:text-pink-500"
             >
               e-Blasts
               {show.eblastCount ? <span className="ml-2 bg-muted px-2 py-0.5 rounded-full text-xs">{show.eblastCount}</span> : null}
             </TabsTrigger>
             <TabsTrigger 
               value="links" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3 font-semibold text-base"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background px-6 py-3 font-semibold text-base"
             >
               Links
             </TabsTrigger>

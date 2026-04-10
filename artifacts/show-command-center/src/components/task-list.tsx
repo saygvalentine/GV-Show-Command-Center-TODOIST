@@ -538,7 +538,7 @@ function AddTaskDialog({ show }: { show: Show }) {
                   if (p.cat !== lastCat) {
                     lastCat = p.cat;
                     rows.push(
-                      <div key={`hdr-${p.cat}`} className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest sticky top-0 bg-background border-b ${getCategoryColor(p.cat)}`}>
+                      <div key={`hdr-${p.cat}`} className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest sticky top-0 !bg-background border-b ${getCategoryColor(p.cat)}`}>
                         {p.cat}
                       </div>
                     );

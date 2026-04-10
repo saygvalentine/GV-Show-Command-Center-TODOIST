@@ -534,12 +534,35 @@ function AddTaskDialog({ show }: { show: Show }) {
               {(() => {
                 const rows: React.ReactNode[] = [];
                 let lastCat = "";
+                const catIndices: Record<string, number[]> = {};
+                presets.forEach((p, idx) => {
+                  if (!catIndices[p.cat]) catIndices[p.cat] = [];
+                  if (p.requires) catIndices[p.cat].push(idx);
+                });
                 presets.forEach((p, idx) => {
                   if (p.cat !== lastCat) {
                     lastCat = p.cat;
+                    const catAvail = catIndices[p.cat] ?? [];
+                    const allSelected = catAvail.length > 0 && catAvail.every(i => selectedPresets.includes(i));
+                    const toggleCat = () => {
+                      if (allSelected) {
+                        setSelectedPresets(prev => prev.filter(i => !catAvail.includes(i)));
+                      } else {
+                        setSelectedPresets(prev => [...new Set([...prev, ...catAvail])]);
+                      }
+                    };
                     rows.push(
-                      <div key={`hdr-${p.cat}`} className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest sticky top-0 !bg-background border-b ${getCategoryColor(p.cat)}`}>
-                        {p.cat}
+                      <div key={`hdr-${p.cat}`} className={`flex items-center justify-between px-3 py-1.5 sticky top-0 !bg-background border-b ${getCategoryColor(p.cat)}`}>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{p.cat}</span>
+                        {catAvail.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={toggleCat}
+                            className="text-[10px] font-semibold underline underline-offset-2 hover:opacity-70 transition-opacity"
+                          >
+                            {allSelected ? "Remove all" : "Add all"}
+                          </button>
+                        )}
                       </div>
                     );
                   }

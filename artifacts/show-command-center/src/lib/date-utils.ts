@@ -38,7 +38,7 @@ export function formatDate(dateStr?: string | null): string {
 }
 
 export function getUrgencyInfo(targetDateStr?: string | null) {
-  if (!targetDateStr) return { color: "default", label: "NO DATE", daysRemaining: null };
+  if (!targetDateStr) return { color: "default", label: "NO DATE", daysRemaining: null, bgClass: "bg-gray-500", textClass: "text-gray-500" };
   
   const target = startOfDay(targetDateStr.includes("T") ? new Date(targetDateStr) : parseDateStr(targetDateStr));
   const today = startOfDay(new Date());

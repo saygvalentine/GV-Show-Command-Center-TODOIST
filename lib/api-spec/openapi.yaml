@@ -422,6 +422,36 @@ paths:
                 $ref: "#/components/schemas/Link"
 
   /shows/{showId}/links/{linkId}:
+    put:
+      operationId: updateLink
+      tags: [links]
+      summary: Update a link
+      parameters:
+        - name: showId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: linkId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLinkBody"
+      responses:
+        "200":
+          description: Updated link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Link"
+        "404":
+          description: Not found
     delete:
       operationId: deleteLink
       tags: [links]
@@ -860,6 +890,15 @@ components:
           format: date-time
 
     CreateLinkBody:
+      type: object
+      required: [title, url]
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+
+    UpdateLinkBody:
       type: object
       required: [title, url]
       properties:

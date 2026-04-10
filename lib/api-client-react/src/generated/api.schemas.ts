@@ -121,6 +121,11 @@ export interface CreateLinkBody {
   url: string;
 }
 
+export interface UpdateLinkBody {
+  title: string;
+  url: string;
+}
+
 export type CalendarEventType =
   (typeof CalendarEventType)[keyof typeof CalendarEventType];
 

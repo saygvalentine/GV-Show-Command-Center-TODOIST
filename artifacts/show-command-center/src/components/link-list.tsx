@@ -6,6 +6,7 @@ import {
   useListLinks, 
   useCreateLink, 
   useDeleteLink,
+  useUpdateLink,
   getListLinksQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -147,8 +148,7 @@ function LinkRow({ link, showId, onDelete }: { link: any, showId: number, onDele
   const [editOpen, setEditOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const createLink = useCreateLink();
-  const deleteLink = useDeleteLink();
+  const updateLink = useUpdateLink();
 
   const form = useForm<z.infer<typeof linkSchema>>({
     resolver: zodResolver(linkSchema),
@@ -160,23 +160,18 @@ function LinkRow({ link, showId, onDelete }: { link: any, showId: number, onDele
     setEditOpen(true);
   };
 
-  const onEditSubmit = async (data: z.infer<typeof linkSchema>) => {
-    deleteLink.mutate({ showId, linkId: link.id }, {
+  const onEditSubmit = (data: z.infer<typeof linkSchema>) => {
+    updateLink.mutate({ showId, linkId: link.id, data }, {
       onSuccess: () => {
-        createLink.mutate({ showId, data }, {
-          onSuccess: () => {
-            toast({ title: "Link updated" });
-            setEditOpen(false);
-            queryClient.invalidateQueries({ queryKey: getListLinksQueryKey(showId) });
-          },
-          onError: () => toast({ title: "Error saving link", variant: "destructive" }),
-        });
+        toast({ title: "Link updated" });
+        setEditOpen(false);
+        queryClient.invalidateQueries({ queryKey: getListLinksQueryKey(showId) });
       },
       onError: () => toast({ title: "Error updating link", variant: "destructive" }),
     });
   };
 
-  const isPending = deleteLink.isPending || createLink.isPending;
+  const isPending = updateLink.isPending;
 
   return (
     <div className="group flex items-center justify-between p-4 rounded-lg border bg-card hover:border-primary/50 transition-colors">

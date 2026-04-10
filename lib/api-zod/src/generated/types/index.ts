@@ -26,5 +26,6 @@ export * from "./show";
 export * from "./showWithItems";
 export * from "./task";
 export * from "./updateEblastBody";
+export * from "./updateLinkBody";
 export * from "./updateOfficeTaskBody";
 export * from "./updateTaskBody";

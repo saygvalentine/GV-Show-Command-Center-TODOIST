@@ -6,6 +6,8 @@ import {
   CreateLinkParams,
   DeleteLinkParams,
   ListLinksParams,
+  UpdateLinkBody,
+  UpdateLinkParams,
 } from "@workspace/api-zod";
 
 const router = Router({ mergeParams: true });
@@ -45,6 +47,41 @@ router.post("/", async (req, res): Promise<void> => {
     .returning();
 
   res.status(201).json(link);
+});
+
+router.put("/:linkId", async (req, res): Promise<void> => {
+  const params = UpdateLinkParams.safeParse({
+    showId: Number(req.params.showId),
+    linkId: Number(req.params.linkId),
+  });
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid params" });
+    return;
+  }
+
+  const parsed = UpdateLinkBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [link] = await db
+    .update(linksTable)
+    .set(parsed.data)
+    .where(
+      and(
+        eq(linksTable.id, params.data.linkId),
+        eq(linksTable.showId, params.data.showId)
+      )
+    )
+    .returning();
+
+  if (!link) {
+    res.status(404).json({ error: "Link not found" });
+    return;
+  }
+
+  res.json(link);
 });
 
 router.delete("/:linkId", async (req, res): Promise<void> => {

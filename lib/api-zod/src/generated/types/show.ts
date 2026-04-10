@@ -16,7 +16,6 @@ export interface Show {
   onlineOrderDeadline?: Date | null;
   showStart?: Date | null;
   dismantleDate?: Date | null;
-  tags?: string[];
   createdAt: Date;
   taskCount?: number;
   completedTaskCount?: number;

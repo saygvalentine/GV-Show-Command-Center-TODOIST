@@ -36,6 +36,7 @@ import type {
   ShowWithItems,
   Task,
   UpdateEblastBody,
+  UpdateLinkBody,
   UpdateOfficeTaskBody,
   UpdateTaskBody,
 } from "./api.schemas";
@@ -1559,6 +1560,94 @@ export const useCreateLink = <
   TContext
 > => {
   return useMutation(getCreateLinkMutationOptions(options));
+};
+
+/**
+ * @summary Update a link
+ */
+export const getUpdateLinkUrl = (showId: number, linkId: number) => {
+  return `/api/shows/${showId}/links/${linkId}`;
+};
+
+export const updateLink = async (
+  showId: number,
+  linkId: number,
+  updateLinkBody: UpdateLinkBody,
+  options?: RequestInit,
+): Promise<Link> => {
+  return customFetch<Link>(getUpdateLinkUrl(showId, linkId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateLinkBody),
+  });
+};
+
+export const getUpdateLinkMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateLink>>,
+    TError,
+    { showId: number; linkId: number; data: BodyType<UpdateLinkBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateLink>>,
+  TError,
+  { showId: number; linkId: number; data: BodyType<UpdateLinkBody> },
+  TContext
+> => {
+  const mutationKey = ["updateLink"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateLink>>,
+    { showId: number; linkId: number; data: BodyType<UpdateLinkBody> }
+  > = (props) => {
+    const { showId, linkId, data } = props ?? {};
+
+    return updateLink(showId, linkId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateLinkMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateLink>>
+>;
+export type UpdateLinkMutationBody = BodyType<UpdateLinkBody>;
+export type UpdateLinkMutationError = ErrorType<void>;
+
+/**
+ * @summary Update a link
+ */
+export const useUpdateLink = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateLink>>,
+    TError,
+    { showId: number; linkId: number; data: BodyType<UpdateLinkBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateLink>>,
+  TError,
+  { showId: number; linkId: number; data: BodyType<UpdateLinkBody> },
+  TContext
+> => {
+  return useMutation(getUpdateLinkMutationOptions(options));
 };
 
 /**

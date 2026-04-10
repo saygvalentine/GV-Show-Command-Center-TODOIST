@@ -32,6 +32,7 @@ export interface Show {
   fireMarshalStatus?: string | null;
   fireMarshalDate?: string | null;
   idSignStatus?: string | null;
+  tags?: string[];
 }
 
 export interface Task {
@@ -82,6 +83,7 @@ export interface CreateShowBody {
   onlineOrderDeadline?: string | null;
   showStart?: string | null;
   dismantleDate?: string | null;
+  tags?: string[];
 }
 
 export interface CreateTaskBody {

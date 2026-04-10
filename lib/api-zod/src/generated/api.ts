@@ -40,6 +40,7 @@ export const ListShowsResponseItem = zod.object({
   fireMarshalStatus: zod.string().nullish(),
   fireMarshalDate: zod.string().nullish(),
   idSignStatus: zod.string().nullish(),
+  tags: zod.array(zod.string()).optional(),
 });
 export const ListShowsResponse = zod.array(ListShowsResponseItem);
 
@@ -55,6 +56,7 @@ export const CreateShowBody = zod.object({
   onlineOrderDeadline: zod.coerce.date().nullish(),
   showStart: zod.coerce.date().nullish(),
   dismantleDate: zod.coerce.date().nullish(),
+  tags: zod.array(zod.string()).optional(),
 });
 
 /**
@@ -88,6 +90,7 @@ export const GetShowResponse = zod
     fireMarshalStatus: zod.string().nullish(),
     fireMarshalDate: zod.string().nullish(),
     idSignStatus: zod.string().nullish(),
+    tags: zod.array(zod.string()).optional(),
   })
   .and(
     zod.object({
@@ -152,6 +155,7 @@ export const UpdateShowBody = zod.object({
   onlineOrderDeadline: zod.coerce.date().nullish(),
   showStart: zod.coerce.date().nullish(),
   dismantleDate: zod.coerce.date().nullish(),
+  tags: zod.array(zod.string()).optional(),
 });
 
 export const UpdateShowResponse = zod.object({
@@ -177,6 +181,7 @@ export const UpdateShowResponse = zod.object({
   fireMarshalStatus: zod.string().nullish(),
   fireMarshalDate: zod.string().nullish(),
   idSignStatus: zod.string().nullish(),
+  tags: zod.array(zod.string()).optional(),
 });
 
 /**
@@ -553,6 +558,7 @@ export const GetDashboardSummaryResponse = zod.object({
       fireMarshalStatus: zod.string().nullish(),
       fireMarshalDate: zod.string().nullish(),
       idSignStatus: zod.string().nullish(),
+      tags: zod.array(zod.string()).optional(),
     })
     .nullish(),
 });

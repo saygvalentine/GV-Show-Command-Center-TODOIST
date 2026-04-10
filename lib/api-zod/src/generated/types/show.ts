@@ -29,4 +29,5 @@ export interface Show {
   fireMarshalStatus?: string | null;
   fireMarshalDate?: string | null;
   idSignStatus?: string | null;
+  tags?: string[];
 }

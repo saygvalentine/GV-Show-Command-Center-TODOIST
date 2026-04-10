@@ -52,7 +52,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit2, Trash2, Loader2, Calendar as CalendarIcon, Search, ArrowUpDown, StickyNote, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2, Calendar as CalendarIcon, Search, ArrowUpDown, StickyNote, X, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
@@ -113,6 +113,7 @@ export default function OfficeTasks() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortOption>("createdAt");
   const [createOpen, setCreateOpen] = useState(false);
+  const [completedOpen, setCompletedOpen] = useState(false);
 
   const { data: tasks, isLoading } = useListOfficeTasks();
   const createTask = useCreateOfficeTask();
@@ -385,18 +386,69 @@ export default function OfficeTasks() {
           <div className="text-center py-16 border-2 border-dashed rounded-xl text-muted-foreground">
             {tasks?.length === 0 ? "No office tasks yet. Create your first task!" : "No tasks match your filters."}
           </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredAndSorted.map(task => (
-              <OfficeTaskRow
-                key={task.id}
-                task={task}
-                onToggle={() => handleToggle(task)}
-                onDelete={() => handleDelete(task.id)}
-              />
-            ))}
-          </div>
-        )}
+        ) : (() => {
+          const activeTasks = filteredAndSorted.filter(t => !t.completed);
+          const completedTasks = filteredAndSorted.filter(t => t.completed);
+
+          // If no active tasks (e.g. filter set to "Completed"), show all flat
+          if (activeTasks.length === 0) {
+            return (
+              <div className="space-y-2">
+                {completedTasks.map(task => (
+                  <OfficeTaskRow
+                    key={task.id}
+                    task={task}
+                    onToggle={() => handleToggle(task)}
+                    onDelete={() => handleDelete(task.id)}
+                  />
+                ))}
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-2">
+              {activeTasks.map(task => (
+                <OfficeTaskRow
+                  key={task.id}
+                  task={task}
+                  onToggle={() => handleToggle(task)}
+                  onDelete={() => handleDelete(task.id)}
+                />
+              ))}
+
+              {completedTasks.length > 0 && (
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCompletedOpen(o => !o)}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full py-2 border-t"
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span className="font-medium">{completedTasks.length} Completed</span>
+                    {completedOpen
+                      ? <ChevronUp className="h-4 w-4 ml-auto" />
+                      : <ChevronDown className="h-4 w-4 ml-auto" />
+                    }
+                  </button>
+
+                  {completedOpen && (
+                    <div className="space-y-2 mt-2">
+                      {completedTasks.map(task => (
+                        <OfficeTaskRow
+                          key={task.id}
+                          task={task}
+                          onToggle={() => handleToggle(task)}
+                          onDelete={() => handleDelete(task.id)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
         </div>
 
         {/* Sticky Notes Sidebar */}

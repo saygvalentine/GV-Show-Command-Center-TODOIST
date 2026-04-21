@@ -462,21 +462,27 @@ function AddEblastDialog({ show }: { show: Show }) {
     else setSelectedPresets([...selectedPresets, idx]);
   };
 
-  const handleBulkAdd = () => {
-    const eblasts = selectedPresets.map(idx => {
+  const submitPresets = (indexes: number[]) => {
+    const eblasts = indexes.map(idx => {
       const p = presets[idx];
       return { name: p.name, dueDate: p.date || undefined, dueDateRule: p.rule || undefined };
     });
-    
     bulkCreate.mutate({ showId: show.id, data: { eblasts } }, {
       onSuccess: () => {
-        toast({ title: `${eblasts.length} e-Blasts added` });
+        toast({ title: `${eblasts.length} e-Blast${eblasts.length !== 1 ? "s" : ""} added` });
         setOpen(false);
         setSelectedPresets([]);
         queryClient.invalidateQueries({ queryKey: getListEblastsQueryKey(show.id) });
         queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(show.id) });
       }
     });
+  };
+
+  const handleBulkAdd = () => submitPresets(selectedPresets);
+
+  const handleAddAll = () => {
+    const available = presets.map((_, i) => i).filter(i => presets[i].requires);
+    submitPresets(available);
   };
 
   return (
@@ -511,11 +517,24 @@ function AddEblastDialog({ show }: { show: Show }) {
                 </div>
               ))}
             </div>
-            <div className="flex justify-end pt-2">
-              <Button onClick={handleBulkAdd} disabled={selectedPresets.length === 0 || bulkCreate.isPending} className="bg-pink-600 hover:bg-pink-700">
-                {bulkCreate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add {selectedPresets.length} e-Blasts
+            <div className="flex justify-between items-center pt-2">
+              <Button variant="outline" size="sm" onClick={() => {
+                const available = presets.map((_, i) => i).filter(i => presets[i].requires);
+                if (selectedPresets.length === available.length) setSelectedPresets([]);
+                else setSelectedPresets(available);
+              }}>
+                {selectedPresets.length === presets.filter(p => p.requires).length ? "Deselect All" : "Select All"}
               </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleAddAll} disabled={bulkCreate.isPending} className="border-pink-600 text-pink-500 hover:bg-pink-600 hover:text-white">
+                  {bulkCreate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Add All
+                </Button>
+                <Button onClick={handleBulkAdd} disabled={selectedPresets.length === 0 || bulkCreate.isPending} className="bg-pink-600 hover:bg-pink-700">
+                  {bulkCreate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Add {selectedPresets.length} e-Blasts
+                </Button>
+              </div>
             </div>
           </TabsContent>
           

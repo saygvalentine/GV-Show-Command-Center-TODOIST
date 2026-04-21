@@ -448,11 +448,11 @@ function AddEblastDialog({ show }: { show: Show }) {
 
   const presets = [
     { name: "Exhibitor Kit Sent", requires: true, date: "", rule: "" },
+    { name: "Bi-Weekly eBlast", requires: true, date: "", rule: "" },
     { name: "Discount Deadline eBlast #1", requires: show.discountDeadline, get date() { return format(subDays(parseDateStr(show.discountDeadline!), 7), "yyyy-MM-dd"); }, rule: "7 cal days before Discount Deadline" },
     { name: "Discount Deadline eBlast #2", requires: show.discountDeadline, get date() { return format(subDays(parseDateStr(show.discountDeadline!), 3), "yyyy-MM-dd"); }, rule: "3 cal days before Discount Deadline" },
     { name: "Online Order Deadline eBlast #1", requires: show.onlineOrderDeadline, get date() { return format(subDays(parseDateStr(show.onlineOrderDeadline!), 7), "yyyy-MM-dd"); }, rule: "7 cal days before Online Order Deadline" },
     { name: "Online Order Deadline eBlast #2", requires: show.onlineOrderDeadline, get date() { return format(subDays(parseDateStr(show.onlineOrderDeadline!), 3), "yyyy-MM-dd"); }, rule: "3 cal days before Online Order Deadline" },
-    { name: "Bi-Weekly eBlast", requires: true, date: "", rule: "" },
   ];
 
   const [selectedPresets, setSelectedPresets] = useState<number[]>([]);

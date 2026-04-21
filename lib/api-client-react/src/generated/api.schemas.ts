@@ -100,6 +100,7 @@ export interface UpdateTaskBody {
   dueDate?: string | null;
   dueDateRule?: string | null;
   completed?: boolean;
+  completedAt?: string | null;
   notes?: string | null;
 }
 
@@ -115,6 +116,7 @@ export interface UpdateEblastBody {
   dueDate?: string | null;
   dueDateRule?: string | null;
   sent?: boolean;
+  sentAt?: string | null;
   notes?: string | null;
 }
 

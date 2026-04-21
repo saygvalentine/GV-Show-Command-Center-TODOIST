@@ -24,6 +24,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -220,10 +225,26 @@ const editEblastSchema = z.object({
 function EblastRow({ item, showId, onToggle, onDelete }: { item: any, showId: number, onToggle: () => void, onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const urgency = getUrgencyInfo(item.dueDate);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const updateEblast = useUpdateEblast();
+
+  const onUpdateSentAt = (dateStr: string) => {
+    if (!dateStr) return;
+    updateEblast.mutate(
+      { showId, eblastId: item.id, data: { sentAt: new Date(dateStr).toISOString() } as any },
+      {
+        onSuccess: () => {
+          toast({ title: "Sent date updated" });
+          setDatePickerOpen(false);
+          queryClient.invalidateQueries({ queryKey: getListEblastsQueryKey(showId) });
+        },
+        onError: () => toast({ title: "Error updating date", variant: "destructive" }),
+      }
+    );
+  };
 
   const form = useForm<z.infer<typeof editEblastSchema>>({
     resolver: zodResolver(editEblastSchema),
@@ -283,10 +304,23 @@ function EblastRow({ item, showId, onToggle, onDelete }: { item: any, showId: nu
 
           <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs">
             {item.sent && item.sentAt ? (
-              <div className="flex items-center gap-1 font-medium text-pink-500">
-                <Mail className="h-3 w-3" />
-                Sent {format(new Date(item.sentAt), "MMM d, yyyy")}
-              </div>
+              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center gap-1 font-medium text-pink-500 hover:text-pink-400 hover:underline cursor-pointer">
+                    <Mail className="h-3 w-3" />
+                    Sent {format(new Date(item.sentAt), "MMM d, yyyy")}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3" align="start">
+                  <p className="text-xs text-muted-foreground mb-2">Adjust sent date</p>
+                  <input
+                    type="date"
+                    defaultValue={format(new Date(item.sentAt), "yyyy-MM-dd")}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                    onChange={(e) => onUpdateSentAt(e.target.value)}
+                  />
+                </PopoverContent>
+              </Popover>
             ) : item.dueDate ? (
               <div className={`flex items-center gap-1 font-medium ${urgency.textClass}`}>
                 <CalendarIcon className="h-3 w-3" />

@@ -11,5 +11,6 @@ export interface UpdateEblastBody {
   dueDate?: Date | null;
   dueDateRule?: string | null;
   sent?: boolean;
+  sentAt?: Date | null;
   notes?: string | null;
 }

@@ -260,6 +260,7 @@ export const UpdateTaskBody = zod.object({
   dueDate: zod.coerce.date().nullish(),
   dueDateRule: zod.string().nullish(),
   completed: zod.boolean().optional(),
+  completedAt: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
 });
 
@@ -349,6 +350,7 @@ export const UpdateEblastBody = zod.object({
   dueDate: zod.coerce.date().nullish(),
   dueDateRule: zod.string().nullish(),
   sent: zod.boolean().optional(),
+  sentAt: zod.coerce.date().nullish(),
   notes: zod.string().nullish(),
 });
 

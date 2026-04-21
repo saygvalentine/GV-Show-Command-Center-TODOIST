@@ -100,9 +100,11 @@ router.put("/:taskId", async (req, res): Promise<void> => {
   const updates: Record<string, unknown> = { ...parsed.data };
 
   if (parsed.data.completed === true) {
-    updates.completedAt = new Date();
+    updates.completedAt = parsed.data.completedAt ? new Date(parsed.data.completedAt) : new Date();
   } else if (parsed.data.completed === false) {
     updates.completedAt = null;
+  } else if (parsed.data.completedAt !== undefined) {
+    updates.completedAt = parsed.data.completedAt ? new Date(parsed.data.completedAt) : null;
   }
 
   const [task] = await db

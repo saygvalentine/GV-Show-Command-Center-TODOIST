@@ -12,5 +12,6 @@ export interface UpdateTaskBody {
   dueDate?: Date | null;
   dueDateRule?: string | null;
   completed?: boolean;
+  completedAt?: Date | null;
   notes?: string | null;
 }

@@ -24,6 +24,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -234,10 +239,26 @@ const editTaskSchema = z.object({
 function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: number, onToggle: () => void, onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const urgency = getUrgencyInfo(task.dueDate);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const updateTask = useUpdateTask();
+
+  const onUpdateCompletedAt = (dateStr: string) => {
+    if (!dateStr) return;
+    updateTask.mutate(
+      { showId, taskId: task.id, data: { completedAt: new Date(dateStr).toISOString() } as any },
+      {
+        onSuccess: () => {
+          toast({ title: "Completion date updated" });
+          setDatePickerOpen(false);
+          queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(showId) });
+        },
+        onError: () => toast({ title: "Error updating date", variant: "destructive" }),
+      }
+    );
+  };
 
   const form = useForm<z.infer<typeof editTaskSchema>>({
     resolver: zodResolver(editTaskSchema),
@@ -304,10 +325,23 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
 
           <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs">
             {task.completed && task.completedAt ? (
-              <div className="flex items-center gap-1 font-medium text-green-500">
-                <CheckCircle2 className="h-3 w-3" />
-                Done {format(new Date(task.completedAt), "MMM d, yyyy")}
-              </div>
+              <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                <PopoverTrigger asChild>
+                  <button className="flex items-center gap-1 font-medium text-green-500 hover:text-green-400 hover:underline cursor-pointer">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Done {format(new Date(task.completedAt), "MMM d, yyyy")}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3" align="start">
+                  <p className="text-xs text-muted-foreground mb-2">Adjust completion date</p>
+                  <input
+                    type="date"
+                    defaultValue={format(new Date(task.completedAt), "yyyy-MM-dd")}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                    onChange={(e) => onUpdateCompletedAt(e.target.value)}
+                  />
+                </PopoverContent>
+              </Popover>
             ) : task.dueDate ? (
               <div className={`flex items-center gap-1 font-medium ${urgency.textClass}`}>
                 <CalendarIcon className="h-3 w-3" />

@@ -812,6 +812,10 @@ components:
           nullable: true
         completed:
           type: boolean
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
         notes:
           type: string
           nullable: true
@@ -877,6 +881,10 @@ components:
           nullable: true
         sent:
           type: boolean
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
         notes:
           type: string
           nullable: true

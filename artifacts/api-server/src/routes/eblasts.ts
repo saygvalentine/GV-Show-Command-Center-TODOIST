@@ -99,9 +99,11 @@ router.put("/:eblastId", async (req, res): Promise<void> => {
   const updates: Record<string, unknown> = { ...parsed.data };
 
   if (parsed.data.sent === true) {
-    updates.sentAt = new Date();
+    updates.sentAt = parsed.data.sentAt ? new Date(parsed.data.sentAt) : new Date();
   } else if (parsed.data.sent === false) {
     updates.sentAt = null;
+  } else if (parsed.data.sentAt !== undefined) {
+    updates.sentAt = parsed.data.sentAt ? new Date(parsed.data.sentAt) : null;
   }
 
   const [eblast] = await db

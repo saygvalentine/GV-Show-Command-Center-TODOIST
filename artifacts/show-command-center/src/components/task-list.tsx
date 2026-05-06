@@ -505,7 +505,13 @@ function AddTaskDialog({ show }: { show: Show }) {
   });
 
   const onSubmitCustom = (data: z.infer<typeof customSchema>) => {
-    createCustomTask.mutate({ showId: show.id, data }, {
+    const cleaned = {
+      name: data.name,
+      ...(data.category ? { category: data.category } : {}),
+      ...(data.dueDate ? { dueDate: data.dueDate } : {}),
+      ...(data.notes ? { notes: data.notes } : {}),
+    };
+    createCustomTask.mutate({ showId: show.id, data: cleaned as any }, {
       onSuccess: () => {
         toast({ title: "Task added" });
         setOpen(false);

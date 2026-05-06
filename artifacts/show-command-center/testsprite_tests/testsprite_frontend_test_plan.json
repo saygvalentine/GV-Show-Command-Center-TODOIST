@@ -1,0 +1,1415 @@
+[
+  {
+    "id": "TC001",
+    "title": "See Next Up countdown and active show list on dashboard",
+    "description": "Verifies the dashboard loads with a visible Next Up countdown and a rendered list of active shows.",
+    "category": "Dashboard / Show List",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a Next Up countdown banner is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a list of active shows is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "View show metadata and overall progress from a show detail page",
+    "description": "Verifies a user can open a show and see its metadata card (dates/venue/tags/urgency) and overall progress.",
+    "category": "Show Detail / Command Center",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card in the active shows list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the show metadata card is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the overall progress indicator is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Open a show from dashboard to view its command center",
+    "description": "Verifies clicking a show card navigates to the show detail page where metadata and progress are displayed.",
+    "category": "Dashboard / Show List",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card in the active shows list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify show metadata is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an overall progress indicator is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Create a new show with required fields and service tags",
+    "description": "Verifies creating a show with a name, move-in date, and at least one service tag navigates to the new show detail page.",
+    "category": "Add New Show",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to add a new show"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Spring Expo Automation\" into the show name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid move-in date into the move-in date field"
+      },
+      {
+        "type": "action",
+        "description": "Select one or more service tag checkboxes"
+      },
+      {
+        "type": "action",
+        "description": "Submit the create show form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify show metadata is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new show name \"Spring Expo Automation\" is visible on the show detail page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Sort shows by overdue to prioritize urgent work",
+    "description": "Verifies selecting the overdue sort option reorders the show list to reflect urgency.",
+    "category": "Dashboard / Show List",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Select the overdue sort order from the sort dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the show list order updates according to the selected sort"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "View show tasks list",
+    "description": "User can open a show and view the Tasks tab with a visible list of tasks including completion status and due dates.",
+    "category": "Tasks Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Tasks tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a list of tasks is displayed with completion indicators and due dates"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "View show e-blasts list",
+    "description": "User can open a show and view the E-Blasts tab with a visible list of scheduled e-blasts including sent status and dates.",
+    "category": "E-Blasts Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the E-Blasts tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a list of e-blasts is displayed with sent indicators and scheduled dates"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Edit show metadata and see updates reflected",
+    "description": "Verifies editing show details updates the metadata shown on the command center after saving.",
+    "category": "Show Detail / Command Center",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to add a new show"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Edit Metadata Show\" into the show name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid move-in date into the move-in date field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the create show form"
+      },
+      {
+        "type": "action",
+        "description": "Open the edit show dialog from the show detail page"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Edited Metadata Show\" into the show name field"
+      },
+      {
+        "type": "action",
+        "description": "Save the show changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated show name \"Edited Metadata Show\" is visible on the show detail page"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Create a custom task for a show",
+    "description": "User can add a custom task with a title and optional due date and see it appear in the show task list.",
+    "category": "Tasks Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Tasks tab"
+      },
+      {
+        "type": "action",
+        "description": "Click Add Task to create a custom task"
+      },
+      {
+        "type": "action",
+        "description": "Fill Sample custom task into the task title field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid due date in the due date field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new task"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a task titled Sample custom task appears in the task list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Create an office task with full details",
+    "description": "Verifies the user can create a new office task with details and it appears in the active task list.",
+    "category": "Office Tasks",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Open the create office task dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill Office Task 1 into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Select a priority value"
+      },
+      {
+        "type": "action",
+        "description": "Select a status value"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid due date into the due date field"
+      },
+      {
+        "type": "action",
+        "description": "Select a category value"
+      },
+      {
+        "type": "action",
+        "description": "Fill Short notes for Office Task 1 into the notes field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the office task form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a task with title Office Task 1 appears in the active tasks list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Mark a show task complete and update progress",
+    "description": "User can toggle a task to complete and see the show progress indicator update accordingly.",
+    "category": "Tasks Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Tasks tab"
+      },
+      {
+        "type": "action",
+        "description": "Click Add Task to create a custom task"
+      },
+      {
+        "type": "action",
+        "description": "Fill Progress task into the task title field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new task"
+      },
+      {
+        "type": "action",
+        "description": "Toggle the completion checkbox for the task titled Progress task"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the task is shown as completed and the show progress indicator reflects increased completion"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Validate required fields when creating a show",
+    "description": "Verifies leaving required fields empty prevents show creation and keeps the create dialog open with validation feedback.",
+    "category": "Add New Show",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to add a new show"
+      },
+      {
+        "type": "action",
+        "description": "Submit the create show form without filling required fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a required-field validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the create show dialog remains open"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Create a custom e-blast with required fields",
+    "description": "User can create a custom e-blast by filling required fields and see it appear in the list.",
+    "category": "E-Blasts Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the E-Blasts tab"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a custom e-blast"
+      },
+      {
+        "type": "action",
+        "description": "Fill Custom promo blast into the custom e-blast name or label field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid scheduled date for the custom e-blast"
+      },
+      {
+        "type": "action",
+        "description": "Submit the custom e-blast"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an e-blast entry for Custom promo blast appears in the e-blast list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Complete an office task and view it under completed",
+    "description": "Verifies the user can mark a task complete and it appears in the completed section.",
+    "category": "Office Tasks",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Open the create office task dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill Office Task To Complete into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the office task form"
+      },
+      {
+        "type": "action",
+        "description": "Toggle completion for the task titled Office Task To Complete"
+      },
+      {
+        "type": "action",
+        "description": "Expand the completed tasks section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a completed task with title Office Task To Complete is shown in the completed tasks list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Toggle an e-blast as sent",
+    "description": "User can mark an e-blast as sent and the entry reflects sent status in the list.",
+    "category": "E-Blasts Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the E-Blasts tab"
+      },
+      {
+        "type": "action",
+        "description": "Click a preset e-blast button to add a scheduled e-blast"
+      },
+      {
+        "type": "action",
+        "description": "Toggle the sent checkbox for the newly added e-blast"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the e-blast is shown as sent"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Add a preset e-blast to a show",
+    "description": "User can add a preset e-blast and see a new e-blast entry appear in the list.",
+    "category": "E-Blasts Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the E-Blasts tab"
+      },
+      {
+        "type": "action",
+        "description": "Click a preset e-blast button to add a scheduled e-blast"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a new e-blast entry appears in the e-blast list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Add all preset e-blasts at once",
+    "description": "User can add all preset e-blasts in one action and see multiple preset entries appear in the list.",
+    "category": "E-Blasts Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the E-Blasts tab"
+      },
+      {
+        "type": "action",
+        "description": "Click Add All to add all preset e-blasts"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify multiple preset e-blast entries are displayed in the e-blast list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Edit an existing office task",
+    "description": "Verifies the user can edit an office task and the updated details are reflected in the task list.",
+    "category": "Office Tasks",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Open the create office task dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill Office Task To Edit into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the office task form"
+      },
+      {
+        "type": "action",
+        "description": "Open edit for the task titled Office Task To Edit"
+      },
+      {
+        "type": "action",
+        "description": "Fill Office Task Edited into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Save the task changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a task with title Office Task Edited is visible in the tasks list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Add a preset task to a show",
+    "description": "User can add a predefined preset task and see it appear in the show task list.",
+    "category": "Tasks Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Tasks tab"
+      },
+      {
+        "type": "action",
+        "description": "Click a preset task button to add a predefined task"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a new task item appears in the task list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC020",
+    "title": "View current month calendar with events rendered",
+    "description": "Verifies the user can load the calendar view and see a monthly grid with events displayed for the current month.",
+    "category": "Calendar View",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /calendar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the monthly calendar grid is displayed with event indicators or event entries visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC021",
+    "title": "Navigate months to plan ahead and backtrack",
+    "description": "Verifies the user can navigate to the next month and back to the previous month and the calendar updates accordingly.",
+    "category": "Calendar View",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /calendar"
+      },
+      {
+        "type": "action",
+        "description": "Click the next month navigation control"
+      },
+      {
+        "type": "action",
+        "description": "Click the previous month navigation control"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the calendar grid is updated to the original month view"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC022",
+    "title": "Delete a show task",
+    "description": "User can delete a task from the show and the task is removed from the list after confirming.",
+    "category": "Tasks Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Tasks tab"
+      },
+      {
+        "type": "action",
+        "description": "Click Add Task to create a custom task"
+      },
+      {
+        "type": "action",
+        "description": "Fill Delete me task into the task title field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new task"
+      },
+      {
+        "type": "action",
+        "description": "Click the trash icon for the task titled Delete me task"
+      },
+      {
+        "type": "action",
+        "description": "Confirm deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the task titled Delete me task is no longer displayed in the task list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC023",
+    "title": "Filter office tasks using combined criteria",
+    "description": "Verifies the user can apply multiple filters and the list updates to only tasks matching the selected criteria.",
+    "category": "Office Tasks",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Open the create office task dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill Filter Task A into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Select a priority value"
+      },
+      {
+        "type": "action",
+        "description": "Select a status value"
+      },
+      {
+        "type": "action",
+        "description": "Select a category value"
+      },
+      {
+        "type": "action",
+        "description": "Submit the office task form"
+      },
+      {
+        "type": "action",
+        "description": "Set the status filter to the status used for Filter Task A"
+      },
+      {
+        "type": "action",
+        "description": "Set the priority filter to the priority used for Filter Task A"
+      },
+      {
+        "type": "action",
+        "description": "Set the category filter to the category used for Filter Task A"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the visible tasks match the selected filter criteria"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC024",
+    "title": "Filter calendar events by a specific show",
+    "description": "Verifies the user can filter the calendar to a specific show and only events for that show are shown.",
+    "category": "Calendar View",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /calendar"
+      },
+      {
+        "type": "action",
+        "description": "Select a specific show in the show filter dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Click a day cell that has events"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the day side panel shows events for the selected show only"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC025",
+    "title": "View show links list",
+    "description": "User can open a show and view the Links tab with a visible list of saved links showing labels and URLs.",
+    "category": "Links Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Links tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a list of saved links is displayed with labels and URLs"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC026",
+    "title": "Delete an office task from the list",
+    "description": "Verifies the user can delete an office task and it is removed from the tasks list.",
+    "category": "Office Tasks",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Open the create office task dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill Office Task To Delete into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the office task form"
+      },
+      {
+        "type": "action",
+        "description": "Initiate delete for the task titled Office Task To Delete"
+      },
+      {
+        "type": "action",
+        "description": "Confirm deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the task titled Office Task To Delete is not present in the tasks list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC027",
+    "title": "Delete an e-blast entry",
+    "description": "User can delete an e-blast entry and it is removed from the list after confirming.",
+    "category": "E-Blasts Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the E-Blasts tab"
+      },
+      {
+        "type": "action",
+        "description": "Click a preset e-blast button to add a scheduled e-blast"
+      },
+      {
+        "type": "action",
+        "description": "Click the trash icon for the newly added e-blast"
+      },
+      {
+        "type": "action",
+        "description": "Confirm deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the deleted e-blast entry is no longer displayed in the e-blast list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC028",
+    "title": "Open a day to review detailed schedule",
+    "description": "Verifies the user can open a day cell and see that day’s events listed in the side panel.",
+    "category": "Calendar View",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /calendar"
+      },
+      {
+        "type": "action",
+        "description": "Click a day cell in the month grid"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the day detail side panel is visible and shows a list of events for that day"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC029",
+    "title": "Add a link to a show",
+    "description": "User can add a labeled URL link to a show and see it appear in the links list.",
+    "category": "Links Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Links tab"
+      },
+      {
+        "type": "action",
+        "description": "Click Add Link to create a new link entry"
+      },
+      {
+        "type": "action",
+        "description": "Fill Exhibitor portal into the link label field"
+      },
+      {
+        "type": "action",
+        "description": "Fill https://example.com into the link URL field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a link labeled Exhibitor portal appears in the links list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC030",
+    "title": "Toggle an office task complete from the calendar day panel",
+    "description": "Verifies the user can mark an office task complete directly from the day side panel and the task reflects completion.",
+    "category": "Calendar View",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Open the create office task dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill Task A into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid due date into the due date field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the office task form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation to the calendar view"
+      },
+      {
+        "type": "action",
+        "description": "Click the day cell matching the due date of Task A to open the side panel"
+      },
+      {
+        "type": "action",
+        "description": "Toggle completion for Task A from the side panel"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Task A is shown as completed in the day side panel"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC031",
+    "title": "Search office tasks by title",
+    "description": "Verifies the user can search by task title and only matching tasks remain visible.",
+    "category": "Office Tasks",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Open the create office task dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill Unique Search Task 123 into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the office task form"
+      },
+      {
+        "type": "action",
+        "description": "Fill Unique Search Task 123 into the search field"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tasks list shows the task titled Unique Search Task 123"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC032",
+    "title": "View and collapse archived shows section",
+    "description": "Verifies the user can expand archived shows to view them and collapse the section again.",
+    "category": "Dashboard / Show List",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Expand the archived shows section"
+      },
+      {
+        "type": "action",
+        "description": "Collapse the archived shows section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the archived shows section is collapsed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC033",
+    "title": "Sort office tasks by due date",
+    "description": "Verifies the user can sort tasks by due date and the list order updates accordingly.",
+    "category": "Office Tasks",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Open the create office task dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill Sort Task 1 into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid due date into the due date field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the office task form"
+      },
+      {
+        "type": "action",
+        "description": "Open the create office task dialog"
+      },
+      {
+        "type": "action",
+        "description": "Fill Sort Task 2 into the title field"
+      },
+      {
+        "type": "action",
+        "description": "Select a different valid due date into the due date field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the office task form"
+      },
+      {
+        "type": "action",
+        "description": "Select the sort option for due date"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tasks list is reordered according to due date"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC034",
+    "title": "Prevent creating a custom e-blast with missing required fields",
+    "description": "User cannot submit a custom e-blast when required fields are missing and validation errors are shown.",
+    "category": "E-Blasts Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the E-Blasts tab"
+      },
+      {
+        "type": "action",
+        "description": "Start creating a custom e-blast"
+      },
+      {
+        "type": "action",
+        "description": "Submit the custom e-blast without filling required fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify required-field validation errors are visible for the custom e-blast form"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC035",
+    "title": "Prevent creating a task without a title",
+    "description": "User cannot submit a new custom task when the title is missing and a validation error is shown.",
+    "category": "Tasks Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Tasks tab"
+      },
+      {
+        "type": "action",
+        "description": "Click Add Task to create a custom task"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new task without filling the task title"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a task title validation error is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC036",
+    "title": "Open a show link in a new browser tab",
+    "description": "User can click a saved link and it opens in a new browser tab.",
+    "category": "Links Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Links tab"
+      },
+      {
+        "type": "action",
+        "description": "Click Add Link to create a new link entry"
+      },
+      {
+        "type": "action",
+        "description": "Fill External resource into the link label field"
+      },
+      {
+        "type": "action",
+        "description": "Fill https://example.com into the link URL field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new link"
+      },
+      {
+        "type": "action",
+        "description": "Click the link labeled External resource"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the link opens in a new browser tab"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC037",
+    "title": "Delete a show link",
+    "description": "User can delete a saved link and it is removed from the links list after confirming.",
+    "category": "Links Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Links tab"
+      },
+      {
+        "type": "action",
+        "description": "Click Add Link to create a new link entry"
+      },
+      {
+        "type": "action",
+        "description": "Fill Delete link into the link label field"
+      },
+      {
+        "type": "action",
+        "description": "Fill https://example.com into the link URL field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new link"
+      },
+      {
+        "type": "action",
+        "description": "Click the trash icon for the link labeled Delete link"
+      },
+      {
+        "type": "action",
+        "description": "Confirm deletion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the link labeled Delete link is no longer displayed in the links list"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC038",
+    "title": "Expand and collapse completed tasks section",
+    "description": "Verifies the user can expand the completed section to view tasks and collapse it again.",
+    "category": "Office Tasks",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Expand the completed tasks section"
+      },
+      {
+        "type": "action",
+        "description": "Collapse the completed tasks section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the completed tasks section is collapsed and completed tasks are not shown"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC039",
+    "title": "Delete a show and confirm it is removed from the dashboard",
+    "description": "Verifies deleting a show from its detail page removes it from the dashboard list after confirmation.",
+    "category": "Show Detail / Command Center",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to add a new show"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Delete Me Show\" into the show name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid move-in date into the move-in date field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the create show form"
+      },
+      {
+        "type": "action",
+        "description": "Initiate deleting the show from the show detail page"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the deletion"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the show named \"Delete Me Show\" is not present in the show list"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC040",
+    "title": "Prevent adding a link with an invalid URL",
+    "description": "User cannot submit a new link when the URL is invalid and a URL validation error is shown.",
+    "category": "Links Tab (Show Detail)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click a show card to open its detail page"
+      },
+      {
+        "type": "action",
+        "description": "Click the Links tab"
+      },
+      {
+        "type": "action",
+        "description": "Click Add Link to create a new link entry"
+      },
+      {
+        "type": "action",
+        "description": "Fill Bad URL into the link label field"
+      },
+      {
+        "type": "action",
+        "description": "Fill not-a-url into the link URL field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a URL validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC041",
+    "title": "Manage sticky notes locally within the session",
+    "description": "Verifies the user can add, edit, recolor, and delete a sticky note and the sidebar reflects each change.",
+    "category": "Office Tasks",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /office-tasks"
+      },
+      {
+        "type": "action",
+        "description": "Add a new sticky note"
+      },
+      {
+        "type": "action",
+        "description": "Fill Sticky Note A into the sticky note text area"
+      },
+      {
+        "type": "action",
+        "description": "Change the sticky note color to a different available color"
+      },
+      {
+        "type": "action",
+        "description": "Delete the sticky note"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sticky note is no longer shown in the sticky notes sidebar"
+      }
+    ],
+    "priority": "Low"
+  }
+]

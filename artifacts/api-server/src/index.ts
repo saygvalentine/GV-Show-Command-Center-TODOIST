@@ -2,6 +2,9 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { createRequire } from "module";
+import path from "path";
 
 const rawPort = process.env["PORT"];
 
@@ -17,31 +20,14 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+const _require = createRequire(import.meta.url);
+const migrationsFolder = path.join(
+  path.dirname(_require.resolve("@workspace/db/package.json")),
+  "migrations",
+);
+
 async function runMigrations() {
-  await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS office_tasks (
-      id SERIAL PRIMARY KEY,
-      title TEXT NOT NULL,
-      notes TEXT,
-      due_date DATE,
-      priority TEXT NOT NULL DEFAULT 'medium',
-      status TEXT NOT NULL DEFAULT 'todo',
-      category TEXT,
-      completed BOOLEAN NOT NULL DEFAULT FALSE,
-      completed_at TIMESTAMPTZ,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
-  await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS venues (
-      id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL UNIQUE,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
-  await db.execute(sql`
-    ALTER TABLE shows ADD COLUMN IF NOT EXISTS tags TEXT[] NOT NULL DEFAULT '{}'
-  `);
+  await migrate(db, { migrationsFolder });
   // Fix legacy category names stored in the database before the rename
   await db.execute(sql`
     UPDATE tasks SET category = 'Fire Marshal' WHERE category = 'Fire Marshal / Floor Plan'

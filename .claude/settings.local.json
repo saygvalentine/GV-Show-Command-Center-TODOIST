@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat -tlnp)",
+      "Read(//proc/2865/net/**)",
+      "Bash(python3 *)",
+      "Bash(node *)",
+      "Bash(npx *)",
+      "Bash(curl -s http://localhost:8081/health)",
+      "Bash(curl -s http://localhost:8080/health)",
+      "Bash(curl -s http://localhost:8081/)",
+      "Bash(curl *)",
+      "Bash(env)",
+      "mcp__testsprite__testsprite_bootstrap",
+      "Bash(ls -la testsprite_tests/)",
+      "Bash(ls -la testsprite_tests/tmp/)",
+      "Bash(cat testsprite_tests/tmp/config.json)",
+      "Bash(ls testsprite_tests/tmp/code_summary.json)",
+      "Bash(ls testsprite_tests/standard_prd.json)",
+      "mcp__testsprite__testsprite_generate_code_summary",
+      "mcp__testsprite__testsprite_generate_standardized_prd",
+      "mcp__testsprite__testsprite_generate_frontend_test_plan",
+      "mcp__testsprite__testsprite_generate_code_and_execute"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "testsprite"
+  ]
+}

@@ -3,7 +3,6 @@ import { logger } from "./lib/logger";
 import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { createRequire } from "module";
 import path from "path";
 
 const rawPort = process.env["PORT"];
@@ -20,14 +19,32 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const _require = createRequire(import.meta.url);
-const migrationsFolder = path.join(
-  path.dirname(_require.resolve("@workspace/db/package.json")),
-  "migrations",
+const migrationsFolder = path.resolve(
+  path.dirname(new URL(import.meta.url).pathname),
+  "../../../lib/db/migrations",
 );
 
+async function schemaAlreadyExists(): Promise<boolean> {
+  const result = await db.execute(sql`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'shows'
+    ) AS "exists"
+  `);
+  return result.rows[0]?.exists === true;
+}
+
 async function runMigrations() {
-  await migrate(db, { migrationsFolder });
+  const alreadyBootstrapped = await schemaAlreadyExists();
+  if (alreadyBootstrapped) {
+    logger.info(
+      "Schema already exists — skipping migrate() to avoid re-applying applied migrations.",
+    );
+  } else {
+    await migrate(db, { migrationsFolder });
+    logger.info("Migrations applied");
+  }
+
   // Fix legacy category names stored in the database before the rename
   await db.execute(sql`
     UPDATE tasks SET category = 'Fire Marshal' WHERE category = 'Fire Marshal / Floor Plan'
@@ -35,7 +52,7 @@ async function runMigrations() {
   await db.execute(sql`
     UPDATE tasks SET category = 'ID Sign' WHERE category = 'ID Sign Production'
   `);
-  logger.info("Migrations complete");
+  logger.info("Startup complete");
 }
 
 runMigrations()

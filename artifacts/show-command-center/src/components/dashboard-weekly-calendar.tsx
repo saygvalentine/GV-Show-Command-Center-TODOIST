@@ -18,13 +18,13 @@ import { useGetCalendarEvents } from "@workspace/api-client-react";
 import { parseDateStr, getCategoryColor } from "@/lib/date-utils";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  "Fire Marshal":       "bg-blue-500/20 text-blue-300 border border-blue-500/30",
-  "ID Sign":            "bg-purple-500/20 text-purple-300 border border-purple-500/30",
-  "Warehouse Manifest": "bg-orange-500/20 text-orange-300 border border-orange-500/30",
-  "Show Bucket":        "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30",
-  "Vehicle Spotting":   "bg-green-500/20 text-green-300 border border-green-500/30",
-  "Electrical":         "bg-red-500/20 text-red-300 border border-red-500/30",
-  "eblast":             "bg-pink-500/20 text-pink-300 border border-pink-500/30",
+  "Fire Marshal":       "bg-blue-400 text-black border border-blue-500",
+  "ID Sign":            "bg-purple-400 text-black border border-purple-500",
+  "Warehouse Manifest": "bg-orange-400 text-black border border-orange-500",
+  "Show Bucket":        "bg-yellow-400 text-black border border-yellow-500",
+  "Vehicle Spotting":   "bg-green-400 text-black border border-green-500",
+  "Electrical":         "bg-red-400 text-black border border-red-500",
+  "eblast":             "bg-pink-400 text-black border border-pink-500",
 };
 
 function chipColor(category: string | null | undefined, type: string): string {

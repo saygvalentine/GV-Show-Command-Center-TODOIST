@@ -172,20 +172,21 @@ export function AddShowDialog() {
               )}
             />
             
+            <FormField
+              control={form.control}
+              name="advanceWarehouseDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adv. Warehouse</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="advanceWarehouseDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Adv. Warehouse</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="discountDeadline"
@@ -199,21 +200,20 @@ export function AddShowDialog() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="onlineOrderDeadline"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Online Order Deadline</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-
-            <FormField
-              control={form.control}
-              name="onlineOrderDeadline"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Online Order Deadline</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <div>
               <p className="text-sm font-medium mb-2">Tags</p>

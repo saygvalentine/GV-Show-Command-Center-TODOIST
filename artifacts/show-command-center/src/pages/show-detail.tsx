@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useParams } from "wouter";
+import { useLocation, useParams, useSearch } from "wouter";
 import { format, differenceInDays, startOfDay } from "date-fns";
 import { useGetShow, useUpdateShow, useDeleteShow, getGetShowQueryKey, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -34,6 +34,8 @@ export default function ShowDetail() {
   const { id } = useParams();
   const showId = Number(id);
   const [, setLocation] = useLocation();
+  const search = useSearch();
+  const tabParam = new URLSearchParams(search).get("tab") || "tasks";
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -199,7 +201,7 @@ export default function ShowDetail() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="tasks" className="w-full">
+        <Tabs defaultValue={tabParam} className="w-full">
           <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-background mb-6 sticky top-14 z-40">
             <TabsTrigger 
               value="tasks" 

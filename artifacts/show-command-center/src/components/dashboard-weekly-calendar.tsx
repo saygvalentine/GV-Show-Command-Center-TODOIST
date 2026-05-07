@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addWeeks } from "date-fns";
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { Link } from "wouter";
 import { useGetCalendarEvents } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -113,9 +114,10 @@ export function DashboardWeeklyCalendar() {
                     className={`min-h-[120px] p-2 pb-3 space-y-1 ${isToday ? "bg-primary/5" : ""}`}
                   >
                     {dayItems.map(item => (
-                      <div
+                      <Link
                         key={item.id}
-                        className={`text-xs rounded px-1.5 py-1 leading-tight border ${
+                        href={`/shows/${item.showId}?tab=${item.type === "eblast" ? "eblasts" : "tasks"}`}
+                        className={`block text-xs rounded px-1.5 py-1 leading-tight border transition-opacity hover:opacity-80 ${
                           item.done
                             ? "bg-muted/30 text-muted-foreground line-through border-muted/20"
                             : item.type === "eblast"
@@ -125,7 +127,7 @@ export function DashboardWeeklyCalendar() {
                       >
                         <div className="font-medium truncate">{item.name}</div>
                         <div className="text-[10px] opacity-70 truncate">{item.showName}</div>
-                      </div>
+                      </Link>
                     ))}
                     {dayItems.length === 0 && (
                       <div className="text-[11px] text-muted-foreground/30 text-center pt-6">—</div>

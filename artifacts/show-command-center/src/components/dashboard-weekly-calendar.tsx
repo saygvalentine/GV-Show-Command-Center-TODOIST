@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
-import { ChevronDown, ChevronUp, CalendarDays } from "lucide-react";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addWeeks } from "date-fns";
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { useGetCalendarEvents } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -8,10 +8,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 export function DashboardWeeklyCalendar() {
   const [open, setOpen] = useState(true);
+  const [weekOffset, setWeekOffset] = useState(0);
 
   const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
+  const baseWeek = startOfWeek(today, { weekStartsOn: 0 });
+  const weekStart = addWeeks(baseWeek, weekOffset);
+  const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   const startMonth = weekStart.getMonth() + 1;
@@ -42,6 +44,11 @@ export function DashboardWeeklyCalendar() {
   }, [events1, events2, crossesMonth]);
 
   const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const isCurrentWeek = weekOffset === 0;
+
+  const weekLabel = isCurrentWeek
+    ? `This Week — ${format(weekStart, "MMM d")} – ${format(weekEnd, "MMM d, yyyy")}`
+    : `${format(weekStart, "MMM d")} – ${format(weekEnd, "MMM d, yyyy")}`;
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -49,16 +56,31 @@ export function DashboardWeeklyCalendar() {
         <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-semibold text-sm">
-              This Week &mdash; {format(weekStart, "MMM d")} &ndash; {format(weekEnd, "MMM d, yyyy")}
-            </h2>
+            <h2 className="font-semibold text-sm">{weekLabel}</h2>
           </div>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 px-2 gap-1">
-              {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              <span className="text-xs">{open ? "Hide" : "Show"}</span>
+
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekOffset(o => o - 1)}>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
-          </CollapsibleTrigger>
+            {!isCurrentWeek && (
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setWeekOffset(0)}>
+                Today
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekOffset(o => o + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+
+            <div className="w-px h-4 bg-border mx-1" />
+
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 px-2 gap-1">
+                {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                <span className="text-xs">{open ? "Hide" : "Show"}</span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
         </CardHeader>
 
         <CollapsibleContent>
@@ -88,7 +110,7 @@ export function DashboardWeeklyCalendar() {
                 return (
                   <div
                     key={i}
-                    className={`min-h-[110px] p-1.5 space-y-1 ${isToday ? "bg-primary/5" : ""}`}
+                    className={`min-h-[120px] p-2 pb-3 space-y-1 ${isToday ? "bg-primary/5" : ""}`}
                   >
                     {dayItems.map(item => (
                       <div
@@ -106,7 +128,7 @@ export function DashboardWeeklyCalendar() {
                       </div>
                     ))}
                     {dayItems.length === 0 && (
-                      <div className="text-[11px] text-muted-foreground/30 text-center pt-5">—</div>
+                      <div className="text-[11px] text-muted-foreground/30 text-center pt-6">—</div>
                     )}
                   </div>
                 );

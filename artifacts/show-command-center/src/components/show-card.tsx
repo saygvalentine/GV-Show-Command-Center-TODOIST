@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { format, differenceInDays, startOfDay } from "date-fns";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, MapPin, Clock } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +55,26 @@ export function ShowCard({ show }: ShowCardProps) {
                 </div>
               )}
             </div>
+
+            {(show.advanceWarehouseDate || show.onlineOrderDeadline || show.discountDeadline) && (
+              <div className="mt-2 space-y-0.5">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70 font-medium uppercase tracking-wide">
+                  <Clock className="h-3 w-3" />
+                  <span>Deadlines</span>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground pl-4">
+                  {show.advanceWarehouseDate && (
+                    <span>Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
+                  )}
+                  {show.onlineOrderDeadline && (
+                    <span>Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
+                  )}
+                  {show.discountDeadline && (
+                    <span>Discount: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex flex-col items-center gap-2 shrink-0">
             <UrgencyBadge dateStr={show.moveInDate} />

@@ -118,7 +118,7 @@ export default function ShowDetail() {
           </div>
         </div>
 
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden border-2">
           <div className={`absolute top-0 left-0 bottom-0 w-2 ${urgency.bgClass}`} />
           <CardContent className="p-6 pl-8">
             <div className="flex flex-col md:flex-row justify-between gap-6">

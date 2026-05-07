@@ -17,10 +17,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { AlertCircle, ChevronDown, ChevronUp, CalendarDays, EyeOff } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, parseDateStr } from "@/lib/date-utils";
-import { DashboardWeeklyCalendar } from "@/components/dashboard-weekly-calendar";
 
 type SortOption = "date-asc" | "date-desc" | "name" | "overdue";
 
@@ -29,8 +29,6 @@ export default function Dashboard() {
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary();
   const [sortBy, setSortBy] = useState<SortOption>("date-asc");
   const [archivedOpen, setArchivedOpen] = useState(false);
-  const [calendarVisible, setCalendarVisible] = useState(true);
-  const [weekOffset, setWeekOffset] = useState(0);
 
   const today = startOfDay(new Date());
 
@@ -101,43 +99,6 @@ export default function Dashboard() {
         {summaryLoading && (
           <Skeleton className="w-full h-32 rounded-lg" />
         )}
-
-        {/* Weekly Calendar Section */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold tracking-tight flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-muted-foreground" />
-              Weekly Overview
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCalendarVisible(v => !v)}
-              className="text-muted-foreground hover:text-foreground h-8 gap-1.5"
-            >
-              {calendarVisible ? (
-                <>
-                  <EyeOff className="h-3.5 w-3.5" />
-                  Hide
-                </>
-              ) : (
-                <>
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  Show
-                </>
-              )}
-            </Button>
-          </div>
-
-          {calendarVisible && (
-            <DashboardWeeklyCalendar
-              weekOffset={weekOffset}
-              onPrev={() => setWeekOffset(o => o - 1)}
-              onNext={() => setWeekOffset(o => o + 1)}
-              onToday={() => setWeekOffset(0)}
-            />
-          )}
-        </div>
 
         {/* Dashboard Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

@@ -298,7 +298,7 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
   };
 
   return (
-    <div className={`group flex flex-col p-3 rounded-lg bg-muted/40 transition-colors ${task.completed ? 'opacity-60' : 'hover:bg-muted/70'}`}>
+    <div className={`group flex flex-col p-3 rounded-lg border bg-card transition-colors ${task.completed ? 'opacity-60' : 'hover:border-primary/30'}`}>
       <div className="flex items-start gap-3">
         <Checkbox
           checked={task.completed}

@@ -7,6 +7,36 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
+type ChipStyle = { bg: string; text: string; border: string };
+
+const CATEGORY_STYLES: Record<string, ChipStyle> = {
+  "Show Bucket":        { bg: "bg-blue-500/15",    text: "text-blue-400",    border: "border-blue-500/30"    },
+  "Fire Marshal":       { bg: "bg-red-500/15",      text: "text-red-400",     border: "border-red-500/30"     },
+  "ID Sign":            { bg: "bg-purple-500/15",   text: "text-purple-400",  border: "border-purple-500/30"  },
+  "Warehouse Manifest": { bg: "bg-cyan-500/15",     text: "text-cyan-400",    border: "border-cyan-500/30"    },
+  "Vehicle Spotting":   { bg: "bg-amber-500/15",    text: "text-amber-400",   border: "border-amber-500/30"   },
+  eblast:               { bg: "bg-pink-500/15",     text: "text-pink-400",    border: "border-pink-500/30"    },
+};
+
+const DONE_STYLE = "bg-muted/30 text-muted-foreground line-through border-muted/20";
+
+function getChipClass(type: string, category: string | null | undefined, done: boolean): string {
+  if (done) return DONE_STYLE;
+  const key = type === "eblast" ? "eblast" : (category ?? "");
+  const style = CATEGORY_STYLES[key];
+  if (!style) return "bg-slate-500/15 text-slate-400 border-slate-500/30";
+  return `${style.bg} ${style.text} ${style.border}`;
+}
+
+const LEGEND_ITEMS: { label: string; key: string }[] = [
+  { label: "Show Bucket",        key: "Show Bucket"        },
+  { label: "Fire Marshal",       key: "Fire Marshal"       },
+  { label: "ID Sign",            key: "ID Sign"            },
+  { label: "Warehouse Manifest", key: "Warehouse Manifest" },
+  { label: "Vehicle Spotting",   key: "Vehicle Spotting"   },
+  { label: "E-Blast",            key: "eblast"             },
+];
+
 export function DashboardWeeklyCalendar() {
   const [open, setOpen] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
@@ -86,6 +116,7 @@ export function DashboardWeeklyCalendar() {
 
         <CollapsibleContent>
           <CardContent className="p-0">
+            {/* Day headers */}
             <div className="grid grid-cols-7 border-t border-b">
               {weekDays.map((day, i) => {
                 const isToday = isSameDay(day, today);
@@ -103,6 +134,7 @@ export function DashboardWeeklyCalendar() {
               })}
             </div>
 
+            {/* Task cells */}
             <div className="grid grid-cols-7 divide-x">
               {weekDays.map((day, i) => {
                 const dateStr = format(day, "yyyy-MM-dd");
@@ -117,13 +149,7 @@ export function DashboardWeeklyCalendar() {
                       <Link
                         key={item.id}
                         href={`/shows/${item.showId}?tab=${item.type === "eblast" ? "eblasts" : "tasks"}`}
-                        className={`block text-xs rounded px-1.5 py-1 leading-tight border transition-opacity hover:opacity-80 ${
-                          item.done
-                            ? "bg-muted/30 text-muted-foreground line-through border-muted/20"
-                            : item.type === "eblast"
-                              ? "bg-pink-500/15 text-pink-400 border-pink-500/25"
-                              : "bg-blue-500/15 text-blue-400 border-blue-500/25"
-                        }`}
+                        className={`block text-xs rounded px-1.5 py-1 leading-tight border transition-opacity hover:opacity-75 ${getChipClass(item.type, item.category, item.done ?? false)}`}
                       >
                         <div className="font-medium truncate">{item.name}</div>
                         <div className="text-[10px] opacity-70 truncate">{item.showName}</div>
@@ -135,6 +161,25 @@ export function DashboardWeeklyCalendar() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Legend */}
+            <div className="flex flex-wrap items-center gap-2 px-3 py-2.5 border-t">
+              <span className="text-[11px] text-muted-foreground/60 font-medium mr-1">Legend:</span>
+              {LEGEND_ITEMS.map(({ label, key }) => {
+                const s = CATEGORY_STYLES[key];
+                return (
+                  <span
+                    key={key}
+                    className={`inline-flex items-center text-[11px] font-medium rounded px-2 py-0.5 border ${s.bg} ${s.text} ${s.border}`}
+                  >
+                    {label}
+                  </span>
+                );
+              })}
+              <span className="inline-flex items-center text-[11px] font-medium rounded px-2 py-0.5 border bg-muted/30 text-muted-foreground border-muted/20 line-through">
+                Completed
+              </span>
             </div>
           </CardContent>
         </CollapsibleContent>

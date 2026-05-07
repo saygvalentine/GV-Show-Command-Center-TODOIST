@@ -148,3 +148,12 @@
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20;
   }
 }
+
+@keyframes task-strikethrough {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.animate-strikethrough {
+  animation: task-strikethrough 420ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}

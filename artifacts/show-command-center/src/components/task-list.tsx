@@ -322,12 +322,9 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
             <span className={`relative font-medium transition-colors duration-500 ${task.completed ? 'text-muted-foreground' : ''}`}>
               {task.name}
               <span
-                className="absolute inset-y-0 left-0 flex items-center pointer-events-none"
+                className={`absolute inset-y-0 left-0 flex items-center pointer-events-none ${justCompleted ? 'animate-strikethrough' : ''}`}
                 aria-hidden="true"
-                style={{
-                  width: task.completed ? '100%' : '0%',
-                  transition: 'width 400ms cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
+                style={{ width: justCompleted ? undefined : task.completed ? '100%' : '0%' }}
               >
                 <span className="block w-full h-px bg-current opacity-60" />
               </span>

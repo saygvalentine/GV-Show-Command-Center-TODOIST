@@ -34,15 +34,35 @@ export function ShowCard({ show }: ShowCardProps) {
               {show.name}
             </Link>
             <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" />
-                <span>{formatDate(show.moveInDate)}</span>
-              </div>
               {show.venue && (
                 <div className="flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" />
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{show.venue}</span>
                 </div>
+              )}
+            </div>
+
+            {/* Key dates grid */}
+            <div className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+              <span className="text-xs text-muted-foreground">Move-In</span>
+              <span className="text-xs font-medium">{formatDate(show.moveInDate)}</span>
+              {show.showStart && (
+                <>
+                  <span className="text-xs text-muted-foreground">Show Date</span>
+                  <span className="text-xs font-medium">{formatDate(show.showStart)}</span>
+                </>
+              )}
+              {show.advanceWarehouseDate && (
+                <>
+                  <span className="text-xs text-muted-foreground">Adv. WH</span>
+                  <span className="text-xs font-medium">{formatDate(show.advanceWarehouseDate)}</span>
+                </>
+              )}
+              {show.discountDeadline && (
+                <>
+                  <span className="text-xs text-muted-foreground">Discount</span>
+                  <span className="text-xs font-medium">{formatDate(show.discountDeadline)}</span>
+                </>
               )}
             </div>
           </div>

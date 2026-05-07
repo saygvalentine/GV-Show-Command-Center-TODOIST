@@ -134,8 +134,8 @@ export function DashboardWeeklyCalendar({ weekOffset, onPrev, onNext, onToday }:
                 key={key}
                 className={`rounded-lg p-2 min-h-[96px] flex flex-col gap-1 ${
                   today
-                    ? "bg-primary/10 border border-primary/30"
-                    : "bg-muted/30 border border-transparent"
+                    ? "bg-primary/10 ring-1 ring-inset ring-primary/40"
+                    : "bg-muted/30"
                 }`}
               >
                 {/* Day header */}

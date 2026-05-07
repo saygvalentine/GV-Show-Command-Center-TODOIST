@@ -1,8 +1,68 @@
 import { Router } from "express";
 import { db, showsTable, tasksTable, eblastsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-
 const router = Router();
+
+function daysOverdueCount(dueDateStr: string, todayMs: number): number {
+  return Math.floor((todayMs - new Date(dueDateStr).getTime()) / 86400000);
+}
+
+router.get("/overdue", async (req, res): Promise<void> => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split("T")[0];
+
+  const shows = await db.select().from(showsTable);
+  const allTasks = await db.select().from(tasksTable);
+  const allEblasts = await db.select().from(eblastsTable);
+
+  const showMap = Object.fromEntries(shows.map((s) => [s.id, s.name]));
+
+  const items: {
+    id: number;
+    type: "task" | "eblast";
+    showId: number;
+    showName: string;
+    name: string;
+    dueDate: string;
+    category: string | null;
+    daysOverdue: number;
+  }[] = [];
+
+  for (const task of allTasks) {
+    if (!task.completed && task.dueDate && task.dueDate < todayStr) {
+      items.push({
+        id: task.id,
+        type: "task",
+        showId: task.showId,
+        showName: showMap[task.showId] ?? "Unknown Show",
+        name: task.name,
+        dueDate: task.dueDate,
+        category: task.category ?? null,
+        daysOverdue: daysOverdueCount(task.dueDate, today.getTime()),
+      });
+    }
+  }
+
+  for (const eblast of allEblasts) {
+    if (!eblast.sent && eblast.dueDate && eblast.dueDate < todayStr) {
+      items.push({
+        id: eblast.id,
+        type: "eblast",
+        showId: eblast.showId,
+        showName: showMap[eblast.showId] ?? "Unknown Show",
+        name: eblast.name,
+        dueDate: eblast.dueDate,
+        category: null,
+        daysOverdue: daysOverdueCount(eblast.dueDate, today.getTime()),
+      });
+    }
+  }
+
+  items.sort((a, b) => b.daysOverdue - a.daysOverdue);
+
+  res.json(items);
+});
 
 router.get("/summary", async (req, res): Promise<void> => {
   const today = new Date();

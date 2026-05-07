@@ -185,6 +185,25 @@ export interface UpdateOfficeTaskBody {
   completed?: boolean;
 }
 
+export type OverdueItemType =
+  (typeof OverdueItemType)[keyof typeof OverdueItemType];
+
+export const OverdueItemType = {
+  task: "task",
+  eblast: "eblast",
+} as const;
+
+export interface OverdueItem {
+  id: number;
+  type: OverdueItemType;
+  showId: number;
+  showName: string;
+  name: string;
+  dueDate: string;
+  category?: string | null;
+  daysOverdue: number;
+}
+
 export interface DashboardSummary {
   totalShows: number;
   activeShows: number;

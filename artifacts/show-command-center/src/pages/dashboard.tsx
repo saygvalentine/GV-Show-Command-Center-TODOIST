@@ -22,6 +22,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, parseDateStr } from "@/lib/date-utils";
 import { DashboardWeeklyCalendar } from "@/components/dashboard-weekly-calendar";
+import { OverduePanel } from "@/components/overdue-panel";
 
 type SortOption = "date-asc" | "date-desc" | "name" | "overdue";
 
@@ -103,6 +104,9 @@ export default function Dashboard() {
 
         {/* Weekly Calendar */}
         <DashboardWeeklyCalendar />
+
+        {/* Overdue Panel */}
+        <OverduePanel />
 
         {/* Dashboard Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

@@ -22,6 +22,8 @@ export * from "./healthStatus";
 export * from "./link";
 export * from "./listOfficeTasksParams";
 export * from "./officeTask";
+export * from "./overdueItem";
+export * from "./overdueItemType";
 export * from "./show";
 export * from "./showWithItems";
 export * from "./task";

@@ -529,6 +529,21 @@ export const GetCalendarEventsResponse = zod.array(
 );
 
 /**
+ * @summary Get all overdue tasks and e-blasts across all shows
+ */
+export const GetOverdueItemsResponseItem = zod.object({
+  id: zod.number(),
+  type: zod.enum(["task", "eblast"]),
+  showId: zod.number(),
+  showName: zod.string(),
+  name: zod.string(),
+  dueDate: zod.coerce.date(),
+  category: zod.string().nullish(),
+  daysOverdue: zod.number(),
+});
+export const GetOverdueItemsResponse = zod.array(GetOverdueItemsResponseItem);
+
+/**
  * @summary Get dashboard summary with overdue counts and next-up show
  */
 export const GetDashboardSummaryResponse = zod.object({

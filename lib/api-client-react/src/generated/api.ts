@@ -32,6 +32,7 @@ import type {
   Link,
   ListOfficeTasksParams,
   OfficeTask,
+  OverdueItem,
   Show,
   ShowWithItems,
   Task,
@@ -2175,6 +2176,81 @@ export function useGetCalendarEvents<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetCalendarEventsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get all overdue tasks and e-blasts across all shows
+ */
+export const getGetOverdueItemsUrl = () => {
+  return `/api/dashboard/overdue`;
+};
+
+export const getOverdueItems = async (
+  options?: RequestInit,
+): Promise<OverdueItem[]> => {
+  return customFetch<OverdueItem[]>(getGetOverdueItemsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetOverdueItemsQueryKey = () => {
+  return [`/api/dashboard/overdue`] as const;
+};
+
+export const getGetOverdueItemsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getOverdueItems>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getOverdueItems>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetOverdueItemsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getOverdueItems>>> = ({
+    signal,
+  }) => getOverdueItems({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getOverdueItems>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetOverdueItemsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getOverdueItems>>
+>;
+export type GetOverdueItemsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all overdue tasks and e-blasts across all shows
+ */
+
+export function useGetOverdueItems<
+  TData = Awaited<ReturnType<typeof getOverdueItems>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getOverdueItems>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetOverdueItemsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

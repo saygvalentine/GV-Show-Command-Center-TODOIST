@@ -36,8 +36,18 @@ export function ShowCard({ show }: ShowCardProps) {
             <div className="flex flex-col gap-1 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5" />
-                <span>{formatDate(show.moveInDate)}</span>
+                <span>Move-in: {formatDate(show.moveInDate)}</span>
               </div>
+              {(show.showStart || show.dismantleDate) && (
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 opacity-50" />
+                  <span>
+                    Show: {show.showStart ? formatDate(show.showStart) : ""}
+                    {show.showStart && show.dismantleDate ? " – " : ""}
+                    {show.dismantleDate ? formatDate(show.dismantleDate) : ""}
+                  </span>
+                </div>
+              )}
               {show.venue && (
                 <div className="flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5" />

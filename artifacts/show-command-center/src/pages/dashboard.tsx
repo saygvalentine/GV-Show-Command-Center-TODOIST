@@ -130,17 +130,12 @@ export default function Dashboard() {
           </div>
 
           {calendarVisible && (
-            showsLoading ? (
-              <Skeleton className="w-full h-40 rounded-xl" />
-            ) : (
-              <DashboardWeeklyCalendar
-                shows={shows ?? []}
-                weekOffset={weekOffset}
-                onPrev={() => setWeekOffset(o => o - 1)}
-                onNext={() => setWeekOffset(o => o + 1)}
-                onToday={() => setWeekOffset(0)}
-              />
-            )
+            <DashboardWeeklyCalendar
+              weekOffset={weekOffset}
+              onPrev={() => setWeekOffset(o => o - 1)}
+              onNext={() => setWeekOffset(o => o + 1)}
+              onToday={() => setWeekOffset(0)}
+            />
           )}
         </div>
 

@@ -21,6 +21,7 @@ import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, parseDateStr } from "@/lib/date-utils";
+import { DashboardWeeklyCalendar } from "@/components/dashboard-weekly-calendar";
 
 type SortOption = "date-asc" | "date-desc" | "name" | "overdue";
 
@@ -99,6 +100,9 @@ export default function Dashboard() {
         {summaryLoading && (
           <Skeleton className="w-full h-32 rounded-lg" />
         )}
+
+        {/* Weekly Calendar */}
+        <DashboardWeeklyCalendar />
 
         {/* Dashboard Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

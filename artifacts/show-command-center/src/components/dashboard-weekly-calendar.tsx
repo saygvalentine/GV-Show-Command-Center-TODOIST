@@ -1,0 +1,120 @@
+import { useMemo, useState } from "react";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns";
+import { ChevronDown, ChevronUp, CalendarDays } from "lucide-react";
+import { useGetCalendarEvents } from "@workspace/api-client-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+export function DashboardWeeklyCalendar() {
+  const [open, setOpen] = useState(true);
+
+  const today = new Date();
+  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
+  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+  const startMonth = weekStart.getMonth() + 1;
+  const startYear = weekStart.getFullYear();
+  const endMonth = weekEnd.getMonth() + 1;
+  const endYear = weekEnd.getFullYear();
+  const crossesMonth = startMonth !== endMonth || startYear !== endYear;
+
+  const { data: events1 } = useGetCalendarEvents(
+    { month: startMonth, year: startYear },
+    { query: { queryKey: ["weekly-cal", startMonth, startYear] } }
+  );
+  const { data: events2 } = useGetCalendarEvents(
+    { month: endMonth, year: endYear },
+    { query: { enabled: crossesMonth, queryKey: ["weekly-cal", endMonth, endYear] } }
+  );
+
+  const tasksByDay = useMemo(() => {
+    const all = [...(events1 || []), ...(crossesMonth ? (events2 || []) : [])];
+    const map: Record<string, typeof all> = {};
+    all
+      .filter(e => e.type === "task" || e.type === "eblast")
+      .forEach(e => {
+        if (!map[e.date]) map[e.date] = [];
+        map[e.date].push(e);
+      });
+    return map;
+  }, [events1, events2, crossesMonth]);
+
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <Card>
+        <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-semibold text-sm">
+              This Week &mdash; {format(weekStart, "MMM d")} &ndash; {format(weekEnd, "MMM d, yyyy")}
+            </h2>
+          </div>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 px-2 gap-1">
+              {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              <span className="text-xs">{open ? "Hide" : "Show"}</span>
+            </Button>
+          </CollapsibleTrigger>
+        </CardHeader>
+
+        <CollapsibleContent>
+          <CardContent className="p-0">
+            <div className="grid grid-cols-7 border-t border-b">
+              {weekDays.map((day, i) => {
+                const isToday = isSameDay(day, today);
+                return (
+                  <div
+                    key={i}
+                    className={`py-2 text-center border-r last:border-r-0 ${isToday ? "text-primary" : "text-muted-foreground"}`}
+                  >
+                    <div className="text-xs font-semibold">{dayLabels[i]}</div>
+                    <div className={`text-base font-bold mt-0.5 mx-auto w-7 h-7 flex items-center justify-center rounded-full ${isToday ? "bg-primary text-primary-foreground" : ""}`}>
+                      {format(day, "d")}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="grid grid-cols-7 divide-x">
+              {weekDays.map((day, i) => {
+                const dateStr = format(day, "yyyy-MM-dd");
+                const dayItems = tasksByDay[dateStr] || [];
+                const isToday = isSameDay(day, today);
+                return (
+                  <div
+                    key={i}
+                    className={`min-h-[110px] p-1.5 space-y-1 ${isToday ? "bg-primary/5" : ""}`}
+                  >
+                    {dayItems.map(item => (
+                      <div
+                        key={item.id}
+                        className={`text-xs rounded px-1.5 py-1 leading-tight border ${
+                          item.done
+                            ? "bg-muted/30 text-muted-foreground line-through border-muted/20"
+                            : item.type === "eblast"
+                              ? "bg-pink-500/15 text-pink-400 border-pink-500/25"
+                              : "bg-blue-500/15 text-blue-400 border-blue-500/25"
+                        }`}
+                      >
+                        <div className="font-medium truncate">{item.name}</div>
+                        <div className="text-[10px] opacity-70 truncate">{item.showName}</div>
+                      </div>
+                    ))}
+                    {dayItems.length === 0 && (
+                      <div className="text-[11px] text-muted-foreground/30 text-center pt-5">—</div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
+  );
+}

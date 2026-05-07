@@ -18,32 +18,25 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 function chipClass(type: string, category: string | null | undefined) {
   if (type === "eblast") return CATEGORY_COLORS["eblast"];
-  const key = category ?? "";
-  return CATEGORY_COLORS[key] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30";
+  return CATEGORY_COLORS[category ?? ""] ?? "bg-slate-500/15 text-slate-400 border-slate-500/30";
 }
 
 function daysLabel(n: number) {
-  if (n === 1) return "1 day";
-  return `${n} days`;
+  return n === 1 ? "1 day" : `${n} days`;
 }
 
 export function OverduePanel() {
-  const { data: items, isLoading } = useGetOverdueItems();
+  const { data: rawItems, isLoading } = useGetOverdueItems();
   const [open, setOpen] = useState(true);
 
-  const count = items?.length ?? 0;
+  // Sort oldest first (highest daysOverdue first)
+  const items = rawItems
+    ? [...rawItems].sort((a, b) => b.daysOverdue - a.daysOverdue)
+    : [];
+
+  const count = items.length;
 
   if (!isLoading && count === 0) return null;
-
-  // Group by show for display, but keep flat list sorted by daysOverdue desc
-  const grouped = items
-    ? items.reduce<Record<string, typeof items>>((acc, item) => {
-        const key = `${item.showId}::${item.showName}`;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(item);
-        return acc;
-      }, {})
-    : {};
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -72,43 +65,30 @@ export function OverduePanel() {
               <div className="px-4 py-6 text-sm text-muted-foreground text-center">Loading…</div>
             ) : (
               <div className="divide-y">
-                {Object.entries(grouped).map(([key, showItems]) => {
-                  const showName = key.split("::").slice(1).join("::");
-                  const showId = showItems[0].showId;
-                  return (
-                    <div key={key} className="px-4 py-2">
-                      <Link
-                        href={`/shows/${showId}?tab=tasks`}
-                        className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wide mb-1.5 block"
+                {items.map(item => (
+                  <Link
+                    key={`${item.type}-${item.id}`}
+                    href={`/shows/${item.showId}?tab=${item.type === "eblast" ? "eblasts" : "tasks"}`}
+                    className="flex items-center justify-between gap-3 px-4 py-2 group hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded border ${chipClass(item.type, item.category)}`}
                       >
-                        {showName}
-                      </Link>
-                      <div className="space-y-1">
-                        {showItems.map(item => (
-                          <Link
-                            key={`${item.type}-${item.id}`}
-                            href={`/shows/${item.showId}?tab=${item.type === "eblast" ? "eblasts" : "tasks"}`}
-                            className="flex items-center justify-between gap-3 group"
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span
-                                className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded border ${chipClass(item.type, item.category)}`}
-                              >
-                                {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
-                              </span>
-                              <span className="text-sm truncate group-hover:text-primary transition-colors">
-                                {item.name}
-                              </span>
-                            </div>
-                            <span className="shrink-0 text-xs font-semibold text-red-400 whitespace-nowrap">
-                              {daysLabel(item.daysOverdue)} ago
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
+                        {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
+                      </span>
+                      <span className="text-sm truncate group-hover:text-primary transition-colors">
+                        {item.name}
+                      </span>
+                      <span className="hidden sm:inline shrink-0 text-xs text-muted-foreground">
+                        — {item.showName}
+                      </span>
                     </div>
-                  );
-                })}
+                    <span className="shrink-0 text-xs font-semibold text-red-400 whitespace-nowrap">
+                      {daysLabel(item.daysOverdue)} ago
+                    </span>
+                  </Link>
+                ))}
               </div>
             )}
           </CardContent>

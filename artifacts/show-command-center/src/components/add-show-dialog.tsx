@@ -27,6 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useCreateShow, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { VenueSelect } from "@/components/venue-select";
+import { ShowDateRangePicker } from "@/components/show-date-range-picker";
 
 export const SHOW_TAGS = [
   "FM",
@@ -204,34 +205,15 @@ export function AddShowDialog() {
               )}
             />
             
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="showStart"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Show Start</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            <FormItem>
+              <FormLabel>Show Dates (Start → Dismantle)</FormLabel>
+              <ShowDateRangePicker
+                startValue={form.watch("showStart") ?? ""}
+                endValue={form.watch("dismantleDate") ?? ""}
+                onStartChange={(v) => form.setValue("showStart", v)}
+                onEndChange={(v) => form.setValue("dismantleDate", v)}
               />
-              <FormField
-                control={form.control}
-                name="dismantleDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dismantle</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            </FormItem>
 
             <div>
               <p className="text-sm font-medium mb-2">Tags</p>

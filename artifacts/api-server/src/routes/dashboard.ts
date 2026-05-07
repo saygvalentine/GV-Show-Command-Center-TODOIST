@@ -76,8 +76,8 @@ router.get("/summary", async (req, res): Promise<void> => {
   const allTasks = await db.select().from(tasksTable);
   const allEblasts = await db.select().from(eblastsTable);
 
-  const activeShows = shows.filter((s) => s.moveInDate >= todayStr);
-  const archivedShows = shows.filter((s) => s.moveInDate < todayStr);
+  const activeShows = shows.filter((s) => (s.dismantleDate ?? s.moveInDate) >= todayStr);
+  const archivedShows = shows.filter((s) => (s.dismantleDate ?? s.moveInDate) < todayStr);
 
   let totalOverdue = 0;
   for (const task of allTasks) {

@@ -37,8 +37,8 @@ export default function Dashboard() {
   const activeShows = useMemo(() => {
     if (!shows) return [];
     return shows.filter(s => {
-      const moveIn = startOfDay(parseDateStr(s.moveInDate));
-      return differenceInDays(moveIn, today) >= 0;
+      const cutoff = startOfDay(parseDateStr(s.dismantleDate ?? s.moveInDate));
+      return differenceInDays(cutoff, today) >= 0;
     }).sort((a, b) => {
       if (sortBy === "date-asc") {
         return parseDateStr(a.moveInDate).getTime() - parseDateStr(b.moveInDate).getTime();
@@ -59,8 +59,8 @@ export default function Dashboard() {
   const archivedShows = useMemo(() => {
     if (!shows) return [];
     return shows.filter(s => {
-      const moveIn = startOfDay(parseDateStr(s.moveInDate));
-      return differenceInDays(moveIn, today) < 0;
+      const cutoff = startOfDay(parseDateStr(s.dismantleDate ?? s.moveInDate));
+      return differenceInDays(cutoff, today) < 0;
     }).sort((a, b) => parseDateStr(b.moveInDate).getTime() - parseDateStr(a.moveInDate).getTime());
   }, [shows, today]);
 

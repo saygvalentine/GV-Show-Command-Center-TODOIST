@@ -148,6 +148,16 @@ export function AddShowDialog() {
               )}
             />
             
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Show Dates (Start → Dismantle)</label>
+              <ShowDateRangePicker
+                startValue={form.watch("showStart") ?? ""}
+                endValue={form.watch("dismantleDate") ?? ""}
+                onStartChange={(v) => form.setValue("showStart", v)}
+                onEndChange={(v) => form.setValue("dismantleDate", v)}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="venue"
@@ -205,16 +215,6 @@ export function AddShowDialog() {
               )}
             />
             
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Show Dates (Start → Dismantle)</label>
-              <ShowDateRangePicker
-                startValue={form.watch("showStart") ?? ""}
-                endValue={form.watch("dismantleDate") ?? ""}
-                onStartChange={(v) => form.setValue("showStart", v)}
-                onEndChange={(v) => form.setValue("dismantleDate", v)}
-              />
-            </div>
-
             <div>
               <p className="text-sm font-medium mb-2">Tags</p>
               <div className="grid grid-cols-2 gap-2">

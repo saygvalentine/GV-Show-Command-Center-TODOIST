@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import { CalendarIcon } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -16,8 +16,9 @@ interface ShowDateRangePickerProps {
 
 function toDate(val: string): Date | undefined {
   if (!val) return undefined;
-  const d = parseISO(val);
-  return isNaN(d.getTime()) ? undefined : d;
+  const [y, m, d] = val.split("-").map(Number);
+  if (!y || !m || !d) return undefined;
+  return new Date(y, m - 1, d);
 }
 
 function toStr(d: Date | undefined): string {
@@ -39,9 +40,14 @@ export function ShowDateRangePicker({
   };
 
   function handleSelect(selected: DateRange | undefined) {
-    onStartChange(toStr(selected?.from));
-    onEndChange(toStr(selected?.to));
-    if (selected?.from && selected?.to) {
+    const from = selected?.from;
+    const to = selected?.to;
+    // react-day-picker v9 fires {from, to} both set to the same day on the first click
+    // treat a collapsed range as "start selected, waiting for end"
+    const sameDay = from && to && from.getTime() === to.getTime();
+    onStartChange(toStr(from));
+    onEndChange(sameDay ? "" : toStr(to));
+    if (from && to && !sameDay) {
       setOpen(false);
     }
   }

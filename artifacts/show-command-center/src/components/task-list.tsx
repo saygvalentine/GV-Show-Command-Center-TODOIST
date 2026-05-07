@@ -319,8 +319,18 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`font-medium ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
+            <span className={`relative font-medium transition-colors duration-500 ${task.completed ? 'text-muted-foreground' : ''}`}>
               {task.name}
+              <span
+                className="absolute inset-y-0 left-0 flex items-center pointer-events-none"
+                aria-hidden="true"
+                style={{
+                  width: task.completed ? '100%' : '0%',
+                  transition: 'width 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+              >
+                <span className="block w-full h-px bg-current opacity-60" />
+              </span>
             </span>
             {task.category && (
               <Badge variant="outline" className={`${getCategoryColor(task.category)} border-transparent text-xs py-0 h-5`}>

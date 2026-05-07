@@ -27,6 +27,7 @@ router.get("/overdue", async (req, res): Promise<void> => {
     dueDate: string;
     category: string | null;
     daysOverdue: number;
+    notes: string | null;
   }[] = [];
 
   for (const task of allTasks) {
@@ -40,6 +41,7 @@ router.get("/overdue", async (req, res): Promise<void> => {
         dueDate: task.dueDate,
         category: task.category ?? null,
         daysOverdue: daysOverdueCount(task.dueDate, today.getTime()),
+        notes: task.notes ?? null,
       });
     }
   }
@@ -55,6 +57,7 @@ router.get("/overdue", async (req, res): Promise<void> => {
         dueDate: eblast.dueDate,
         category: null,
         daysOverdue: daysOverdueCount(eblast.dueDate, today.getTime()),
+        notes: null,
       });
     }
   }

@@ -540,6 +540,7 @@ export const GetOverdueItemsResponseItem = zod.object({
   dueDate: zod.coerce.date(),
   category: zod.string().nullish(),
   daysOverdue: zod.number(),
+  notes: zod.string().nullish(),
 });
 export const GetOverdueItemsResponse = zod.array(GetOverdueItemsResponseItem);
 

@@ -71,18 +71,25 @@ export function OverduePanel() {
                     href={`/shows/${item.showId}?tab=${item.type === "eblast" ? "eblasts" : "tasks"}`}
                     className="flex items-center justify-between gap-3 px-4 py-2 group hover:bg-muted/40 transition-colors"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span
-                        className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded border ${chipClass(item.type, item.category)}`}
-                      >
-                        {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
-                      </span>
-                      <span className="text-sm truncate group-hover:text-primary transition-colors">
-                        {item.name}
-                      </span>
-                      <span className="hidden sm:inline shrink-0 text-xs text-muted-foreground">
-                        — {item.showName}
-                      </span>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded border ${chipClass(item.type, item.category)}`}
+                        >
+                          {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
+                        </span>
+                        <span className="text-sm truncate group-hover:text-primary transition-colors">
+                          {item.name}
+                        </span>
+                        <span className="hidden sm:inline shrink-0 text-xs text-muted-foreground">
+                          — {item.showName}
+                        </span>
+                      </div>
+                      {item.notes && (
+                        <p className="text-xs text-muted-foreground pl-1 truncate">
+                          {item.notes}
+                        </p>
+                      )}
                     </div>
                     <span className="shrink-0 text-xs font-semibold text-red-400 whitespace-nowrap">
                       {daysLabel(item.daysOverdue)} ago

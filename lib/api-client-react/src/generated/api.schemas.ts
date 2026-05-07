@@ -202,6 +202,7 @@ export interface OverdueItem {
   dueDate: string;
   category?: string | null;
   daysOverdue: number;
+  notes?: string | null;
 }
 
 export interface DashboardSummary {

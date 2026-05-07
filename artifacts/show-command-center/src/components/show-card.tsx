@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { format, differenceInDays, startOfDay } from "date-fns";
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { Calendar, MapPin, Clock, Truck } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -35,14 +35,14 @@ export function ShowCard({ show }: ShowCardProps) {
             </Link>
             <div className="flex flex-col gap-1 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" />
-                <span>Move-in: {formatDate(show.moveInDate)}</span>
+                <Truck className="h-3.5 w-3.5" />
+                <span>{formatDate(show.moveInDate)}</span>
               </div>
               {(show.showStart || show.dismantleDate) && (
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5 opacity-50" />
+                  <Calendar className="h-3.5 w-3.5" />
                   <span>
-                    Show: {show.showStart ? formatDate(show.showStart) : ""}
+                    {show.showStart ? formatDate(show.showStart) : ""}
                     {show.showStart && show.dismantleDate ? " – " : ""}
                     {show.dismantleDate ? formatDate(show.dismantleDate) : ""}
                   </span>

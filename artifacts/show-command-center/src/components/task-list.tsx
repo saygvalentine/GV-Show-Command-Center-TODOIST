@@ -240,6 +240,15 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
   const [expanded, setExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
+
+  const handleToggle = () => {
+    if (!task.completed) {
+      setJustCompleted(true);
+      setTimeout(() => setJustCompleted(false), 650);
+    }
+    onToggle();
+  };
   const urgency = getUrgencyInfo(task.dueDate);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -298,13 +307,15 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
   };
 
   return (
-    <div className={`group flex flex-col p-3 rounded-lg border bg-card transition-colors ${task.completed ? 'opacity-60' : 'hover:border-primary/30'}`}>
+    <div className={`group flex flex-col p-3 rounded-lg border bg-card transition-all duration-300 ${justCompleted ? 'border-green-500/60 bg-green-500/8 scale-[1.01]' : task.completed ? 'opacity-60' : 'hover:border-primary/30'}`}>
       <div className="flex items-start gap-3">
-        <Checkbox
-          checked={task.completed}
-          onCheckedChange={onToggle}
-          className={`mt-1 ${task.completed ? 'data-[state=checked]:bg-green-500 data-[state=checked]:text-white border-green-500' : ''}`}
-        />
+        <div className={`mt-1 transition-transform duration-150 ${justCompleted ? 'scale-125' : 'scale-100'}`}>
+          <Checkbox
+            checked={task.completed}
+            onCheckedChange={handleToggle}
+            className={`transition-colors duration-300 ${task.completed ? 'data-[state=checked]:bg-green-500 data-[state=checked]:text-white border-green-500' : ''}`}
+          />
+        </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">

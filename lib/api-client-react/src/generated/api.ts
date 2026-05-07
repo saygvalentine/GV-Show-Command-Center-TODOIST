@@ -28,12 +28,14 @@ import type {
   DashboardSummary,
   Eblast,
   GetCalendarEventsParams,
+  GetCalendarShowDatesParams,
   HealthStatus,
   Link,
   ListOfficeTasksParams,
   OfficeTask,
   OverdueItem,
   Show,
+  ShowDateEvent,
   ShowWithItems,
   Task,
   UpdateEblastBody,
@@ -2176,6 +2178,106 @@ export function useGetCalendarEvents<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetCalendarEventsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get show milestone dates for calendar view
+ */
+export const getGetCalendarShowDatesUrl = (
+  params: GetCalendarShowDatesParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/calendar/show-dates?${stringifiedParams}`
+    : `/api/calendar/show-dates`;
+};
+
+export const getCalendarShowDates = async (
+  params: GetCalendarShowDatesParams,
+  options?: RequestInit,
+): Promise<ShowDateEvent[]> => {
+  return customFetch<ShowDateEvent[]>(getGetCalendarShowDatesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCalendarShowDatesQueryKey = (
+  params?: GetCalendarShowDatesParams,
+) => {
+  return [`/api/calendar/show-dates`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetCalendarShowDatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCalendarShowDates>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetCalendarShowDatesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCalendarShowDates>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetCalendarShowDatesQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getCalendarShowDates>>
+  > = ({ signal }) =>
+    getCalendarShowDates(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCalendarShowDates>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCalendarShowDatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCalendarShowDates>>
+>;
+export type GetCalendarShowDatesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get show milestone dates for calendar view
+ */
+
+export function useGetCalendarShowDates<
+  TData = Awaited<ReturnType<typeof getCalendarShowDates>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetCalendarShowDatesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCalendarShowDates>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCalendarShowDatesQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

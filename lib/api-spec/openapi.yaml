@@ -592,6 +592,37 @@ paths:
                 items:
                   $ref: "#/components/schemas/CalendarEvent"
 
+  /calendar/show-dates:
+    get:
+      operationId: getCalendarShowDates
+      tags: [calendar]
+      summary: Get show milestone dates for calendar view
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: showId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Show date events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShowDateEvent"
+
   /dashboard/overdue:
     get:
       operationId: getOverdueItems
@@ -969,6 +1000,25 @@ components:
         officeTaskId:
           type: integer
           nullable: true
+
+    ShowDateEvent:
+      type: object
+      required: [id, type, showId, showName, name, date]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [movein, advwarehouse, discount, orderdeadline, showstart, dismantle]
+        showId:
+          type: integer
+        showName:
+          type: string
+        name:
+          type: string
+        date:
+          type: string
+          format: date
 
     OfficeTask:
       type: object

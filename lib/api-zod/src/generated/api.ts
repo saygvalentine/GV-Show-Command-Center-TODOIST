@@ -529,6 +529,34 @@ export const GetCalendarEventsResponse = zod.array(
 );
 
 /**
+ * @summary Get show milestone dates for calendar view
+ */
+export const GetCalendarShowDatesQueryParams = zod.object({
+  month: zod.coerce.number(),
+  year: zod.coerce.number(),
+  showId: zod.coerce.number().optional(),
+});
+
+export const GetCalendarShowDatesResponseItem = zod.object({
+  id: zod.number(),
+  type: zod.enum([
+    "movein",
+    "advwarehouse",
+    "discount",
+    "orderdeadline",
+    "showstart",
+    "dismantle",
+  ]),
+  showId: zod.number(),
+  showName: zod.string(),
+  name: zod.string(),
+  date: zod.coerce.date(),
+});
+export const GetCalendarShowDatesResponse = zod.array(
+  GetCalendarShowDatesResponseItem,
+);
+
+/**
  * @summary Get all overdue tasks and e-blasts across all shows
  */
 export const GetOverdueItemsResponseItem = zod.object({

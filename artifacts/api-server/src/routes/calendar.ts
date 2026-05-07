@@ -141,4 +141,61 @@ router.get("/", async (req, res): Promise<void> => {
   res.json(events);
 });
 
+router.get("/show-dates", async (req, res): Promise<void> => {
+  const month = Number(req.query.month);
+  const year = Number(req.query.year);
+  const showId = req.query.showId ? Number(req.query.showId) : undefined;
+
+  if (!month || !year) {
+    res.status(400).json({ error: "month and year required" });
+    return;
+  }
+
+  const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+  const endDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
+
+  const shows = showId
+    ? await db.select().from(showsTable).where(eq(showsTable.id, showId))
+    : await db.select().from(showsTable);
+
+  type ShowDateType = "movein" | "advwarehouse" | "discount" | "orderdeadline" | "showstart" | "dismantle";
+  const milestones: Array<{ field: keyof typeof shows[0]; type: ShowDateType; label: string }> = [
+    { field: "moveInDate",           type: "movein",        label: "Move-In" },
+    { field: "advanceWarehouseDate", type: "advwarehouse",  label: "Adv. Warehouse" },
+    { field: "discountDeadline",     type: "discount",      label: "Discount Deadline" },
+    { field: "onlineOrderDeadline",  type: "orderdeadline", label: "Online Order Deadline" },
+    { field: "showStart",            type: "showstart",     label: "Show Start" },
+    { field: "dismantleDate",        type: "dismantle",     label: "Dismantle" },
+  ];
+
+  const dateEvents: {
+    id: number;
+    type: ShowDateType;
+    showId: number;
+    showName: string;
+    name: string;
+    date: string;
+  }[] = [];
+
+  for (const show of shows) {
+    milestones.forEach(({ field, type, label }, idx) => {
+      const date = show[field] as string | null;
+      if (date && date >= startDate && date <= endDate) {
+        dateEvents.push({
+          id: show.id * 100 + idx,
+          type,
+          showId: show.id,
+          showName: show.name,
+          name: `${show.name} — ${label}`,
+          date,
+        });
+      }
+    });
+  }
+
+  dateEvents.sort((a, b) => a.date.localeCompare(b.date));
+  res.json(dateEvents);
+});
+
 export default router;

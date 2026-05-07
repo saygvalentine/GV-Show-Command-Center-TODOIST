@@ -153,6 +153,27 @@ export interface CalendarEvent {
   officeTaskId?: number | null;
 }
 
+export type ShowDateEventType =
+  (typeof ShowDateEventType)[keyof typeof ShowDateEventType];
+
+export const ShowDateEventType = {
+  movein: "movein",
+  advwarehouse: "advwarehouse",
+  discount: "discount",
+  orderdeadline: "orderdeadline",
+  showstart: "showstart",
+  dismantle: "dismantle",
+} as const;
+
+export interface ShowDateEvent {
+  id: number;
+  type: ShowDateEventType;
+  showId: number;
+  showName: string;
+  name: string;
+  date: string;
+}
+
 export interface OfficeTask {
   id: number;
   title: string;
@@ -228,6 +249,12 @@ export type ListOfficeTasksParams = {
 };
 
 export type GetCalendarEventsParams = {
+  month: number;
+  year: number;
+  showId?: number;
+};
+
+export type GetCalendarShowDatesParams = {
   month: number;
   year: number;
   showId?: number;

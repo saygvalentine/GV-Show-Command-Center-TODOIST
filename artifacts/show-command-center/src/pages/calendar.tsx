@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, startOfDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Loader2, Download, CheckCircle2, Circle } from "lucide-react";
-import { useGetCalendarEvents, useListShows, useUpdateOfficeTask, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
+import { useGetCalendarEvents, useGetCalendarShowDates, useListShows, useUpdateOfficeTask, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,17 +15,26 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(startOfDay(new Date()));
   const [selectedShowId, setSelectedShowId] = useState<string>("all");
   const [selectedDay, setSelectedDay] = useState<Date | null>(startOfDay(new Date()));
+  const [mode, setMode] = useState<"tasks" | "showdates">("tasks");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const month = currentDate.getMonth() + 1;
   const year = currentDate.getFullYear();
+  const showIdParam = selectedShowId !== "all" ? Number(selectedShowId) : undefined;
 
   const { data: shows } = useListShows();
-  const { data: events, isLoading, refetch: refetchCalendar } = useGetCalendarEvents(
-    { month, year, showId: selectedShowId !== "all" ? Number(selectedShowId) : undefined },
-    { query: { queryKey: ["calendar-events", month, year, selectedShowId] } }
+  const { data: taskEvents, isLoading: taskLoading, refetch: refetchCalendar } = useGetCalendarEvents(
+    { month, year, showId: showIdParam },
+    { query: { enabled: mode === "tasks", queryKey: ["calendar-events", month, year, selectedShowId] } }
   );
+  const { data: showDateEvents, isLoading: showDateLoading } = useGetCalendarShowDates(
+    { month, year, showId: showIdParam },
+    { query: { enabled: mode === "showdates", queryKey: ["calendar-show-dates", month, year, selectedShowId] } }
+  );
+
+  const events = mode === "tasks" ? taskEvents : showDateEvents;
+  const isLoading = mode === "tasks" ? taskLoading : showDateLoading;
 
   const updateOfficeTask = useUpdateOfficeTask();
 
@@ -35,6 +44,7 @@ export default function Calendar() {
   const handleExport = () => {
     const params = new URLSearchParams();
     if (selectedShowId !== "all") params.set("showId", selectedShowId);
+    if (mode === "showdates") params.set("mode", "showdates");
     const url = `/api/export/ics${params.toString() ? `?${params}` : ""}`;
     const a = document.createElement("a");
     a.href = url;
@@ -66,10 +76,22 @@ export default function Calendar() {
   const firstDayOfMonth = startOfMonth(currentDate).getDay();
   const paddingDays = Array.from({ length: firstDayOfMonth }).map((_, i) => i);
 
+  type AnyEvent = {
+    id: number;
+    type: string;
+    showId?: number | null;
+    showName?: string | null;
+    name: string;
+    date: string;
+    done?: boolean;
+    category?: string | null;
+    officeTaskId?: number | null;
+  };
+
   const eventsByDay = useMemo(() => {
-    if (!events) return {};
-    const map: Record<string, typeof events> = {};
-    events.forEach(e => {
+    if (!events) return {} as Record<string, AnyEvent[]>;
+    const map: Record<string, AnyEvent[]> = {};
+    (events as AnyEvent[]).forEach(e => {
       const dateStr = e.date;
       if (!map[dateStr]) map[dateStr] = [];
       map[dateStr].push(e);
@@ -82,20 +104,30 @@ export default function Calendar() {
   const getEventColor = (type: string, done?: boolean) => {
     if (done) return "bg-gray-500/20 text-gray-500 line-through border-gray-500/30";
     switch (type) {
-      case "movein": return "bg-primary/20 text-primary border-primary/30";
-      case "eblast": return "bg-pink-500/20 text-pink-500 border-pink-500/30";
-      case "task": return "bg-blue-500/20 text-blue-500 border-blue-500/30";
-      case "officetask": return "bg-purple-500/20 text-purple-500 border-purple-500/30";
+      case "movein":       return "bg-primary/20 text-primary border-primary/30";
+      case "eblast":       return "bg-pink-500/20 text-pink-500 border-pink-500/30";
+      case "task":         return "bg-blue-500/20 text-blue-500 border-blue-500/30";
+      case "officetask":   return "bg-purple-500/20 text-purple-500 border-purple-500/30";
+      case "advwarehouse": return "bg-amber-500/20 text-amber-600 border-amber-500/30";
+      case "discount":     return "bg-green-500/20 text-green-600 border-green-500/30";
+      case "orderdeadline":return "bg-violet-500/20 text-violet-600 border-violet-500/30";
+      case "showstart":    return "bg-teal-500/20 text-teal-600 border-teal-500/30";
+      case "dismantle":    return "bg-rose-500/20 text-rose-600 border-rose-500/30";
       default: return "bg-gray-500/20 text-gray-500 border-gray-500/30";
     }
   };
 
   const getEventTypeLabel = (type: string) => {
     switch (type) {
-      case "movein": return "Move-In";
-      case "eblast": return "E-Blast";
-      case "task": return "Task";
-      case "officetask": return "Office";
+      case "movein":       return "Move-In";
+      case "eblast":       return "E-Blast";
+      case "task":         return "Task";
+      case "officetask":   return "Office";
+      case "advwarehouse": return "Adv. Wh.";
+      case "discount":     return "Discount";
+      case "orderdeadline":return "Order DL";
+      case "showstart":    return "Show Start";
+      case "dismantle":    return "Dismantle";
       default: return type;
     }
   };
@@ -121,8 +153,25 @@ export default function Calendar() {
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="flex rounded-md border overflow-hidden">
+              <Button
+                variant={mode === "tasks" ? "default" : "ghost"}
+                className="rounded-none text-sm h-9 px-3"
+                onClick={() => setMode("tasks")}
+              >
+                Task Dates
+              </Button>
+              <Button
+                variant={mode === "showdates" ? "default" : "ghost"}
+                className="rounded-none border-l text-sm h-9 px-3"
+                onClick={() => setMode("showdates")}
+              >
+                Show Dates
+              </Button>
+            </div>
+
             <Select value={selectedShowId} onValueChange={setSelectedShowId}>
-              <SelectTrigger className="w-[250px]">
+              <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by Show" />
               </SelectTrigger>
               <SelectContent>

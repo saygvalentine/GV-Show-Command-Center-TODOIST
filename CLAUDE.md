@@ -113,11 +113,11 @@ Show urgency is based on days until `moveInDate` (see `getUrgencyInfo` in `artif
 | Days remaining | Color | Label |
 |---|---|---|
 | past | Gray | PAST |
-| 0–3 | Red | DUE SOON |
-| 4–7 | Amber | URGENT |
-| 8–14 | Yellow | SOON |
-| 15–30 | Green | ON TRACK |
-| 31+ | Indigo | LATER |
+| 0–7 | Red | URGENT |
+| 8–13 | Amber | CLOSE |
+| 14–30 | Yellow | SOON |
+| 31–60 | Green | IN PROGRESS |
+| 61+ | Indigo | PLANNING |
 
 ### Show Archive Logic
 

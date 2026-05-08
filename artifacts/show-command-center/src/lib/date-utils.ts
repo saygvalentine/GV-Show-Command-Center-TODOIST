@@ -45,13 +45,13 @@ export function getUrgencyInfo(targetDateStr?: string | null) {
   
   const diff = differenceInDays(target, today);
   
-  if (diff < 0) return { color: "gray", label: "PAST", daysRemaining: diff, bgClass: "bg-gray-500", textClass: "text-gray-500" };
-  if (diff <= 3) return { color: "red", label: "DUE SOON", daysRemaining: diff, bgClass: "bg-red-500", textClass: "text-red-500" };
-  if (diff <= 7) return { color: "amber", label: "URGENT", daysRemaining: diff, bgClass: "bg-amber-500", textClass: "text-amber-500" };
-  if (diff <= 14) return { color: "yellow", label: "SOON", daysRemaining: diff, bgClass: "bg-yellow-500", textClass: "text-yellow-500" };
-  if (diff <= 30) return { color: "green", label: "ON TRACK", daysRemaining: diff, bgClass: "bg-green-500", textClass: "text-green-500" };
-  
-  return { color: "indigo", label: "LATER", daysRemaining: diff, bgClass: "bg-indigo-500", textClass: "text-indigo-500" };
+  if (diff < 0)  return { color: "gray",   label: "PAST",        daysRemaining: diff, bgClass: "bg-gray-500",   textClass: "text-gray-500"   };
+  if (diff <= 7)  return { color: "red",    label: "URGENT",      daysRemaining: diff, bgClass: "bg-red-500",    textClass: "text-red-500"    };
+  if (diff <= 13) return { color: "amber",  label: "CLOSE",       daysRemaining: diff, bgClass: "bg-amber-500",  textClass: "text-amber-500"  };
+  if (diff <= 30) return { color: "yellow", label: "SOON",        daysRemaining: diff, bgClass: "bg-yellow-500", textClass: "text-yellow-500" };
+  if (diff <= 60) return { color: "green",  label: "IN PROGRESS", daysRemaining: diff, bgClass: "bg-green-500",  textClass: "text-green-500"  };
+
+  return { color: "indigo", label: "PLANNING", daysRemaining: diff, bgClass: "bg-indigo-500", textClass: "text-indigo-500" };
 }
 
 export function getCategoryColor(category?: string | null) {

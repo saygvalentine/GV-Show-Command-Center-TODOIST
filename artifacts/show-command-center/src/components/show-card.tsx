@@ -88,14 +88,14 @@ export function ShowCard({ show }: ShowCardProps) {
       <CardContent className="pb-4 flex-1 border-t">
         <div className="space-y-4 pt-4">
           {/* Status Chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {/* FM */}
             {show.fireMarshalStatus === "Submitted" ? (
-              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+              <Badge variant="outline" className="w-full justify-start bg-green-500/10 text-green-500 border-green-500/20">
                 FM: Submitted {show.fireMarshalDate ? format(new Date(show.fireMarshalDate), "M/d") : ""}
               </Badge>
             ) : show.fireMarshalStatus === "In Progress" ? (
-              <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 flex items-center gap-1.5">
+              <Badge variant="outline" className="w-full justify-start bg-blue-500/10 text-blue-500 border-blue-500/20 flex items-center gap-1.5">
                 <div className="relative flex h-2 w-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -103,18 +103,18 @@ export function ShowCard({ show }: ShowCardProps) {
                 FM: In Progress
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+              <Badge variant="outline" className="w-full justify-start text-muted-foreground border-muted-foreground/30">
                 FM: N/A
               </Badge>
             )}
 
             {/* ID Signs */}
             {show.idSignStatus === "Ordered" ? (
-              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+              <Badge variant="outline" className="w-full justify-start bg-green-500/10 text-green-500 border-green-500/20">
                 ID Signs: Ordered {show.idSignDate ? format(new Date(show.idSignDate), "M/d") : ""}
               </Badge>
             ) : show.idSignStatus === "In Progress" ? (
-              <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 flex items-center gap-1.5">
+              <Badge variant="outline" className="w-full justify-start bg-purple-500/10 text-purple-500 border-purple-500/20 flex items-center gap-1.5">
                 <div className="relative flex h-2 w-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
@@ -122,29 +122,29 @@ export function ShowCard({ show }: ShowCardProps) {
                 ID Signs: In Progress
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+              <Badge variant="outline" className="w-full justify-start text-muted-foreground border-muted-foreground/30">
                 ID Signs: N/A
               </Badge>
             )}
 
             {/* Kit Sent */}
             {show.exhibitorKitSent && show.exhibitorKitDate ? (
-              <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20">
+              <Badge variant="outline" className="w-full justify-start bg-pink-500/10 text-pink-500 border-pink-500/20">
                 Kit Sent: {format(new Date(show.exhibitorKitDate), "M/d")}
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+              <Badge variant="outline" className="w-full justify-start text-muted-foreground border-muted-foreground/30">
                 Kit Sent: N/A
               </Badge>
             )}
 
             {/* Last eBlast */}
             {show.lastEblastDate ? (
-              <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20">
+              <Badge variant="outline" className="w-full justify-start bg-pink-500/10 text-pink-500 border-pink-500/20">
                 Last eBlast: Sent {format(new Date(show.lastEblastDate), "M/d")}
               </Badge>
             ) : (
-              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+              <Badge variant="outline" className="w-full justify-start text-muted-foreground border-muted-foreground/30">
                 Last eBlast: N/A
               </Badge>
             )}

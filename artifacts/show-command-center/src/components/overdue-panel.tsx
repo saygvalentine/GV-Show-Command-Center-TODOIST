@@ -27,7 +27,7 @@ function daysLabel(n: number) {
 
 export function OverduePanel() {
   const { data: rawItems, isLoading } = useGetOverdueItems();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   // Sort oldest first (highest daysOverdue first)
   const items = rawItems

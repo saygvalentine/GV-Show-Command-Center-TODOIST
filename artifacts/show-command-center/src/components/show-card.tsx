@@ -57,7 +57,7 @@ export function ShowCard({ show }: ShowCardProps) {
             </div>
 
             {(show.advanceWarehouseDate || show.onlineOrderDeadline || show.discountDeadline) && (
-              <div className="mt-2 flex items-center gap-x-3 text-xs overflow-hidden flex-wrap">
+              <div className="mt-2 flex items-center gap-x-2 text-xs overflow-hidden whitespace-nowrap">
                 <span className="flex items-center gap-1 text-muted-foreground/70 font-medium uppercase tracking-wide shrink-0">
                   <Clock className="h-3 w-3" />
                   Deadlines

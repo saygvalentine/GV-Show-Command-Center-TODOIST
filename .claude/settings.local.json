@@ -23,6 +23,19 @@
       "mcp__testsprite__testsprite_generate_code_and_execute"
     ]
   },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"You just edited or wrote files. At the end of your response, ask the user if they would like you to commit these changes to git.\"}}'"
+          }
+        ]
+      }
+    ]
+  },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "testsprite"

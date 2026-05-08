@@ -60,13 +60,13 @@ export function ShowCard({ show }: ShowCardProps) {
               <div className="mt-2 flex items-center gap-x-2 text-xs overflow-hidden whitespace-nowrap">
                 <Clock className="h-3 w-3 text-muted-foreground/70 shrink-0" />
                 {show.advanceWarehouseDate && (
-                  <span className="text-muted-foreground">Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
+                  <span className="text-muted-foreground">WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
                 )}
                 {show.onlineOrderDeadline && (
-                  <span className="text-muted-foreground">Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
+                  <span className="text-muted-foreground">OL: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
                 )}
                 {show.discountDeadline && (
-                  <span className="text-muted-foreground">Discount: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
+                  <span className="text-muted-foreground">Disc: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
                 )}
               </div>
             )}

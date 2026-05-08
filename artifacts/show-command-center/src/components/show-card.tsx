@@ -29,7 +29,7 @@ export function ShowCard({ show }: ShowCardProps) {
       
       <CardHeader className="pb-3 flex-none">
         <div className="flex justify-between items-start">
-          <div className="space-y-1.5 pr-4">
+          <div className="space-y-1.5 pr-4 min-w-0">
             <Link href={`/shows/${show.id}`} className="font-semibold text-lg hover:underline underline-offset-4 decoration-primary/50">
               {show.name}
             </Link>

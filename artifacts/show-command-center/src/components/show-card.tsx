@@ -57,22 +57,20 @@ export function ShowCard({ show }: ShowCardProps) {
             </div>
 
             {(show.advanceWarehouseDate || show.onlineOrderDeadline || show.discountDeadline) && (
-              <div className="mt-2 space-y-0.5">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70 font-medium uppercase tracking-wide">
+              <div className="mt-2 flex items-center gap-x-3 text-xs overflow-hidden flex-wrap">
+                <span className="flex items-center gap-1 text-muted-foreground/70 font-medium uppercase tracking-wide shrink-0">
                   <Clock className="h-3 w-3" />
-                  <span>Deadlines</span>
-                </div>
-                <div className="flex gap-x-3 text-xs text-muted-foreground pl-4 overflow-hidden">
-                  {show.advanceWarehouseDate && (
-                    <span>Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
-                  )}
-                  {show.onlineOrderDeadline && (
-                    <span>Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
-                  )}
-                  {show.discountDeadline && (
-                    <span>Discount: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
-                  )}
-                </div>
+                  Deadlines
+                </span>
+                {show.advanceWarehouseDate && (
+                  <span className="text-muted-foreground">Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
+                )}
+                {show.onlineOrderDeadline && (
+                  <span className="text-muted-foreground">Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
+                )}
+                {show.discountDeadline && (
+                  <span className="text-muted-foreground">Discount: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
+                )}
               </div>
             )}
           </div>

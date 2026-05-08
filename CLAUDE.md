@@ -14,8 +14,8 @@ pnpm run build                  # Typecheck + build all packages
 pnpm run typecheck              # Full typecheck across all packages
 
 # Development
-pnpm --filter @workspace/api-server run dev           # Start API server
-pnpm --filter @workspace/show-command-center run dev  # Start frontend
+pnpm --filter @workspace/api-server run dev           # Build (esbuild) then start API server (no watch; restart to pick up changes)
+pnpm --filter @workspace/show-command-center run dev  # Start frontend (Vite HMR)
 
 # Database
 pnpm --filter @workspace/db run generate  # Generate new migration
@@ -126,9 +126,11 @@ A show is considered **active** if `dismantleDate ?? moveInDate >= today`; other
 ### DB Schema Key Fields
 
 - **shows**: `moveInDate` (required), `dismantleDate`, `advanceWarehouseDate`, `discountDeadline`, `onlineOrderDeadline`, `showStart`, `venue`, `tags` (text array).
-- **tasks**: completion tracked via `completed` boolean + `completedAt` timestamp.
-- **eblasts**: completion tracked via `sent` boolean + `sentAt` timestamp (not `completed`/`completedAt`).
-- **office_tasks**: has `priority` (`low`/`medium`/`high`) and `status` (`todo`/`in-progress`/`done`) fields in addition to `completed`.
+- **tasks**: completion tracked via `completed` boolean + `completedAt` timestamp; has `category`, `dueDate`, `dueDateRule`, `notes`.
+- **eblasts**: completion tracked via `sent` boolean + `sentAt` timestamp (not `completed`/`completedAt`); no category field.
+- **office_tasks**: has `priority` (`low`/`medium`/`high`) and `status` (`todo`/`in-progress`/`done`) fields in addition to `completed`; standalone (no `showId`).
+- **links**: `title` + `url` only; no completion state.
+- **venues**: lookup table referenced by `shows.venue` (text, not a foreign key).
 
 ### Task Categories
 

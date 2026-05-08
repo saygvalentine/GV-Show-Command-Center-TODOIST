@@ -128,8 +128,18 @@ router.get("/summary", async (req, res): Promise<void> => {
 
     const idSignTasks = tasks.filter((t) => t.category === "ID Sign");
     let idSignStatus = null;
+    let idSignDate = null;
     if (idSignTasks.length > 0) {
-      idSignStatus = idSignTasks.every((t) => t.completed) ? "Ordered" : "In Progress";
+      const allDone = idSignTasks.every((t) => t.completed);
+      if (allDone) {
+        idSignStatus = "Ordered";
+        const lastDone = idSignTasks
+          .filter((t) => t.completedAt)
+          .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())[0];
+        idSignDate = lastDone?.completedAt?.toISOString() ?? null;
+      } else {
+        idSignStatus = "In Progress";
+      }
     }
 
     nextUpShow = {
@@ -145,6 +155,7 @@ router.get("/summary", async (req, res): Promise<void> => {
       fireMarshalStatus,
       fireMarshalDate,
       idSignStatus,
+      idSignDate,
     };
   }
 

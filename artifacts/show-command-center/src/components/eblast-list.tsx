@@ -149,7 +149,7 @@ export function EblastList({ show }: { show: Show }) {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold tracking-tight text-pink-500">e-Blasts</h3>
+        <h3 className="text-lg font-semibold tracking-tight text-pink-500">eBlasts</h3>
         <AddEblastDialog show={show} />
       </div>
 
@@ -186,7 +186,7 @@ export function EblastList({ show }: { show: Show }) {
       
       {grouped.upcoming.length === 0 && grouped.overdue.length === 0 && (
         <div className="text-center py-10 border-2 border-dashed rounded-lg text-muted-foreground">
-          No pending e-blasts.
+          No pending eBlasts.
         </div>
       )}
 
@@ -271,12 +271,12 @@ function EblastRow({ item, showId, onToggle, onDelete }: { item: any, showId: nu
       { showId, eblastId: item.id, data },
       {
         onSuccess: () => {
-          toast({ title: "e-Blast updated" });
+          toast({ title: "eBlast updated" });
           setEditOpen(false);
           queryClient.invalidateQueries({ queryKey: getListEblastsQueryKey(showId) });
           queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(showId) });
         },
-        onError: () => toast({ title: "Error updating e-Blast", variant: "destructive" }),
+        onError: () => toast({ title: "Error updating eBlast", variant: "destructive" }),
       }
     );
   };
@@ -352,7 +352,7 @@ function EblastRow({ item, showId, onToggle, onDelete }: { item: any, showId: nu
             <DialogContent className="max-w-md border-pink-500/20" aria-describedby={undefined}>
               <DialogHeader>
                 <DialogTitle className="text-pink-500 flex items-center gap-2">
-                  <Mail className="h-4 w-4" /> Edit e-Blast
+                  <Mail className="h-4 w-4" /> Edit eBlast
                 </DialogTitle>
               </DialogHeader>
               <Form {...form}>
@@ -362,7 +362,7 @@ function EblastRow({ item, showId, onToggle, onDelete }: { item: any, showId: nu
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>e-Blast Name *</FormLabel>
+                        <FormLabel>eBlast Name *</FormLabel>
                         <FormControl><Input {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
@@ -420,7 +420,7 @@ function EblastRow({ item, showId, onToggle, onDelete }: { item: any, showId: nu
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete e-Blast?</AlertDialogTitle>
+                <AlertDialogTitle>Delete eBlast?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Are you sure you want to delete "{item.name}"? This cannot be undone.
                 </AlertDialogDescription>
@@ -476,7 +476,7 @@ function AddEblastDialog({ show }: { show: Show }) {
     };
     createCustom.mutate({ showId: show.id, data: cleaned as any }, {
       onSuccess: () => {
-        toast({ title: "e-Blast added" });
+        toast({ title: "eBlast added" });
         setOpen(false);
         form.reset();
         queryClient.invalidateQueries({ queryKey: getListEblastsQueryKey(show.id) });
@@ -508,7 +508,7 @@ function AddEblastDialog({ show }: { show: Show }) {
     });
     bulkCreate.mutate({ showId: show.id, data: { eblasts } }, {
       onSuccess: () => {
-        toast({ title: `${eblasts.length} e-Blast${eblasts.length !== 1 ? "s" : ""} added` });
+        toast({ title: `${eblasts.length} eBlast${eblasts.length !== 1 ? "s" : ""} added` });
         setOpen(false);
         setSelectedPresets([]);
         queryClient.invalidateQueries({ queryKey: getListEblastsQueryKey(show.id) });
@@ -527,17 +527,17 @@ function AddEblastDialog({ show }: { show: Show }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="bg-pink-600 hover:bg-pink-700 text-white"><Plus className="mr-2 h-4 w-4" /> Add e-Blast</Button>
+        <Button size="sm" className="bg-pink-600 hover:bg-pink-700 text-white"><Plus className="mr-2 h-4 w-4" /> Add eBlast</Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl border-pink-500/30" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle className="text-pink-500 flex items-center gap-2"><Mail className="h-5 w-5"/> Add e-Blasts</DialogTitle>
+          <DialogTitle className="text-pink-500 flex items-center gap-2"><Mail className="h-5 w-5"/> Add eBlasts</DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="preset">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="preset">Preset Schedule</TabsTrigger>
-            <TabsTrigger value="custom">Custom e-Blast</TabsTrigger>
+            <TabsTrigger value="custom">Custom eBlast</TabsTrigger>
           </TabsList>
           
           <TabsContent value="preset" className="space-y-4">
@@ -571,7 +571,7 @@ function AddEblastDialog({ show }: { show: Show }) {
                 </Button>
                 <Button onClick={handleBulkAdd} disabled={selectedPresets.length === 0 || bulkCreate.isPending} className="bg-pink-600 hover:bg-pink-700">
                   {bulkCreate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Add {selectedPresets.length} e-Blasts
+                  Add {selectedPresets.length} eBlasts
                 </Button>
               </div>
             </div>
@@ -585,7 +585,7 @@ function AddEblastDialog({ show }: { show: Show }) {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>e-Blast Name *</FormLabel>
+                      <FormLabel>eBlast Name *</FormLabel>
                       <FormControl><Input {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -617,7 +617,7 @@ function AddEblastDialog({ show }: { show: Show }) {
                 <div className="flex justify-end pt-2">
                   <Button type="submit" disabled={createCustom.isPending} className="bg-pink-600 hover:bg-pink-700">
                     {createCustom.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Add Custom e-Blast
+                    Add Custom eBlast
                   </Button>
                 </div>
               </form>

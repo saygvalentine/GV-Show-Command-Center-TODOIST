@@ -728,6 +728,9 @@ components:
         idSignStatus:
           type: string
           nullable: true
+        idSignDate:
+          type: string
+          nullable: true
         tags:
           type: array
           items:

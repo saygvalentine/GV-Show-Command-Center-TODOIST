@@ -57,19 +57,16 @@ export function ShowCard({ show }: ShowCardProps) {
             </div>
 
             {(show.advanceWarehouseDate || show.onlineOrderDeadline || show.discountDeadline) && (
-              <div className="mt-2 flex items-center gap-x-2 text-xs overflow-hidden whitespace-nowrap">
-                <span className="flex items-center gap-1 text-muted-foreground/70 font-medium uppercase tracking-wide shrink-0">
-                  <Clock className="h-3 w-3" />
-                  Deadlines
-                </span>
+              <div className="mt-2 flex flex-nowrap items-center gap-x-2 text-xs overflow-hidden">
+                <Clock className="h-3 w-3 text-muted-foreground/70 shrink-0" />
                 {show.advanceWarehouseDate && (
-                  <span className="text-muted-foreground">Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
+                  <span className="whitespace-nowrap text-muted-foreground">Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
                 )}
                 {show.onlineOrderDeadline && (
-                  <span className="text-muted-foreground">Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
+                  <span className="whitespace-nowrap text-muted-foreground">Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
                 )}
                 {show.discountDeadline && (
-                  <span className="text-muted-foreground">Discount: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
+                  <span className="whitespace-nowrap text-muted-foreground">Disc: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
                 )}
               </div>
             )}
@@ -88,48 +85,67 @@ export function ShowCard({ show }: ShowCardProps) {
         </div>
       </CardHeader>
       
-      <CardContent className="pb-4 flex-1">
-        <div className="space-y-4">
+      <CardContent className="pb-4 flex-1 border-t">
+        <div className="space-y-4 pt-4">
           {/* Status Chips */}
           <div className="flex flex-wrap gap-2">
-            {(show.fireMarshalStatus || show.fireMarshalDate) && (
-              show.fireMarshalStatus === "Submitted" ? (
-                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                  FM: Submitted
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 flex items-center gap-1.5">
-                  <div className="relative flex h-2 w-2 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                  </div>
-                  FM: {show.fireMarshalStatus || formatDate(show.fireMarshalDate)}
-                </Badge>
-              )
-            )}
-            {show.idSignStatus && (
-              show.idSignStatus === "Ordered" ? (
-                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                  ID Sign: Ordered
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 flex items-center gap-1.5">
-                  <div className="relative flex h-2 w-2 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                  </div>
-                  ID Sign: {show.idSignStatus}
-                </Badge>
-              )
-            )}
-            {show.exhibitorKitSent && show.exhibitorKitDate && (
-              <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20">
-                XBR Kit Sent: {formatDate(show.exhibitorKitDate)}
+            {/* FM */}
+            {show.fireMarshalStatus === "Submitted" ? (
+              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                FM: Submitted {show.fireMarshalDate ? format(new Date(show.fireMarshalDate), "M/d") : ""}
+              </Badge>
+            ) : show.fireMarshalStatus === "In Progress" ? (
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 flex items-center gap-1.5">
+                <div className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </div>
+                FM: In Progress
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+                FM: N/A
               </Badge>
             )}
-            {show.lastEblastDate && (
+
+            {/* ID Signs */}
+            {show.idSignStatus === "Ordered" ? (
+              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                ID Signs: Ordered {show.idSignDate ? format(new Date(show.idSignDate), "M/d") : ""}
+              </Badge>
+            ) : show.idSignStatus === "In Progress" ? (
+              <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 flex items-center gap-1.5">
+                <div className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                </div>
+                ID Signs: In Progress
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+                ID Signs: N/A
+              </Badge>
+            )}
+
+            {/* Kit Sent */}
+            {show.exhibitorKitSent && show.exhibitorKitDate ? (
               <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20">
-                Last e-Blast Sent: {formatDate(show.lastEblastDate)}
+                Kit Sent: {format(new Date(show.exhibitorKitDate), "M/d")}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+                Kit Sent: N/A
+              </Badge>
+            )}
+
+            {/* Last eBlast */}
+            {show.lastEblastDate ? (
+              <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20">
+                Last eBlast: Sent {format(new Date(show.lastEblastDate), "M/d")}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+                Last eBlast: N/A
               </Badge>
             )}
           </div>

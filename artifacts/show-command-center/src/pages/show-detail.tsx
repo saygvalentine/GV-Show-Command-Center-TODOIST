@@ -106,7 +106,7 @@ export default function ShowDetail() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Show?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete "{show.name}" and all of its tasks, e-blasts, and links. This action cannot be undone.
+                    This will permanently delete "{show.name}" and all of its tasks, eBlasts, and links. This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -214,7 +214,7 @@ export default function ShowDetail() {
               value="eblasts" 
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-pink-500 data-[state=active]:bg-background px-6 py-3 font-semibold text-base data-[state=active]:text-pink-500"
             >
-              e-Blasts
+              eBlasts
               {show.eblastCount ? <span className="ml-2 bg-muted px-2 py-0.5 rounded-full text-xs">{show.eblastCount}</span> : null}
             </TabsTrigger>
             <TabsTrigger 

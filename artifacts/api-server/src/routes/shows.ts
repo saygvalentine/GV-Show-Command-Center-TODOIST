@@ -79,9 +79,18 @@ function computeShowStats(
   // ID Sign status
   const idSignTasks = tasks.filter((t) => t.category === "ID Sign");
   let idSignStatus: string | null = null;
+  let idSignDate: string | null = null;
   if (idSignTasks.length > 0) {
     const allDone = idSignTasks.every((t) => t.completed);
-    idSignStatus = allDone ? "Ordered" : "In Progress";
+    if (allDone) {
+      idSignStatus = "Ordered";
+      const lastDone = idSignTasks
+        .filter((t) => t.completedAt)
+        .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())[0];
+      idSignDate = lastDone?.completedAt?.toISOString() ?? null;
+    } else {
+      idSignStatus = "In Progress";
+    }
   }
 
   return {
@@ -96,6 +105,7 @@ function computeShowStats(
     fireMarshalStatus,
     fireMarshalDate,
     idSignStatus,
+    idSignDate,
   };
 }
 

@@ -58,10 +58,7 @@ export function ShowCard({ show }: ShowCardProps) {
 
             {(show.advanceWarehouseDate || show.onlineOrderDeadline || show.discountDeadline) && (
               <div className="mt-2 flex items-center gap-x-2 text-xs overflow-hidden whitespace-nowrap">
-                <span className="flex items-center gap-1 text-muted-foreground/70 font-medium uppercase tracking-wide shrink-0">
-                  <Clock className="h-3 w-3" />
-                  Deadlines
-                </span>
+                <Clock className="h-3 w-3 text-muted-foreground/70 shrink-0" />
                 {show.advanceWarehouseDate && (
                   <span className="text-muted-foreground">Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
                 )}

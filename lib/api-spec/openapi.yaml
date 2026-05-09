@@ -1012,7 +1012,7 @@ components:
           type: integer
         type:
           type: string
-          enum: [movein, advwarehouse, discount, orderdeadline, showstart, dismantle]
+          enum: [movein, advwarehouse, discount, orderdeadline, showstart, dismantle, showday]
         showId:
           type: integer
         showName:

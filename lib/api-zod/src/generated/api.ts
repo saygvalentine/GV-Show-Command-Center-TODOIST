@@ -549,6 +549,7 @@ export const GetCalendarShowDatesResponseItem = zod.object({
     "orderdeadline",
     "showstart",
     "dismantle",
+    "showday",
   ]),
   showId: zod.number(),
   showName: zod.string(),

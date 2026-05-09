@@ -164,6 +164,7 @@ export const ShowDateEventType = {
   orderdeadline: "orderdeadline",
   showstart: "showstart",
   dismantle: "dismantle",
+  showday: "showday",
 } as const;
 
 export interface ShowDateEvent {

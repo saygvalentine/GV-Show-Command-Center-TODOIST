@@ -113,6 +113,7 @@ export default function Calendar() {
       case "orderdeadline":return "bg-violet-500/20 text-violet-600 border-violet-500/30";
       case "showstart":    return "bg-teal-500/20 text-teal-600 border-teal-500/30";
       case "dismantle":    return "bg-rose-500/20 text-rose-600 border-rose-500/30";
+      case "showday":      return "bg-teal-500/10 text-teal-500 border-teal-500/20";
       default: return "bg-gray-500/20 text-gray-500 border-gray-500/30";
     }
   };
@@ -128,6 +129,7 @@ export default function Calendar() {
       case "orderdeadline":return "Order DL";
       case "showstart":    return "Show Start";
       case "dismantle":    return "Dismantle";
+      case "showday":      return "Show";
       default: return type;
     }
   };

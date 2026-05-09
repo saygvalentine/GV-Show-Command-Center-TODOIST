@@ -159,7 +159,7 @@ router.get("/show-dates", async (req, res): Promise<void> => {
     ? await db.select().from(showsTable).where(eq(showsTable.id, showId))
     : await db.select().from(showsTable);
 
-  type ShowDateType = "movein" | "advwarehouse" | "discount" | "orderdeadline" | "showstart" | "dismantle";
+  type ShowDateType = "movein" | "advwarehouse" | "discount" | "orderdeadline" | "showstart" | "dismantle" | "showday";
   const milestones: Array<{ field: keyof typeof shows[0]; type: ShowDateType; label: string }> = [
     { field: "moveInDate",           type: "movein",        label: "Move-In" },
     { field: "advanceWarehouseDate", type: "advwarehouse",  label: "Adv. Warehouse" },
@@ -192,6 +192,32 @@ router.get("/show-dates", async (req, res): Promise<void> => {
         });
       }
     });
+  }
+
+  // Expand showStart → dismantleDate into per-day "showday" events for intermediate days
+  for (const show of shows) {
+    if (showId && show.id !== showId) continue;
+    if (!show.showStart || !show.dismantleDate || show.showStart >= show.dismantleDate) continue;
+
+    const cur = new Date(show.showStart + "T00:00:00Z");
+    cur.setUTCDate(cur.getUTCDate() + 1); // skip showStart day (already a "showstart" milestone)
+    let dayIdx = 0;
+    while (true) {
+      const dateStr = cur.toISOString().slice(0, 10);
+      if (dateStr >= show.dismantleDate) break; // exclusive of dismantleDate
+      if (dateStr >= startDate && dateStr <= endDate) {
+        dateEvents.push({
+          id: show.id * 10000 + dayIdx,
+          type: "showday",
+          showId: show.id,
+          showName: show.name,
+          name: show.name,
+          date: dateStr,
+        });
+      }
+      cur.setUTCDate(cur.getUTCDate() + 1);
+      dayIdx++;
+    }
   }
 
   dateEvents.sort((a, b) => a.date.localeCompare(b.date));

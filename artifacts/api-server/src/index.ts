@@ -25,9 +25,26 @@ const migrationsFolder = path.resolve(
 );
 
 
+async function schemaAlreadyExists(): Promise<boolean> {
+  const result = await db.execute(sql`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'shows'
+    ) AS "exists"
+  `);
+  return result.rows[0]?.exists === true;
+}
+
 async function runMigrations() {
-  await migrate(db, { migrationsFolder });
-  logger.info("Migrations applied");
+  const alreadyBootstrapped = await schemaAlreadyExists();
+  if (alreadyBootstrapped) {
+    logger.info(
+      "Schema already exists — skipping migrate() to avoid re-applying applied migrations.",
+    );
+  } else {
+    await migrate(db, { migrationsFolder });
+    logger.info("Migrations applied");
+  }
 
   // Fix legacy category names stored in the database before the rename
   await db.execute(sql`
@@ -39,17 +56,17 @@ async function runMigrations() {
   logger.info("Startup complete");
 }
 
-runMigrations()
-  .then(() => {
-    app.listen(port, (err) => {
-      if (err) {
-        logger.error({ err }, "Error listening on port");
-        process.exit(1);
-      }
-      logger.info({ port }, "Server listening");
-    });
-  })
-  .catch((err) => {
-    logger.error({ err }, "Migration failed, aborting startup");
+// Start listening immediately so Replit's health probe (/api/healthz) passes
+// before the DB connection is established. Migrations run right after.
+app.listen(port, (err) => {
+  if (err) {
+    logger.error({ err }, "Error listening on port");
+    process.exit(1);
+  }
+  logger.info({ port }, "Server listening");
+
+  runMigrations().catch((err) => {
+    logger.error({ err }, "Migration failed");
     process.exit(1);
   });
+});

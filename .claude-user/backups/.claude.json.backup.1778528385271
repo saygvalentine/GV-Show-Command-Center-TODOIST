@@ -16,9 +16,7 @@
     "drag-and-drop-images": 1,
     "double-esc-code-restore": 1,
     "continue": 1,
-    "ide-upsell-external-terminal": 2,
-    "shift-tab": 2,
-    "image-paste": 2
+    "ide-upsell-external-terminal": 2
   },
   "promptQueueUseCount": 1,
   "cachedGrowthBookFeatures": {

@@ -507,6 +507,67 @@ export const DeleteOfficeTaskParams = zod.object({
 });
 
 /**
+ * @summary List all preset tasks
+ */
+export const ListPresetTasksResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  category: zod.string(),
+  dueDateOffset: zod.number().nullish(),
+  dueDateUnit: zod.string().nullish(),
+  dueDateDirection: zod.string().nullish(),
+  dueDateAnchor: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListPresetTasksResponse = zod.array(ListPresetTasksResponseItem);
+
+/**
+ * @summary Create a new preset task
+ */
+export const CreatePresetTaskBody = zod.object({
+  name: zod.string(),
+  category: zod.string(),
+  dueDateOffset: zod.number().nullish(),
+  dueDateUnit: zod.string().nullish(),
+  dueDateDirection: zod.string().nullish(),
+  dueDateAnchor: zod.string().nullish(),
+});
+
+/**
+ * @summary Update a preset task
+ */
+export const UpdatePresetTaskParams = zod.object({
+  presetId: zod.coerce.number(),
+});
+
+export const UpdatePresetTaskBody = zod.object({
+  name: zod.string().optional(),
+  category: zod.string().optional(),
+  dueDateOffset: zod.number().nullish(),
+  dueDateUnit: zod.string().nullish(),
+  dueDateDirection: zod.string().nullish(),
+  dueDateAnchor: zod.string().nullish(),
+});
+
+export const UpdatePresetTaskResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  category: zod.string(),
+  dueDateOffset: zod.number().nullish(),
+  dueDateUnit: zod.string().nullish(),
+  dueDateDirection: zod.string().nullish(),
+  dueDateAnchor: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a preset task
+ */
+export const DeletePresetTaskParams = zod.object({
+  presetId: zod.coerce.number(),
+});
+
+/**
  * @summary Get all tasks and e-blasts for calendar view
  */
 export const GetCalendarEventsQueryParams = zod.object({

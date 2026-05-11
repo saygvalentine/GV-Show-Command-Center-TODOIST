@@ -561,6 +561,80 @@ paths:
         "404":
           description: Office task not found
 
+  /preset-tasks:
+    get:
+      operationId: listPresetTasks
+      tags: [presettasks]
+      summary: List all preset tasks
+      responses:
+        "200":
+          description: List of preset tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PresetTask"
+    post:
+      operationId: createPresetTask
+      tags: [presettasks]
+      summary: Create a new preset task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePresetTaskBody"
+      responses:
+        "201":
+          description: Created preset task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresetTask"
+
+  /preset-tasks/{presetId}:
+    put:
+      operationId: updatePresetTask
+      tags: [presettasks]
+      summary: Update a preset task
+      parameters:
+        - name: presetId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePresetTaskBody"
+      responses:
+        "200":
+          description: Updated preset task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresetTask"
+        "404":
+          description: Preset task not found
+    delete:
+      operationId: deletePresetTask
+      tags: [presettasks]
+      summary: Delete a preset task
+      parameters:
+        - name: presetId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Preset task not found
+
   /calendar:
     get:
       operationId: getCalendarEvents
@@ -1097,6 +1171,73 @@ components:
           nullable: true
         completed:
           type: boolean
+
+    PresetTask:
+      type: object
+      required: [id, name, category, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        dueDateOffset:
+          type: integer
+          nullable: true
+        dueDateUnit:
+          type: string
+          nullable: true
+        dueDateDirection:
+          type: string
+          nullable: true
+        dueDateAnchor:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    CreatePresetTaskBody:
+      type: object
+      required: [name, category]
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        dueDateOffset:
+          type: integer
+          nullable: true
+        dueDateUnit:
+          type: string
+          nullable: true
+        dueDateDirection:
+          type: string
+          nullable: true
+        dueDateAnchor:
+          type: string
+          nullable: true
+
+    UpdatePresetTaskBody:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        dueDateOffset:
+          type: integer
+          nullable: true
+        dueDateUnit:
+          type: string
+          nullable: true
+        dueDateDirection:
+          type: string
+          nullable: true
+        dueDateAnchor:
+          type: string
+          nullable: true
 
     OverdueItem:
       type: object

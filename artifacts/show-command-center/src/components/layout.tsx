@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useSearch } from "wouter";
-import { Moon, Sun, LayoutDashboard, Search, CheckSquare, X } from "lucide-react";
+import { Moon, Sun, LayoutDashboard, Search, CheckSquare, Settings, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +56,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link href="/office-tasks" className={`flex items-center gap-1.5 transition-colors hover:text-foreground/80 ${location === "/office-tasks" ? "text-foreground" : "text-foreground/60"}`}>
               <CheckSquare className="h-3.5 w-3.5" />
               Office Tasks
+            </Link>
+            <Link href="/settings" className={`flex items-center gap-1.5 transition-colors hover:text-foreground/80 ${location === "/settings" ? "text-foreground" : "text-foreground/60"}`}>
+              <Settings className="h-3.5 w-3.5" />
+              Settings
             </Link>
           </nav>
 

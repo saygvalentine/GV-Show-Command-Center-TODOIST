@@ -9,6 +9,7 @@ import dashboardRouter from "./dashboard";
 import exportRouter from "./export";
 import officeTasksRouter from "./officeTasks";
 import venuesRouter from "./venues";
+import presetTasksRouter from "./presetTasks";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use("/dashboard", dashboardRouter);
 router.use("/export", exportRouter);
 router.use("/office-tasks", officeTasksRouter);
 router.use("/venues", venuesRouter);
+router.use("/preset-tasks", presetTasksRouter);
 
 export default router;

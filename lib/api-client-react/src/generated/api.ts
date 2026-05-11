@@ -23,6 +23,7 @@ import type {
   CreateEblastBody,
   CreateLinkBody,
   CreateOfficeTaskBody,
+  CreatePresetTaskBody,
   CreateShowBody,
   CreateTaskBody,
   DashboardSummary,
@@ -34,6 +35,7 @@ import type {
   ListOfficeTasksParams,
   OfficeTask,
   OverdueItem,
+  PresetTask,
   Show,
   ShowDateEvent,
   ShowWithItems,
@@ -41,6 +43,7 @@ import type {
   UpdateEblastBody,
   UpdateLinkBody,
   UpdateOfficeTaskBody,
+  UpdatePresetTaskBody,
   UpdateTaskBody,
 } from "./api.schemas";
 
@@ -2087,6 +2090,338 @@ export const useDeleteOfficeTask = <
   TContext
 > => {
   return useMutation(getDeleteOfficeTaskMutationOptions(options));
+};
+
+/**
+ * @summary List all preset tasks
+ */
+export const getListPresetTasksUrl = () => {
+  return `/api/preset-tasks`;
+};
+
+export const listPresetTasks = async (
+  options?: RequestInit,
+): Promise<PresetTask[]> => {
+  return customFetch<PresetTask[]>(getListPresetTasksUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPresetTasksQueryKey = () => {
+  return [`/api/preset-tasks`] as const;
+};
+
+export const getListPresetTasksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPresetTasks>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPresetTasks>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPresetTasksQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPresetTasks>>> = ({
+    signal,
+  }) => listPresetTasks({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPresetTasks>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPresetTasksQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPresetTasks>>
+>;
+export type ListPresetTasksQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all preset tasks
+ */
+
+export function useListPresetTasks<
+  TData = Awaited<ReturnType<typeof listPresetTasks>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPresetTasks>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPresetTasksQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new preset task
+ */
+export const getCreatePresetTaskUrl = () => {
+  return `/api/preset-tasks`;
+};
+
+export const createPresetTask = async (
+  createPresetTaskBody: CreatePresetTaskBody,
+  options?: RequestInit,
+): Promise<PresetTask> => {
+  return customFetch<PresetTask>(getCreatePresetTaskUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createPresetTaskBody),
+  });
+};
+
+export const getCreatePresetTaskMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPresetTask>>,
+    TError,
+    { data: BodyType<CreatePresetTaskBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPresetTask>>,
+  TError,
+  { data: BodyType<CreatePresetTaskBody> },
+  TContext
+> => {
+  const mutationKey = ["createPresetTask"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPresetTask>>,
+    { data: BodyType<CreatePresetTaskBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createPresetTask(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePresetTaskMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPresetTask>>
+>;
+export type CreatePresetTaskMutationBody = BodyType<CreatePresetTaskBody>;
+export type CreatePresetTaskMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a new preset task
+ */
+export const useCreatePresetTask = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPresetTask>>,
+    TError,
+    { data: BodyType<CreatePresetTaskBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createPresetTask>>,
+  TError,
+  { data: BodyType<CreatePresetTaskBody> },
+  TContext
+> => {
+  return useMutation(getCreatePresetTaskMutationOptions(options));
+};
+
+/**
+ * @summary Update a preset task
+ */
+export const getUpdatePresetTaskUrl = (presetId: number) => {
+  return `/api/preset-tasks/${presetId}`;
+};
+
+export const updatePresetTask = async (
+  presetId: number,
+  updatePresetTaskBody: UpdatePresetTaskBody,
+  options?: RequestInit,
+): Promise<PresetTask> => {
+  return customFetch<PresetTask>(getUpdatePresetTaskUrl(presetId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updatePresetTaskBody),
+  });
+};
+
+export const getUpdatePresetTaskMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePresetTask>>,
+    TError,
+    { presetId: number; data: BodyType<UpdatePresetTaskBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updatePresetTask>>,
+  TError,
+  { presetId: number; data: BodyType<UpdatePresetTaskBody> },
+  TContext
+> => {
+  const mutationKey = ["updatePresetTask"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updatePresetTask>>,
+    { presetId: number; data: BodyType<UpdatePresetTaskBody> }
+  > = (props) => {
+    const { presetId, data } = props ?? {};
+
+    return updatePresetTask(presetId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdatePresetTaskMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updatePresetTask>>
+>;
+export type UpdatePresetTaskMutationBody = BodyType<UpdatePresetTaskBody>;
+export type UpdatePresetTaskMutationError = ErrorType<void>;
+
+/**
+ * @summary Update a preset task
+ */
+export const useUpdatePresetTask = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePresetTask>>,
+    TError,
+    { presetId: number; data: BodyType<UpdatePresetTaskBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updatePresetTask>>,
+  TError,
+  { presetId: number; data: BodyType<UpdatePresetTaskBody> },
+  TContext
+> => {
+  return useMutation(getUpdatePresetTaskMutationOptions(options));
+};
+
+/**
+ * @summary Delete a preset task
+ */
+export const getDeletePresetTaskUrl = (presetId: number) => {
+  return `/api/preset-tasks/${presetId}`;
+};
+
+export const deletePresetTask = async (
+  presetId: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeletePresetTaskUrl(presetId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeletePresetTaskMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePresetTask>>,
+    TError,
+    { presetId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deletePresetTask>>,
+  TError,
+  { presetId: number },
+  TContext
+> => {
+  const mutationKey = ["deletePresetTask"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deletePresetTask>>,
+    { presetId: number }
+  > = (props) => {
+    const { presetId } = props ?? {};
+
+    return deletePresetTask(presetId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeletePresetTaskMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deletePresetTask>>
+>;
+
+export type DeletePresetTaskMutationError = ErrorType<void>;
+
+/**
+ * @summary Delete a preset task
+ */
+export const useDeletePresetTask = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePresetTask>>,
+    TError,
+    { presetId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deletePresetTask>>,
+  TError,
+  { presetId: number },
+  TContext
+> => {
+  return useMutation(getDeletePresetTaskMutationOptions(options));
 };
 
 /**

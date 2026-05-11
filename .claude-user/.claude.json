@@ -9,7 +9,9 @@
     "default-permission-mode-config": 1,
     "status-line": 1,
     "prompt-queue": 1,
-    "enter-to-steer-in-relatime": 1
+    "enter-to-steer-in-relatime": 1,
+    "todo-list": 1,
+    "install-github-app": 1
   },
   "cachedGrowthBookFeatures": {
     "tengu_cedar_inlet": "off",

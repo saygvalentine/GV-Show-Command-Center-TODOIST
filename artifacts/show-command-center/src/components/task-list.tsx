@@ -3,15 +3,17 @@ import { format, differenceInDays, startOfDay, subDays, addDays } from "date-fns
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { 
-  useListTasks, 
-  useUpdateTask, 
-  useDeleteTask, 
+import {
+  useListTasks,
+  useUpdateTask,
+  useDeleteTask,
   useCreateTask,
   useBulkCreateTasks,
+  useListPresetTasks,
   getListTasksQueryKey,
   getGetShowQueryKey,
-  Show
+  Show,
+  PresetTask,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -659,6 +661,36 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
   );
 }
 
+const ANCHOR_DISPLAY: Record<string, string> = {
+  moveInDate: "move-in",
+  advanceWarehouseDate: "Advance Warehouse",
+  onlineOrderDeadline: "Online Order Deadline",
+};
+
+function computePresetDate(preset: PresetTask, show: Show): { date: string; requires: unknown } {
+  if (!preset.dueDateOffset || !preset.dueDateUnit || !preset.dueDateDirection || !preset.dueDateAnchor) {
+    return { date: "", requires: true };
+  }
+  const anchor = (show as Record<string, unknown>)[preset.dueDateAnchor];
+  if (!anchor) return { date: "", requires: null };
+  const anchorDate = parseDateStr(anchor as string);
+  const d =
+    preset.dueDateDirection === "before"
+      ? preset.dueDateUnit === "biz"
+        ? subBusinessDays(anchorDate, preset.dueDateOffset)
+        : subDays(anchorDate, preset.dueDateOffset)
+      : preset.dueDateUnit === "biz"
+        ? addBusinessDays(anchorDate, preset.dueDateOffset)
+        : addDays(anchorDate, preset.dueDateOffset);
+  return { date: format(d, "yyyy-MM-dd"), requires: anchor };
+}
+
+function presetRuleLabel(preset: PresetTask): string {
+  if (!preset.dueDateOffset) return "Manual entry — set due date after adding";
+  const anchor = ANCHOR_DISPLAY[preset.dueDateAnchor!] ?? preset.dueDateAnchor ?? "";
+  return `${preset.dueDateOffset} ${preset.dueDateUnit} days ${preset.dueDateDirection} ${anchor}`;
+}
+
 function AddTaskDialog({ show }: { show: Show }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -696,41 +728,16 @@ function AddTaskDialog({ show }: { show: Show }) {
     });
   };
 
-  // Preset tasks logic
-  const mi = parseDateStr(show.moveInDate);
-  const aw = show.advanceWarehouseDate ? parseDateStr(show.advanceWarehouseDate as string) : null;
-  const ood = show.onlineOrderDeadline ? parseDateStr(show.onlineOrderDeadline as string) : null;
+  const { data: apiPresets = [], isLoading: presetsLoading } = useListPresetTasks();
 
-  const presets: { cat: string; name: string; requires: unknown; date: string; rule: string }[] = [
-    // ── Fire Marshal / Floor Plan ──────────────────────────────────────
-    { cat: "Fire Marshal", name: "Initial Contact Account Executive", requires: show.moveInDate, date: format(subDays(mi, 60), "yyyy-MM-dd"), rule: "60 cal days before move-in" },
-    { cat: "Fire Marshal", name: "Check In / Submit", requires: show.moveInDate, date: format(subBusinessDays(mi, 30), "yyyy-MM-dd"), rule: "30 biz days before move-in" },
-    { cat: "Fire Marshal", name: "Hard Deadline", requires: show.moveInDate, date: format(subDays(mi, 30), "yyyy-MM-dd"), rule: "30 cal days before move-in" },
-
-    // ── ID Sign Production ─────────────────────────────────────────────
-    { cat: "ID Sign", name: "Contact Client / Give Deadline", requires: show.moveInDate, date: format(subDays(mi, 30), "yyyy-MM-dd"), rule: "30 cal days before move-in" },
-    { cat: "ID Sign", name: "ID Sign Deadline", requires: show.moveInDate, date: format(subBusinessDays(mi, 12), "yyyy-MM-dd"), rule: "12 biz days before move-in" },
-    { cat: "ID Sign", name: "Submit Order", requires: show.moveInDate, date: format(subBusinessDays(mi, 8), "yyyy-MM-dd"), rule: "8 biz days before move-in" },
-
-    // ── Warehouse Manifest ─────────────────────────────────────────────
-    { cat: "Warehouse Manifest", name: "Contact Declared but Not Received", requires: show.advanceWarehouseDate, date: aw ? format(subBusinessDays(aw, 3), "yyyy-MM-dd") : "", rule: "3 biz days before Advance Warehouse" },
-
-    // ── Show Bucket ────────────────────────────────────────────────────
-    { cat: "Show Bucket", name: "Get Bucket Due Dates & Quantities", requires: show.moveInDate, date: format(subBusinessDays(mi, 10), "yyyy-MM-dd"), rule: "10 biz days before move-in" },
-    { cat: "Show Bucket", name: "Create Carpet Plan", requires: show.onlineOrderDeadline, date: ood ? format(addDays(ood, 1), "yyyy-MM-dd") : "", rule: "1 cal day after Online Order Deadline" },
-    { cat: "Show Bucket", name: "Add CC Tags to XBR List", requires: show.moveInDate, date: format(subBusinessDays(mi, 5), "yyyy-MM-dd"), rule: "5 biz days before move-in" },
-    { cat: "Show Bucket", name: "Finalize Carpet Plan", requires: show.moveInDate, date: format(subBusinessDays(mi, 5), "yyyy-MM-dd"), rule: "5 biz days before move-in" },
-    { cat: "Show Bucket", name: "Begin Bucket Creation", requires: show.moveInDate, date: format(subBusinessDays(mi, 5), "yyyy-MM-dd"), rule: "5 biz days before move-in" },
-    { cat: "Show Bucket", name: "Bucket Due Date", requires: true, date: "", rule: "Manual entry — set due date after adding" },
-
-    // ── Vehicle Spotting ───────────────────────────────────────────────
-    { cat: "Vehicle Spotting", name: "Send e-Blast for A.E. Vehicle Spotting", requires: show.moveInDate, date: format(subDays(mi, 60), "yyyy-MM-dd"), rule: "60 cal days before move-in" },
-    { cat: "Vehicle Spotting", name: "Check Vehicle Spotting / Provide To Beau", requires: show.moveInDate, date: format(subDays(mi, 40), "yyyy-MM-dd"), rule: "40 cal days before move-in" },
-    { cat: "Vehicle Spotting", name: "Check Vehicle Spotting / Provide To Beau 2", requires: show.moveInDate, date: format(subBusinessDays(mi, 30), "yyyy-MM-dd"), rule: "30 biz days before move-in" },
-
-    // ── Electrical ─────────────────────────────────────────────────────
-    { cat: "Electrical", name: "Contact Electrical Provider", requires: show.onlineOrderDeadline, date: ood ? format(addDays(ood, 1), "yyyy-MM-dd") : "", rule: "1 cal day after Online Order Deadline" },
-  ];
+  const presets = useMemo(
+    () =>
+      apiPresets.map((p) => {
+        const { date, requires } = computePresetDate(p, show);
+        return { cat: p.category, name: p.name, requires, date, rule: presetRuleLabel(p) };
+      }),
+    [apiPresets, show]
+  );
 
   const [selectedPresets, setSelectedPresets] = useState<number[]>([]);
 
@@ -773,6 +780,19 @@ function AddTaskDialog({ show }: { show: Show }) {
           </TabsList>
           
           <TabsContent value="preset" className="space-y-4">
+            {presetsLoading && (
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            )}
+            {!presetsLoading && presets.length === 0 && (
+              <div className="py-10 text-center text-sm text-muted-foreground border-2 border-dashed rounded-lg">
+                No presets configured. Visit <strong>Settings</strong> to add some.
+              </div>
+            )}
+            {!presetsLoading && presets.length > 0 && (
             <div className="border rounded-md max-h-[420px] overflow-y-auto">
               {(() => {
                 const rows: React.ReactNode[] = [];
@@ -849,6 +869,7 @@ function AddTaskDialog({ show }: { show: Show }) {
                 Add {selectedPresets.length} Task{selectedPresets.length !== 1 ? "s" : ""}
               </Button>
             </div>
+            )}
           </TabsContent>
           
           <TabsContent value="custom">

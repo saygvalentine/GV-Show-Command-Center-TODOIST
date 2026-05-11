@@ -1,124 +1,157 @@
-# Plan: Functional Search Bar
+# Plan: Preset Tasks Settings Page
 
-## Context
+## Goal
 
-The navbar search bar (`layout.tsx`) is a static, non-functional `<Input>` with no state, no event handlers, and no connection to the dashboard. Users see a "Search shows..." field that does nothing. This plan wires it up to filter shows on the dashboard — the only view that lists shows — with real-time filtering when already on the dashboard and Enter-key navigation from other pages.
-
-## Approach: URL query param (`?q=`)
-
-State lives in the URL (`/?q=imex`). No context or prop drilling needed.
-
-- **Layout** owns the input, syncs its value to/from the URL `?q` param, and navigates on change (replace-mode when already on `/`, push-mode on Enter from other pages).
-- **Dashboard** reads `?q` from the URL and filters the shows list before rendering.
-- **wouter** is already imported in both files; `useSearch()` is the only new hook needed.
+Add a `/settings` page with a CRUD admin UI so the user can add, edit, and delete preset task templates without touching code. The existing 17 hardcoded presets in `task-list.tsx` are migrated to a `preset_tasks` DB table; `AddTaskDialog` fetches from the API instead of the static array.
 
 ---
 
-## File Changes
+## Files to Create / Modify
 
-### 1. `artifacts/show-command-center/src/components/layout.tsx`
+### 1. `lib/db/src/schema/presetTasks.ts` (new)
 
-**Imports to add:** `useState, useEffect` (react); `useSearch` (wouter); `X` (lucide-react)
+Drizzle table with columns: `id` (serial PK), `name` (text), `category` (text), `dueDateOffset` (integer nullable), `dueDateUnit` (text nullable — "cal"|"biz"), `dueDateDirection` (text nullable — "before"|"after"), `dueDateAnchor` (text nullable — "moveInDate"|"advanceWarehouseDate"|"onlineOrderDeadline"), `createdAt` (timestamp).
 
-**Logic to add:**
+`dueDateOffset = null` means "Manual entry" (no calculated date).
+
+Export `insertPresetTaskSchema`, `InsertPresetTask`, `PresetTask` types.
+
+### 2. `lib/db/src/schema/index.ts` (modify)
+Add `export * from "./presetTasks";`
+
+### 3. `lib/db/migrations/0001_preset_tasks.sql` (new, hand-written)
+Creates the `preset_tasks` table and seeds all 17 current presets:
+
+| name | category | offset | unit | direction | anchor |
+|---|---|---|---|---|---|
+| Initial Contact Account Executive | Fire Marshal | 60 | cal | before | moveInDate |
+| Check In / Submit | Fire Marshal | 30 | biz | before | moveInDate |
+| Hard Deadline | Fire Marshal | 30 | cal | before | moveInDate |
+| Contact Client / Give Deadline | ID Sign | 30 | cal | before | moveInDate |
+| ID Sign Deadline | ID Sign | 12 | biz | before | moveInDate |
+| Submit Order | ID Sign | 8 | biz | before | moveInDate |
+| Contact Declared but Not Received | Warehouse Manifest | 3 | biz | before | advanceWarehouseDate |
+| Get Bucket Due Dates & Quantities | Show Bucket | 10 | biz | before | moveInDate |
+| Create Carpet Plan | Show Bucket | 1 | cal | after | onlineOrderDeadline |
+| Add CC Tags to XBR List | Show Bucket | 5 | biz | before | moveInDate |
+| Finalize Carpet Plan | Show Bucket | 5 | biz | before | moveInDate |
+| Begin Bucket Creation | Show Bucket | 5 | biz | before | moveInDate |
+| Bucket Due Date | Show Bucket | NULL | NULL | NULL | NULL |
+| Send e-Blast for A.E. Vehicle Spotting | Vehicle Spotting | 60 | cal | before | moveInDate |
+| Check Vehicle Spotting / Provide To Beau | Vehicle Spotting | 40 | cal | before | moveInDate |
+| Check Vehicle Spotting / Provide To Beau 2 | Vehicle Spotting | 30 | biz | before | moveInDate |
+| Contact Electrical Provider | Electrical | 1 | cal | after | onlineOrderDeadline |
+
+### 4. `lib/db/migrations/meta/_journal.json` (modify)
+Add entry `{ "idx": 1, "version": "7", "when": <timestamp>, "tag": "0001_preset_tasks", "breakpoints": true }`.
+
+### 5. `lib/api-spec/openapi.yaml` (modify)
+Add after the `/office-tasks/{taskId}` block:
+
+```yaml
+/preset-tasks:
+  get: operationId: listPresetTasks, returns array of PresetTask
+  post: operationId: createPresetTask, body: CreatePresetTaskBody, returns 201 PresetTask
+
+/preset-tasks/{presetId}:
+  put: operationId: updatePresetTask, body: UpdatePresetTaskBody, returns 200 PresetTask or 404
+  delete: operationId: deletePresetTask, returns 204 or 404
 ```
-const [, navigate] = useLocation();          // already have [location]
-const searchStr = useSearch();               // "?q=imex" or ""
 
-// Sync input value from URL when on dashboard
-const qFromUrl = location === "/" ? (new URLSearchParams(searchStr).get("q") ?? "") : "";
-const [query, setQuery] = useState(qFromUrl);
-useEffect(() => { setQuery(qFromUrl); }, [qFromUrl]);
+Add schemas: `PresetTask`, `CreatePresetTaskBody`, `UpdatePresetTaskBody`.
 
-const handleChange = (val: string) => {
-  setQuery(val);
-  if (location === "/") {
-    // Real-time filtering on dashboard (replace so Back button isn't polluted)
-    navigate(val.trim() ? `/?q=${encodeURIComponent(val.trim())}` : "/", { replace: true });
+### 6. Run codegen
+```bash
+pnpm --filter @workspace/api-spec run codegen
+```
+Regenerates `lib/api-client-react/src/generated/api.ts` and `lib/api-zod/src/generated/`.
+
+### 7. `artifacts/api-server/src/routes/presetTasks.ts` (new)
+Express CRUD router (same pattern as `officeTasks.ts`):
+- `GET /` → select all, ordered by id
+- `POST /` → insert with Zod validation
+- `PUT /:presetId` → update with 404 guard
+- `DELETE /:presetId` → delete with 404 guard
+
+### 8. `artifacts/api-server/src/routes/index.ts` (modify)
+Add `router.use("/preset-tasks", presetTasksRouter);`
+
+### 9. `artifacts/show-command-center/src/pages/settings.tsx` (new)
+Settings page. Structure:
+- Page title "Settings" + subtitle
+- For each of the 6 categories: a collapsible section listing its presets
+- Each preset row: name + computed rule label + Edit (pencil) + Delete (trash) buttons
+- "Add Preset" button per category → small inline form or dialog
+
+Rule label computed from structured fields:
+- offset=null → "Manual entry"
+- offset=N, unit=biz/cal, direction=before/after, anchor=moveInDate/advanceWarehouseDate/onlineOrderDeadline → e.g. "30 biz days before move-in"
+
+Anchor display map: `moveInDate`→"move-in", `advanceWarehouseDate`→"Advance Warehouse", `onlineOrderDeadline`→"Online Order Deadline"
+
+Add/Edit form fields: Name, Category (select), Offset (number, optional), Unit (cal/biz, optional), Direction (before/after, optional), Anchor (select, optional). If Offset is blank → treat as manual.
+
+Uses `useListPresetTasks`, `useCreatePresetTask`, `useUpdatePresetTask`, `useDeletePresetTask` from generated hooks.
+
+### 10. `artifacts/show-command-center/src/components/layout.tsx` (modify)
+Add nav link `<Link href="/settings">Settings</Link>` after "Office Tasks". Import `Settings` icon from lucide-react.
+
+### 11. `artifacts/show-command-center/src/App.tsx` (modify)
+Add `import Settings from "@/pages/settings";` and `<Route path="/settings" component={Settings} />`.
+
+### 12. `artifacts/show-command-center/src/components/task-list.tsx` (modify)
+In `AddTaskDialog`:
+- Add `useListPresetTasks` hook (fetches from API)
+- Replace hardcoded `presets` array with computed list from API data using `computePresetDate(preset, show)`
+- `computePresetDate`: maps structured fields → actual date string using same `subDays`/`addDays`/`subBusinessDays`/`addBusinessDays` logic
+- `ruleLabel(preset)`: generates the human-readable rule string from structured fields
+- Show loading state while fetching; show "No presets configured. Visit Settings to add some." if list is empty
+- The rendered UI (category headers, checkboxes, rule text) stays identical
+
+---
+
+## Key Helper Functions (in task-list.tsx)
+
+```ts
+function computePresetDate(preset: PresetTask, show: Show): { date: string; requires: unknown } {
+  if (!preset.dueDateOffset || !preset.dueDateUnit || !preset.dueDateDirection || !preset.dueDateAnchor) {
+    return { date: "", requires: true }; // manual
   }
-};
+  const anchor = (show as any)[preset.dueDateAnchor];
+  if (!anchor) return { date: "", requires: null }; // anchor not set
+  const anchorDate = parseDateStr(anchor as string);
+  const d = preset.dueDateDirection === "before"
+    ? (preset.dueDateUnit === "biz" ? subBusinessDays(anchorDate, preset.dueDateOffset) : subDays(anchorDate, preset.dueDateOffset))
+    : (preset.dueDateUnit === "biz" ? addBusinessDays(anchorDate, preset.dueDateOffset) : addDays(anchorDate, preset.dueDateOffset));
+  return { date: format(d, "yyyy-MM-dd"), requires: anchor };
+}
 
-const handleKeyDown = (e) => {
-  if (e.key === "Enter" && query.trim()) navigate(`/?q=${encodeURIComponent(query.trim())}`);
-  if (e.key === "Enter" && !query.trim()) navigate("/");
-  if (e.key === "Escape") { setQuery(""); navigate("/"); }
-};
-
-const clearSearch = () => { setQuery(""); navigate("/"); };
-```
-
-**JSX changes:**
-- Make `<Input>` controlled: add `value={query}`, `onChange`, `onKeyDown`
-- Add `pr-8` to Input className (room for X button)
-- Render `<button onClick={clearSearch}><X /></button>` absolutely positioned on the right when `query` is non-empty
-
----
-
-### 2. `artifacts/show-command-center/src/pages/dashboard.tsx`
-
-**Imports to add:** `useSearch` (wouter)
-
-**Logic to add:**
-```tsx
-const searchStr = useSearch();
-const searchQuery = new URLSearchParams(searchStr).get("q")?.trim() ?? "";
-```
-
-**`activeShows` useMemo** — add one filter step after the existing date filter:
-```tsx
-.filter(s => !searchQuery ||
-  s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  (s.venue ?? "").toLowerCase().includes(searchQuery.toLowerCase()))
-```
-
-Apply the same filter to **`archivedShows`** useMemo.
-
-**Empty state** — update the "No active shows" message:
-```tsx
-{searchQuery
-  ? `No shows match "${searchQuery}".`
-  : "No active shows found. Add one to get started."}
-```
-
-**Auto-expand archived** — if `searchQuery` is set and `archivedShows.length > 0`, default `archivedOpen` to `true`:
-```tsx
-const [archivedOpen, setArchivedOpen] = useState(false);
-// Add this effect:
-useEffect(() => {
-  if (searchQuery && archivedShows.length > 0) setArchivedOpen(true);
-}, [searchQuery, archivedShows.length]);
+function ruleLabel(preset: PresetTask): string {
+  if (!preset.dueDateOffset) return "Manual entry — set due date after adding";
+  const anchorMap: Record<string, string> = {
+    moveInDate: "move-in",
+    advanceWarehouseDate: "Advance Warehouse",
+    onlineOrderDeadline: "Online Order Deadline",
+  };
+  return `${preset.dueDateOffset} ${preset.dueDateUnit} days ${preset.dueDateDirection} ${anchorMap[preset.dueDateAnchor!] ?? preset.dueDateAnchor}`;
+}
 ```
 
 ---
 
-## Behaviour Summary
+## Summary of Changes
 
-| Scenario | Result |
+| File | Action |
 |---|---|
-| Type on dashboard | Shows filter in real-time; URL updates (replace) |
-| Press Enter on dashboard | Same as above but adds to history |
-| Type + Enter from Calendar/Office Tasks | Navigates to `/?q=term` |
-| Press Escape anywhere | Clears input, navigates to `/` |
-| Click × button | Clears input, navigates to `/` |
-| Navigate to `/?q=foo` directly | Input populates with "foo", shows filtered |
-| No matches in active, matches in archived | Archived section auto-expands |
-
----
-
-## Files Modified
-
-- `artifacts/show-command-center/src/components/layout.tsx`
-- `artifacts/show-command-center/src/pages/dashboard.tsx`
-
-No API, schema, or backend changes needed.
-
----
-
-## Verification
-
-1. Start the dev servers (`pnpm --filter @workspace/api-server run dev` + `pnpm --filter @workspace/show-command-center run dev`)
-2. On dashboard: type a show name fragment — cards filter in real-time
-3. On calendar page: type a show name + Enter — navigates to dashboard with filtered results
-4. Clear with × or Escape — all shows return
-5. Archived shows with matching name auto-expand when searched
-6. Run existing Playwright tests to confirm no regressions: `pnpm --filter @workspace/show-command-center run test -- tests/features.spec.ts`
+| `lib/db/src/schema/presetTasks.ts` | Create |
+| `lib/db/src/schema/index.ts` | Add export |
+| `lib/db/migrations/0001_preset_tasks.sql` | Create |
+| `lib/db/migrations/meta/_journal.json` | Add entry |
+| `lib/api-spec/openapi.yaml` | Add paths + schemas |
+| (run codegen) | Regenerate hooks + Zod |
+| `artifacts/api-server/src/routes/presetTasks.ts` | Create |
+| `artifacts/api-server/src/routes/index.ts` | Register route |
+| `artifacts/show-command-center/src/pages/settings.tsx` | Create |
+| `artifacts/show-command-center/src/components/layout.tsx` | Add nav link |
+| `artifacts/show-command-center/src/App.tsx` | Add route |
+| `artifacts/show-command-center/src/components/task-list.tsx` | Refactor AddTaskDialog |

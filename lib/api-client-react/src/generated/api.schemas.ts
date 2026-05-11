@@ -208,6 +208,35 @@ export interface UpdateOfficeTaskBody {
   completed?: boolean;
 }
 
+export interface PresetTask {
+  id: number;
+  name: string;
+  category: string;
+  dueDateOffset?: number | null;
+  dueDateUnit?: string | null;
+  dueDateDirection?: string | null;
+  dueDateAnchor?: string | null;
+  createdAt: string;
+}
+
+export interface CreatePresetTaskBody {
+  name: string;
+  category: string;
+  dueDateOffset?: number | null;
+  dueDateUnit?: string | null;
+  dueDateDirection?: string | null;
+  dueDateAnchor?: string | null;
+}
+
+export interface UpdatePresetTaskBody {
+  name?: string;
+  category?: string;
+  dueDateOffset?: number | null;
+  dueDateUnit?: string | null;
+  dueDateDirection?: string | null;
+  dueDateAnchor?: string | null;
+}
+
 export type OverdueItemType =
   (typeof OverdueItemType)[keyof typeof OverdueItemType];
 

@@ -24,26 +24,10 @@ const migrationsFolder = path.resolve(
   "../../../lib/db/migrations",
 );
 
-async function schemaAlreadyExists(): Promise<boolean> {
-  const result = await db.execute(sql`
-    SELECT EXISTS (
-      SELECT FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = 'shows'
-    ) AS "exists"
-  `);
-  return result.rows[0]?.exists === true;
-}
 
 async function runMigrations() {
-  const alreadyBootstrapped = await schemaAlreadyExists();
-  if (alreadyBootstrapped) {
-    logger.info(
-      "Schema already exists — skipping migrate() to avoid re-applying applied migrations.",
-    );
-  } else {
-    await migrate(db, { migrationsFolder });
-    logger.info("Migrations applied");
-  }
+  await migrate(db, { migrationsFolder });
+  logger.info("Migrations applied");
 
   // Fix legacy category names stored in the database before the rename
   await db.execute(sql`

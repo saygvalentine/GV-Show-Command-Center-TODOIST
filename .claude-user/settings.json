@@ -1,3 +1,4 @@
 {
-  "theme": "auto"
+  "theme": "auto",
+  "skipDangerousModePermissionPrompt": true
 }

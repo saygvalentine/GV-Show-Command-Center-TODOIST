@@ -84,12 +84,14 @@ All routes are under `artifacts/api-server/src/routes/`: `/shows`, `/shows/:show
 
 The `/export` route returns ICS (iCalendar) format for importing shows into calendar apps.
 
+The API server runs DB migrations automatically on startup (via `drizzle-orm/node-postgres/migrator`), but only if the `shows` table does not yet exist — otherwise it skips to avoid re-applying already-applied migrations.
+
 ## Environment Variables
 
 | Variable | Required by |
 |---|---|
 | `DATABASE_URL` | API server + DB migrations |
-| `PORT` | Vite frontend dev server |
+| `PORT` | API server + Vite frontend dev server |
 | `BASE_PATH` | Vite frontend base path |
 | `NODE_ENV` | API server |
 
@@ -143,7 +145,7 @@ Tasks belong to one of six hardcoded categories (each has a distinct color and a
 - **Vehicle Spotting** — deadlines relative to move-in date
 - **Electrical** — deadlines relative to `onlineOrderDeadline`
 
-The full preset list lives in `task-list.tsx` and `eblast-list.tsx`. Each preset computes a `dueDate` and stores a human-readable `dueDateRule` string (e.g. `"30 biz days before move-in"`) as display text — it is not re-evaluated after creation.
+The full preset list lives in `artifacts/show-command-center/src/components/task-list.tsx` and `eblast-list.tsx` (same directory). Each preset computes a `dueDate` and stores a human-readable `dueDateRule` string (e.g. `"30 biz days before move-in"`) as display text — it is not re-evaluated after creation.
 
 Category badge colors come from `getCategoryColor` in `artifacts/show-command-center/src/lib/date-utils.ts`.
 

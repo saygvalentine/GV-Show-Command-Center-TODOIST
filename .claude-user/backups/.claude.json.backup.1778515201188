@@ -3,9 +3,7 @@
   "installMethod": "global",
   "tipsHistory": {
     "new-user-warmup": 1,
-    "plan-mode-for-complex-tasks": 1,
-    "memory-command": 1,
-    "theme-command": 1
+    "plan-mode-for-complex-tasks": 1
   },
   "cachedGrowthBookFeatures": {
     "tengu_cedar_inlet": "off",

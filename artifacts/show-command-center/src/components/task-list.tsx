@@ -14,10 +14,10 @@ import {
   Show
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { 
-  CheckCircle2, Circle, Clock, Edit2, Trash2, 
+import {
+  CheckCircle2, Circle, Clock, Edit2, Trash2,
   Plus, Calendar as CalendarIcon, MessageSquare, AlertCircle,
-  ChevronDown, ChevronUp, Loader2
+  ChevronDown, ChevronUp, Loader2, Filter, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +71,30 @@ const PRESET_CATEGORIES = [
   "Electrical"
 ];
 
+type SortMode = "dueAsc" | "dueDesc" | "nameAz" | "category";
+
+function applySortToTasks(tasks: any[], mode: SortMode): any[] {
+  const arr = [...tasks];
+  switch (mode) {
+    case "dueAsc":
+      return arr.sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return parseDateStr(a.dueDate).getTime() - parseDateStr(b.dueDate).getTime();
+      });
+    case "dueDesc":
+      return arr.sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return parseDateStr(b.dueDate).getTime() - parseDateStr(a.dueDate).getTime();
+      });
+    case "nameAz":
+      return arr.sort((a, b) => a.name.localeCompare(b.name));
+    case "category":
+      return arr.sort((a, b) => (a.category ?? "").localeCompare(b.category ?? ""));
+  }
+}
+
 export function TaskList({ show }: { show: Show }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -78,60 +102,63 @@ export function TaskList({ show }: { show: Show }) {
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
 
+  const [filterCategories, setFilterCategories] = useState<string[]>([]);
+  const [sortMode, setSortMode] = useState<SortMode>("dueAsc");
+  const [groupMode, setGroupMode] = useState<"status" | "category">("status");
+  const [filterOpen, setFilterOpen] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
+  const [catSectionOpen, setCatSectionOpen] = useState<Record<string, boolean>>({});
+
+  const filteredTasks = useMemo(() => {
+    if (!tasks) return [];
+    if (filterCategories.length === 0) return tasks;
+    return tasks.filter(t => filterCategories.includes(t.category ?? ""));
+  }, [tasks, filterCategories]);
 
   const groupedTasks = useMemo(() => {
-    if (!tasks) return { overdue: [], upcoming: [], completed: [] };
-    
     const today = startOfDay(new Date());
-    const overdue = [];
-    const upcoming = [];
-    const completed = [];
+    const overdue: any[] = [];
+    const upcoming: any[] = [];
+    const completed: any[] = [];
 
-    for (const t of tasks) {
-      if (t.completed) {
-        completed.push(t);
-        continue;
-      }
-      
+    for (const t of filteredTasks) {
+      if (t.completed) { completed.push(t); continue; }
       if (t.dueDate) {
         const dueDate = startOfDay(parseDateStr(t.dueDate));
-        if (differenceInDays(dueDate, today) < 0) {
-          overdue.push(t);
-        } else {
-          upcoming.push(t);
-        }
+        if (differenceInDays(dueDate, today) < 0) overdue.push(t);
+        else upcoming.push(t);
       } else {
         upcoming.push(t);
       }
     }
 
-    upcoming.sort((a, b) => {
-      if (!a.dueDate) return 1;
-      if (!b.dueDate) return -1;
-      return parseDateStr(a.dueDate).getTime() - parseDateStr(b.dueDate).getTime();
-    });
+    return {
+      overdue: applySortToTasks(overdue, sortMode),
+      upcoming: applySortToTasks(upcoming, sortMode),
+      completed: completed.sort((a, b) => {
+        if (!a.completedAt) return 1;
+        if (!b.completedAt) return -1;
+        return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+      }),
+    };
+  }, [filteredTasks, sortMode]);
 
-    overdue.sort((a, b) => {
-      if (!a.dueDate) return 1;
-      if (!b.dueDate) return -1;
-      return parseDateStr(a.dueDate).getTime() - parseDateStr(b.dueDate).getTime();
-    });
-    
-    completed.sort((a, b) => {
-      if (!a.completedAt) return 1;
-      if (!b.completedAt) return -1;
-      return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
-    });
-
-    return { overdue, upcoming, completed };
-  }, [tasks]);
+  const categoryGrouped = useMemo(() => {
+    const result: { cat: string; tasks: any[] }[] = [];
+    for (const cat of PRESET_CATEGORIES) {
+      const catTasks = filteredTasks.filter(t => t.category === cat);
+      if (catTasks.length > 0) result.push({ cat, tasks: applySortToTasks(catTasks, sortMode) });
+    }
+    const uncategorized = filteredTasks.filter(t => !t.category || !PRESET_CATEGORIES.includes(t.category));
+    if (uncategorized.length > 0) result.push({ cat: "Uncategorized", tasks: applySortToTasks(uncategorized, sortMode) });
+    return result;
+  }, [filteredTasks, sortMode]);
 
   const toggleTask = (taskId: number, currentCompleted: boolean) => {
-    updateTask.mutate({ 
+    updateTask.mutate({
       showId: show.id,
       taskId,
-      data: { completed: !currentCompleted } 
+      data: { completed: !currentCompleted }
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListTasksQueryKey(show.id) });
@@ -151,6 +178,10 @@ export function TaskList({ show }: { show: Show }) {
     });
   };
 
+  const toggleFilter = (cat: string) => {
+    setFilterCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
+  };
+
   if (isLoading) {
     return <div className="space-y-4">
       <Skeleton className="h-12 w-full" />
@@ -159,70 +190,195 @@ export function TaskList({ show }: { show: Show }) {
     </div>;
   }
 
+  const hasTasks = (tasks?.length ?? 0) > 0;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold tracking-tight">Tasks</h3>
         <AddTaskDialog show={show} />
       </div>
 
-      {groupedTasks.overdue.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-red-500 font-semibold uppercase tracking-wider text-sm">
-            <div className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-            </div>
-            Overdue
-          </div>
-          <div className="grid gap-2 border-red-500/20 border rounded-lg p-2 bg-red-500/5">
-            {groupedTasks.overdue.map(t => (
-              <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {groupedTasks.upcoming.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-muted-foreground font-semibold uppercase tracking-wider text-sm">
-            <Clock className="h-4 w-4" />
-            Upcoming
-          </div>
-          <div className="grid gap-2">
-            {groupedTasks.upcoming.map(t => (
-              <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {groupedTasks.upcoming.length === 0 && groupedTasks.overdue.length === 0 && (
-        <div className="text-center py-10 border-2 border-dashed rounded-lg text-muted-foreground">
-          No pending tasks.
-        </div>
-      )}
-
-      {groupedTasks.completed.length > 0 && (
-        <Collapsible open={completedOpen} onOpenChange={setCompletedOpen} className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-green-500 font-semibold uppercase tracking-wider text-sm">
-              <CheckCircle2 className="h-4 w-4" />
-              Completed
-            </div>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm">
-                {completedOpen ? "Hide" : "Show"} ({groupedTasks.completed.length})
-                {completedOpen ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+      {hasTasks && (
+        <div data-testid="task-toolbar" className="flex flex-wrap items-center gap-2">
+          <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
+                <Filter className="h-3 w-3" />
+                Filter
+                {filterCategories.length > 0 && (
+                  <span className="ml-0.5 bg-primary text-primary-foreground rounded-full h-4 w-4 inline-flex items-center justify-center text-[10px] font-bold">
+                    {filterCategories.length}
+                  </span>
+                )}
               </Button>
-            </CollapsibleTrigger>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-2" align="start">
+              <div className="space-y-0.5">
+                {PRESET_CATEGORIES.map(cat => (
+                  <div
+                    key={cat}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer select-none"
+                    onClick={() => toggleFilter(cat)}
+                  >
+                    <Checkbox checked={filterCategories.includes(cat)} onCheckedChange={() => toggleFilter(cat)} />
+                    <span className="text-sm">{cat}</span>
+                  </div>
+                ))}
+              </div>
+              {filterCategories.length > 0 && (
+                <Button variant="ghost" size="sm" className="w-full mt-1.5 h-7 text-xs" onClick={() => setFilterCategories([])}>
+                  Clear all
+                </Button>
+              )}
+            </PopoverContent>
+          </Popover>
+
+          {filterCategories.map(cat => (
+            <Badge
+              key={cat}
+              variant="secondary"
+              className="gap-1 h-6 text-xs cursor-pointer pr-1.5 hover:bg-secondary/80"
+              onClick={() => toggleFilter(cat)}
+            >
+              {cat}
+              <X className="h-3 w-3 opacity-60" />
+            </Badge>
+          ))}
+
+          <div className="flex items-center gap-1.5 ml-auto">
+            <Select value={sortMode} onValueChange={(v) => setSortMode(v as SortMode)}>
+              <SelectTrigger className="h-7 text-xs w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dueAsc">Due Date ↑</SelectItem>
+                <SelectItem value="dueDesc">Due Date ↓</SelectItem>
+                <SelectItem value="nameAz">Name A→Z</SelectItem>
+                <SelectItem value="category">Category</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="inline-flex rounded-md border overflow-hidden text-xs font-medium">
+              <button
+                className={`px-2.5 py-1 transition-colors ${groupMode === "status" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                onClick={() => setGroupMode("status")}
+              >
+                Status
+              </button>
+              <button
+                className={`px-2.5 py-1 transition-colors border-l ${groupMode === "category" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}
+                onClick={() => setGroupMode("category")}
+              >
+                Category
+              </button>
+            </div>
           </div>
-          <CollapsibleContent className="space-y-2 opacity-75">
-            {groupedTasks.completed.map(t => (
-              <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
-            ))}
-          </CollapsibleContent>
-        </Collapsible>
+        </div>
+      )}
+
+      {groupMode === "status" && (
+        <div className="space-y-8">
+          {groupedTasks.overdue.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-red-500 font-semibold uppercase tracking-wider text-sm">
+                <div className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </div>
+                Overdue
+              </div>
+              <div className="grid gap-2 border-red-500/20 border rounded-lg p-2 bg-red-500/5">
+                {groupedTasks.overdue.map(t => (
+                  <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {groupedTasks.upcoming.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-muted-foreground font-semibold uppercase tracking-wider text-sm">
+                <Clock className="h-4 w-4" />
+                Upcoming
+              </div>
+              <div className="grid gap-2">
+                {groupedTasks.upcoming.map(t => (
+                  <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {groupedTasks.upcoming.length === 0 && groupedTasks.overdue.length === 0 && (
+            <div className="text-center py-10 border-2 border-dashed rounded-lg text-muted-foreground">
+              {filterCategories.length > 0 ? "No pending tasks match the active filter." : "No pending tasks."}
+            </div>
+          )}
+
+          {groupedTasks.completed.length > 0 && (
+            <Collapsible open={completedOpen} onOpenChange={setCompletedOpen} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-green-500 font-semibold uppercase tracking-wider text-sm">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Completed
+                </div>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    {completedOpen ? "Hide" : "Show"} ({groupedTasks.completed.length})
+                    {completedOpen ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent className="space-y-2 opacity-75">
+                {groupedTasks.completed.map(t => (
+                  <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+        </div>
+      )}
+
+      {groupMode === "category" && (
+        <div className="space-y-4">
+          {categoryGrouped.length === 0 && (
+            <div className="text-center py-10 border-2 border-dashed rounded-lg text-muted-foreground">
+              {filterCategories.length > 0 ? "No tasks match the active filter." : "No tasks."}
+            </div>
+          )}
+          {categoryGrouped.map(({ cat, tasks: catTasks }) => {
+            const isOpen = catSectionOpen[cat] ?? true;
+            const textColorClass = getCategoryColor(cat).split(" ").find(c => c.startsWith("text-")) ?? "text-muted-foreground";
+            return (
+              <Collapsible
+                key={cat}
+                open={isOpen}
+                onOpenChange={(open) => setCatSectionOpen(prev => ({ ...prev, [cat]: open }))}
+                className="space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <div className={`flex items-center gap-2 font-semibold uppercase tracking-wider text-sm ${textColorClass}`}>
+                    {cat}
+                    <span className="font-normal text-muted-foreground normal-case tracking-normal">
+                      ({catTasks.length})
+                    </span>
+                  </div>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                      {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent className="grid gap-2">
+                  {catTasks.map(t => (
+                    <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
+        </div>
       )}
     </div>
   );

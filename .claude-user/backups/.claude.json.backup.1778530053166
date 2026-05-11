@@ -18,9 +18,7 @@
     "continue": 1,
     "ide-upsell-external-terminal": 2,
     "shift-tab": 2,
-    "image-paste": 2,
-    "web-app": 2,
-    "remote-control": 2
+    "image-paste": 2
   },
   "promptQueueUseCount": 1,
   "cachedGrowthBookFeatures": {

@@ -40,6 +40,7 @@ const LEGEND_ITEMS: { label: string; key: string }[] = [
 export function DashboardWeeklyCalendar() {
   const [open, setOpen] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [legendOpen, setLegendOpen] = useState(false);
 
   const today = new Date();
   const baseWeek = startOfWeek(today, { weekStartsOn: 0 });
@@ -164,22 +165,32 @@ export function DashboardWeeklyCalendar() {
             </div>
 
             {/* Legend */}
-            <div className="flex flex-wrap items-center gap-2 px-3 py-2.5 border-t">
-              <span className="text-[11px] text-muted-foreground/60 font-medium mr-1">Legend:</span>
-              {LEGEND_ITEMS.map(({ label, key }) => {
-                const s = CATEGORY_STYLES[key];
-                return (
-                  <span
-                    key={key}
-                    className={`inline-flex items-center text-[11px] font-medium rounded px-2 py-0.5 border ${s.bg} ${s.text} ${s.border}`}
-                  >
-                    {label}
+            <div className="border-t px-3 py-2">
+              <button
+                onClick={() => setLegendOpen(v => !v)}
+                className="flex items-center gap-1 text-[11px] text-muted-foreground/60 font-medium hover:text-muted-foreground transition-colors"
+              >
+                Legend
+                {legendOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              </button>
+              {legendOpen && (
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  {LEGEND_ITEMS.map(({ label, key }) => {
+                    const s = CATEGORY_STYLES[key];
+                    return (
+                      <span
+                        key={key}
+                        className={`inline-flex items-center text-[11px] font-medium rounded px-2 py-0.5 border ${s.bg} ${s.text} ${s.border}`}
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
+                  <span className="inline-flex items-center text-[11px] font-medium rounded px-2 py-0.5 border bg-muted/30 text-muted-foreground border-muted/20 line-through">
+                    Completed
                   </span>
-                );
-              })}
-              <span className="inline-flex items-center text-[11px] font-medium rounded px-2 py-0.5 border bg-muted/30 text-muted-foreground border-muted/20 line-through">
-                Completed
-              </span>
+                </div>
+              )}
             </div>
           </CardContent>
         </CollapsibleContent>

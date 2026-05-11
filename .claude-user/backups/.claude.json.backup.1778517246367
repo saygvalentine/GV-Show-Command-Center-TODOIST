@@ -4,7 +4,11 @@
   "tipsHistory": {
     "new-user-warmup": 1,
     "plan-mode-for-complex-tasks": 1,
-    "memory-command": 1
+    "memory-command": 1,
+    "theme-command": 1,
+    "default-permission-mode-config": 1,
+    "status-line": 1,
+    "prompt-queue": 1
   },
   "cachedGrowthBookFeatures": {
     "tengu_cedar_inlet": "off",
@@ -524,5 +528,6 @@
       "usageCount": 1,
       "lastUsedAt": 1778513919456
     }
-  }
+  },
+  "lastPlanModeUse": 1778515804744
 }

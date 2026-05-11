@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { Link, useSearch } from "wouter";
+import { useState, useMemo } from "react";
+import { Link } from "wouter";
 import { differenceInDays, startOfDay } from "date-fns";
 import { 
   useListShows, 
@@ -32,50 +32,37 @@ export default function Dashboard() {
   const [sortBy, setSortBy] = useState<SortOption>("date-asc");
   const [archivedOpen, setArchivedOpen] = useState(false);
 
-  const searchQuery = new URLSearchParams(useSearch()).get("q")?.trim() ?? "";
-
   const today = startOfDay(new Date());
-
-  const matchesSearch = (s: { name: string; venue?: string | null }, q: string) => {
-    const lower = q.toLowerCase();
-    return s.name.toLowerCase().includes(lower) || (s.venue ?? "").toLowerCase().includes(lower);
-  };
 
   const activeShows = useMemo(() => {
     if (!shows) return [];
     return shows.filter(s => {
       const cutoff = startOfDay(parseDateStr(s.dismantleDate ?? s.moveInDate));
       return differenceInDays(cutoff, today) >= 0;
-    }).filter(s => !searchQuery || matchesSearch(s, searchQuery))
-      .sort((a, b) => {
-        if (sortBy === "date-asc") {
-          return parseDateStr(a.moveInDate).getTime() - parseDateStr(b.moveInDate).getTime();
-        }
-        if (sortBy === "date-desc") {
-          return parseDateStr(b.moveInDate).getTime() - parseDateStr(a.moveInDate).getTime();
-        }
-        if (sortBy === "name") {
-          return a.name.localeCompare(b.name);
-        }
-        if (sortBy === "overdue") {
-          return (b.overdueCount || 0) - (a.overdueCount || 0);
-        }
-        return 0;
-      });
-  }, [shows, sortBy, today, searchQuery]);
+    }).sort((a, b) => {
+      if (sortBy === "date-asc") {
+        return parseDateStr(a.moveInDate).getTime() - parseDateStr(b.moveInDate).getTime();
+      }
+      if (sortBy === "date-desc") {
+        return parseDateStr(b.moveInDate).getTime() - parseDateStr(a.moveInDate).getTime();
+      }
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      }
+      if (sortBy === "overdue") {
+        return (b.overdueCount || 0) - (a.overdueCount || 0);
+      }
+      return 0;
+    });
+  }, [shows, sortBy, today]);
 
   const archivedShows = useMemo(() => {
     if (!shows) return [];
     return shows.filter(s => {
       const cutoff = startOfDay(parseDateStr(s.dismantleDate ?? s.moveInDate));
       return differenceInDays(cutoff, today) < 0;
-    }).filter(s => !searchQuery || matchesSearch(s, searchQuery))
-      .sort((a, b) => parseDateStr(b.moveInDate).getTime() - parseDateStr(a.moveInDate).getTime());
-  }, [shows, today, searchQuery]);
-
-  useEffect(() => {
-    if (searchQuery && archivedShows.length > 0) setArchivedOpen(true);
-  }, [searchQuery, archivedShows.length]);
+    }).sort((a, b) => parseDateStr(b.moveInDate).getTime() - parseDateStr(a.moveInDate).getTime());
+  }, [shows, today]);
 
   return (
     <Layout>
@@ -161,7 +148,7 @@ export default function Dashboard() {
             ))}
             {activeShows.length === 0 && (
               <div className="col-span-full py-12 text-center border-2 border-dashed rounded-xl text-muted-foreground">
-                {searchQuery ? `No shows match "${searchQuery}".` : "No active shows found. Add one to get started."}
+                No active shows found. Add one to get started.
               </div>
             )}
           </div>

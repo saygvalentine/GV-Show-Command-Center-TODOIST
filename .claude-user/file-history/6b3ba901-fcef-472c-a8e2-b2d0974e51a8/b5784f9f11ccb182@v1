@@ -1,41 +1,12 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation, useSearch } from "wouter";
-import { Moon, Sun, LayoutDashboard, Search, CheckSquare, X } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Moon, Sun, LayoutDashboard, Search, CheckSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [location, navigate] = useLocation();
-  const searchStr = useSearch();
+  const [location] = useLocation();
   const { theme, setTheme } = useTheme();
-
-  const qFromUrl = location === "/" ? (new URLSearchParams(searchStr).get("q") ?? "") : "";
-  const [query, setQuery] = useState(qFromUrl);
-
-  useEffect(() => { setQuery(qFromUrl); }, [qFromUrl]);
-
-  const handleChange = (val: string) => {
-    setQuery(val);
-    if (location === "/") {
-      navigate(val.trim() ? `/?q=${encodeURIComponent(val.trim())}` : "/", { replace: true });
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      query.trim() ? navigate(`/?q=${encodeURIComponent(query.trim())}`) : navigate("/");
-    }
-    if (e.key === "Escape") {
-      setQuery("");
-      navigate("/");
-    }
-  };
-
-  const clearSearch = () => {
-    setQuery("");
-    navigate("/");
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -60,25 +31,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-4">
-            <div className="relative hidden md:flex items-center">
-              <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <div className="relative hidden md:flex">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                type="text"
+                type="search"
                 placeholder="Search shows..."
-                className="w-64 pl-8 pr-8 h-9 bg-muted/50 border-none focus-visible:ring-1"
-                value={query}
-                onChange={(e) => handleChange(e.target.value)}
-                onKeyDown={handleKeyDown}
+                className="w-64 pl-8 h-9 bg-muted/50 border-none focus-visible:ring-1"
               />
-              {query && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Clear search"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
             </div>
             <Button
               variant="ghost"

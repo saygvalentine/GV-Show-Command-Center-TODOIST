@@ -2,7 +2,11 @@
   "numStartups": 1,
   "installMethod": "global",
   "tipsHistory": {
-    "new-user-warmup": 1
+    "new-user-warmup": 1,
+    "plan-mode-for-complex-tasks": 1,
+    "memory-command": 1,
+    "theme-command": 1,
+    "default-permission-mode-config": 1
   },
   "cachedGrowthBookFeatures": {
     "tengu_cedar_inlet": "off",
@@ -473,7 +477,10 @@
         "api.ts"
       ],
       "exampleFilesGeneratedAt": 1778513874266,
-      "hasCompletedProjectOnboarding": true
+      "hasCompletedProjectOnboarding": true,
+      "lastHintSessionId": "6b3ba901-fcef-472c-a8e2-b2d0974e51a8",
+      "lastSessionFirstPrompt": "#1 - Task Filter, Sort & Group in Show Detail What & Why The task list in Show Detail grows long for busy shows. Users need to quickly focus on specific categories (e.g., only Fire Marshal tasks), reo",
+      "lastSessionModified": 1778514151906
     }
   },
   "cachedExperimentFeatures": [
@@ -519,5 +526,6 @@
       "usageCount": 1,
       "lastUsedAt": 1778513919456
     }
-  }
+  },
+  "lastPlanModeUse": 1778515804744
 }

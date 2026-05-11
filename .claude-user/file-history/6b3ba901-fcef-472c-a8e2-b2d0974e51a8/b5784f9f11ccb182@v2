@@ -63,7 +63,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="relative hidden md:flex items-center">
               <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
-                type="text"
+                type="search"
                 placeholder="Search shows..."
                 className="w-64 pl-8 pr-8 h-9 bg-muted/50 border-none focus-visible:ring-1"
                 value={query}

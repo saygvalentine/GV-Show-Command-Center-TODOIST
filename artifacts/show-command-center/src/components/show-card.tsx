@@ -17,16 +17,16 @@ export function ShowCard({ show }: ShowCardProps) {
   const totalItems = (show.taskCount || 0) + (show.eblastCount || 0);
   const completedItems = (show.completedTaskCount || 0) + (show.sentEblastCount || 0);
   const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
-  
+
   const moveInDate = startOfDay(parseDateStr(show.moveInDate));
   const today = startOfDay(new Date());
   const daysUntil = differenceInDays(moveInDate, today);
-  
+
   return (
     <Card className="relative overflow-hidden flex flex-col h-full hover:border-primary/50 transition-colors group">
       {/* Top Color Bar */}
       <div className={`h-1.5 w-full ${urgency.bgClass}`} />
-      
+
       <CardHeader className="pb-3 flex-none">
         <div className="flex justify-between items-start">
           <div className="space-y-1.5 pr-4 min-w-0">
@@ -98,7 +98,7 @@ export function ShowCard({ show }: ShowCardProps) {
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="pb-4 flex-1 border-t">
         <div className="space-y-4 pt-4">
           {/* Status Chips */}
@@ -163,7 +163,7 @@ export function ShowCard({ show }: ShowCardProps) {
               </Badge>
             )}
           </div>
-          
+
           {/* Overdue Warning */}
           {(show.overdueCount || 0) > 0 && (
             <div className="flex items-center gap-2 text-red-500 bg-red-500/10 px-3 py-2 rounded-md">
@@ -178,7 +178,7 @@ export function ShowCard({ show }: ShowCardProps) {
           )}
         </div>
       </CardContent>
-      
+
       <CardFooter className="pt-0 pb-4 border-t flex-none mt-auto">
         <div className="w-full space-y-2 pt-4">
           <div className="flex justify-between text-xs text-muted-foreground">
@@ -191,7 +191,7 @@ export function ShowCard({ show }: ShowCardProps) {
           </div>
         </div>
       </CardFooter>
-      
+
       <Link href={`/shows/${show.id}`} className="absolute inset-0 z-10">
         <span className="sr-only">View Show Details</span>
       </Link>

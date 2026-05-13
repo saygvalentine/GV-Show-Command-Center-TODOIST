@@ -13,12 +13,13 @@ export async function gcalRequest(
     options.headers = { "Content-Type": "application/json" };
   }
   const response = await connectors.proxy("google-calendar", `/calendar/v3${path}`, options);
+
   if (response.status === 404 || response.status === 410) return null;
-  if (response.status === 204 || method === "DELETE") return {};
   if (!response.ok) {
     const text = await response.text();
     throw new Error(`Google Calendar API error ${response.status}: ${text}`);
   }
+  if (response.status === 204) return {};
   return response.json();
 }
 

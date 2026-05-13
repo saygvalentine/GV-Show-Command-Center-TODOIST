@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, eblastsTable } from "@workspace/db";
+import { db, eblastsTable, gcalOrphansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   CreateEblastBody,
@@ -133,6 +133,15 @@ router.delete("/:eblastId", async (req, res): Promise<void> => {
   if (!params.success) {
     res.status(400).json({ error: "Invalid params" });
     return;
+  }
+
+  const [eblast] = await db
+    .select({ gcalEventId: eblastsTable.gcalEventId })
+    .from(eblastsTable)
+    .where(and(eq(eblastsTable.id, params.data.eblastId), eq(eblastsTable.showId, params.data.showId)));
+
+  if (eblast?.gcalEventId) {
+    await db.insert(gcalOrphansTable).values({ gcalEventId: eblast.gcalEventId });
   }
 
   await db

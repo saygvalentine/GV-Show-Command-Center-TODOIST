@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, showsTable, tasksTable, eblastsTable } from "@workspace/db";
+import { db, showsTable, tasksTable, eblastsTable, gcalOrphansTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { gcalRequest, makeGcalEvent } from "../lib/google-calendar-client";
 
@@ -86,15 +86,40 @@ async function syncEblast(
   }
 }
 
+async function drainOrphans(counters: { deleted: number }) {
+  const orphans = await db.select().from(gcalOrphansTable);
+  if (orphans.length === 0) return;
+
+  const CONCURRENCY = 5;
+  for (let i = 0; i < orphans.length; i += CONCURRENCY) {
+    await Promise.all(
+      orphans.slice(i, i + CONCURRENCY).map(async (orphan) => {
+        await gcalRequest("DELETE", `/calendars/primary/events/${orphan.gcalEventId}`);
+        await db.delete(gcalOrphansTable).where(eq(gcalOrphansTable.id, orphan.id));
+        counters.deleted++;
+      })
+    );
+  }
+}
+
 router.post("/sync", async (req, res): Promise<void> => {
-  const showId = req.query.showId ? Number(req.query.showId) : undefined;
+  const rawShowId = req.query.showId;
+  let showId: number | undefined;
+  if (rawShowId !== undefined) {
+    const parsed = Number(rawShowId);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      res.status(400).json({ error: "Invalid showId — must be a positive integer" });
+      return;
+    }
+    showId = parsed;
+  }
 
   const shows = showId
     ? await db.select().from(showsTable).where(eq(showsTable.id, showId))
     : await db.select().from(showsTable);
 
-  if (shows.length === 0) {
-    res.json({ ok: true, created: 0, updated: 0, deleted: 0 });
+  if (shows.length === 0 && showId !== undefined) {
+    res.status(404).json({ error: "Show not found" });
     return;
   }
 
@@ -102,8 +127,12 @@ router.post("/sync", async (req, res): Promise<void> => {
   const showMap = new Map(shows.map((s) => [s.id, s.name]));
 
   const [allTasks, allEblasts] = await Promise.all([
-    db.select().from(tasksTable).where(inArray(tasksTable.showId, showIds)),
-    db.select().from(eblastsTable).where(inArray(eblastsTable.showId, showIds)),
+    showIds.length > 0
+      ? db.select().from(tasksTable).where(inArray(tasksTable.showId, showIds))
+      : [],
+    showIds.length > 0
+      ? db.select().from(eblastsTable).where(inArray(eblastsTable.showId, showIds))
+      : [],
   ]);
 
   const counters = { created: 0, updated: 0, deleted: 0 };
@@ -118,6 +147,7 @@ router.post("/sync", async (req, res): Promise<void> => {
     for (let i = 0; i < allWork.length; i += CONCURRENCY) {
       await Promise.all(allWork.slice(i, i + CONCURRENCY).map((fn) => fn()));
     }
+    await drainOrphans(counters);
   } catch (err) {
     res.status(503).json({ error: (err as Error).message });
     return;

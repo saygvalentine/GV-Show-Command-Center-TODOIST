@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, tasksTable } from "@workspace/db";
+import { db, tasksTable, gcalOrphansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   CreateTaskBody,
@@ -134,6 +134,15 @@ router.delete("/:taskId", async (req, res): Promise<void> => {
   if (!params.success) {
     res.status(400).json({ error: "Invalid params" });
     return;
+  }
+
+  const [task] = await db
+    .select({ gcalEventId: tasksTable.gcalEventId })
+    .from(tasksTable)
+    .where(and(eq(tasksTable.id, params.data.taskId), eq(tasksTable.showId, params.data.showId)));
+
+  if (task?.gcalEventId) {
+    await db.insert(gcalOrphansTable).values({ gcalEventId: task.gcalEventId });
   }
 
   await db

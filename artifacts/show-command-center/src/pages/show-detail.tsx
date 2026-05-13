@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useParams, useSearch } from "wouter";
 import { format, differenceInDays, startOfDay } from "date-fns";
-import { useGetShow, useUpdateShow, useDeleteShow, getGetShowQueryKey, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
+import { useGetShow, useUpdateShow, useDeleteShow, useSyncGoogleCalendar, getGetShowQueryKey, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, MapPin, Trash2, CheckCircle2, AlertCircle, Tag } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Trash2, CheckCircle2, AlertCircle, Tag, RefreshCw, Loader2 } from "lucide-react";
 import { UrgencyBadge } from "@/components/urgency-badge";
 import { getUrgencyInfo, formatDate, parseDateStr } from "@/lib/date-utils";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,28 @@ export default function ShowDetail() {
   
   const { data: show, isLoading } = useGetShow(showId);
   const deleteShow = useDeleteShow();
+  const syncGcal = useSyncGoogleCalendar();
+
+  const handleGcalSync = () => {
+    syncGcal.mutate(
+      { params: { showId } },
+      {
+        onSuccess: (data) => {
+          toast({
+            title: "Synced to Google Calendar",
+            description: `${data.created} created, ${data.updated} updated, ${data.deleted} removed`,
+          });
+        },
+        onError: (err) => {
+          toast({
+            title: "Google Calendar sync failed",
+            description: (err as Error).message,
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
 
   if (isLoading) {
     return (
@@ -202,6 +224,12 @@ export default function ShowDetail() {
         </Card>
 
         <Tabs defaultValue={tabParam} className="w-full">
+          <div className="flex justify-end mb-3">
+            <Button variant="outline" size="sm" onClick={handleGcalSync} disabled={syncGcal.isPending}>
+              {syncGcal.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Sync to Google Calendar
+            </Button>
+          </div>
           <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-background mb-6 sticky top-14 z-40">
             <TabsTrigger 
               value="tasks" 

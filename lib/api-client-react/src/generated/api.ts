@@ -28,6 +28,7 @@ import type {
   CreateTaskBody,
   DashboardSummary,
   Eblast,
+  GcalSyncResult,
   GetCalendarEventsParams,
   GetCalendarShowDatesParams,
   HealthStatus,
@@ -39,6 +40,8 @@ import type {
   Show,
   ShowDateEvent,
   ShowWithItems,
+  SyncGoogleCalendar503,
+  SyncGoogleCalendarParams,
   Task,
   UpdateEblastBody,
   UpdateLinkBody,
@@ -2620,6 +2623,102 @@ export function useGetCalendarShowDates<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Sync tasks and e-blasts to Google Calendar
+ */
+export const getSyncGoogleCalendarUrl = (params?: SyncGoogleCalendarParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/export/google-calendar/sync?${stringifiedParams}`
+    : `/api/export/google-calendar/sync`;
+};
+
+export const syncGoogleCalendar = async (
+  params?: SyncGoogleCalendarParams,
+  options?: RequestInit,
+): Promise<GcalSyncResult> => {
+  return customFetch<GcalSyncResult>(getSyncGoogleCalendarUrl(params), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSyncGoogleCalendarMutationOptions = <
+  TError = ErrorType<SyncGoogleCalendar503>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncGoogleCalendar>>,
+    TError,
+    { params?: SyncGoogleCalendarParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof syncGoogleCalendar>>,
+  TError,
+  { params?: SyncGoogleCalendarParams },
+  TContext
+> => {
+  const mutationKey = ["syncGoogleCalendar"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof syncGoogleCalendar>>,
+    { params?: SyncGoogleCalendarParams }
+  > = (props) => {
+    const { params } = props ?? {};
+
+    return syncGoogleCalendar(params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SyncGoogleCalendarMutationResult = NonNullable<
+  Awaited<ReturnType<typeof syncGoogleCalendar>>
+>;
+
+export type SyncGoogleCalendarMutationError = ErrorType<SyncGoogleCalendar503>;
+
+/**
+ * @summary Sync tasks and e-blasts to Google Calendar
+ */
+export const useSyncGoogleCalendar = <
+  TError = ErrorType<SyncGoogleCalendar503>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncGoogleCalendar>>,
+    TError,
+    { params?: SyncGoogleCalendarParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof syncGoogleCalendar>>,
+  TError,
+  { params?: SyncGoogleCalendarParams },
+  TContext
+> => {
+  return useMutation(getSyncGoogleCalendarMutationOptions(options));
+};
 
 /**
  * @summary Get all overdue tasks and e-blasts across all shows

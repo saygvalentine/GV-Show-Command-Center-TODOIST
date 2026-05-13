@@ -631,6 +631,20 @@ export const GetCalendarShowDatesResponse = zod.array(
 );
 
 /**
+ * @summary Sync tasks and e-blasts to Google Calendar
+ */
+export const SyncGoogleCalendarQueryParams = zod.object({
+  showId: zod.coerce.number().optional(),
+});
+
+export const SyncGoogleCalendarResponse = zod.object({
+  ok: zod.boolean(),
+  created: zod.number(),
+  updated: zod.number(),
+  deleted: zod.number(),
+});
+
+/**
  * @summary Get all overdue tasks and e-blasts across all shows
  */
 export const GetOverdueItemsResponseItem = zod.object({

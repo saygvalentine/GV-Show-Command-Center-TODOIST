@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, startOfDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Loader2, Download, CheckCircle2, Circle } from "lucide-react";
-import { useGetCalendarEvents, useGetCalendarShowDates, useListShows, useUpdateOfficeTask, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
+import { ChevronLeft, ChevronRight, Loader2, Download, CheckCircle2, Circle, RefreshCw } from "lucide-react";
+import { useGetCalendarEvents, useGetCalendarShowDates, useListShows, useUpdateOfficeTask, useSyncGoogleCalendar, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,6 +37,30 @@ export default function Calendar() {
   const isLoading = mode === "tasks" ? taskLoading : showDateLoading;
 
   const updateOfficeTask = useUpdateOfficeTask();
+  const syncGcal = useSyncGoogleCalendar();
+
+  const handleGcalSync = () => {
+    const params: { showId?: number } = {};
+    if (selectedShowId !== "all") params.showId = Number(selectedShowId);
+    syncGcal.mutate(
+      { params },
+      {
+        onSuccess: (data) => {
+          toast({
+            title: "Synced to Google Calendar",
+            description: `${data.created} created, ${data.updated} updated, ${data.deleted} removed`,
+          });
+        },
+        onError: (err) => {
+          toast({
+            title: "Google Calendar sync failed",
+            description: (err as Error).message,
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
 
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
@@ -186,6 +210,12 @@ export default function Calendar() {
             <Button variant="outline" onClick={handleExport} title={selectedShowId === "all" ? "Export all shows to calendar" : "Export selected show to calendar"}>
               <Download className="h-4 w-4 mr-2" />
               Export .ics
+            </Button>
+            <Button variant="outline" onClick={handleGcalSync} disabled={syncGcal.isPending} title="Sync to Google Calendar">
+              {syncGcal.isPending
+                ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                : <RefreshCw className="h-4 w-4 mr-2" />}
+              Sync to Google
             </Button>
           </div>
         </div>

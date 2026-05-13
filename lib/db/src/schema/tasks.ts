@@ -13,6 +13,7 @@ export const tasksTable = pgTable("tasks", {
   completed: boolean("completed").notNull().default(false),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   notes: text("notes"),
+  gcalEventId: text("gcal_event_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

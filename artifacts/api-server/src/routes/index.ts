@@ -10,6 +10,7 @@ import exportRouter from "./export";
 import officeTasksRouter from "./officeTasks";
 import venuesRouter from "./venues";
 import presetTasksRouter from "./presetTasks";
+import googleCalendarRouter from "./google-calendar";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use("/export", exportRouter);
 router.use("/office-tasks", officeTasksRouter);
 router.use("/venues", venuesRouter);
 router.use("/preset-tasks", presetTasksRouter);
+router.use("/export/google-calendar", googleCalendarRouter);
 
 export default router;

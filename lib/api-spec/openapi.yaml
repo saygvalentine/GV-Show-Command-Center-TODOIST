@@ -24,6 +24,8 @@ tags:
     description: Dashboard data
   - name: officetasks
     description: Office task management
+  - name: export
+    description: Export and sync operations
 paths:
   /healthz:
     get:
@@ -697,6 +699,34 @@ paths:
                 items:
                   $ref: "#/components/schemas/ShowDateEvent"
 
+  /export/google-calendar/sync:
+    post:
+      operationId: syncGoogleCalendar
+      tags: [export]
+      summary: Sync tasks and e-blasts to Google Calendar
+      parameters:
+        - name: showId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GcalSyncResult"
+        "503":
+          description: Google Calendar connector not configured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /dashboard/overdue:
     get:
       operationId: getOverdueItems
@@ -1277,6 +1307,19 @@ components:
         notes:
           type: string
           nullable: true
+
+    GcalSyncResult:
+      type: object
+      required: [ok, created, updated, deleted]
+      properties:
+        ok:
+          type: boolean
+        created:
+          type: integer
+        updated:
+          type: integer
+        deleted:
+          type: integer
 
     DashboardSummary:
       type: object

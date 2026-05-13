@@ -260,6 +260,13 @@ export interface OverdueItem {
   notes?: string | null;
 }
 
+export interface GcalSyncResult {
+  ok: boolean;
+  created: number;
+  updated: number;
+  deleted: number;
+}
+
 export interface DashboardSummary {
   totalShows: number;
   activeShows: number;
@@ -292,4 +299,12 @@ export type GetCalendarShowDatesParams = {
   month: number;
   year: number;
   showId?: number;
+};
+
+export type SyncGoogleCalendarParams = {
+  showId?: number;
+};
+
+export type SyncGoogleCalendar503 = {
+  error?: string;
 };

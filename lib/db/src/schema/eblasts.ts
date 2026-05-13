@@ -12,6 +12,7 @@ export const eblastsTable = pgTable("eblasts", {
   sent: boolean("sent").notNull().default(false),
   sentAt: timestamp("sent_at", { withTimezone: true }),
   notes: text("notes"),
+  gcalEventId: text("gcal_event_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

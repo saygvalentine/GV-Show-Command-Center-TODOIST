@@ -89,6 +89,7 @@ export function ShowCard({ show }: ShowCardProps) {
         <div className="space-y-4 pt-4">
           {/* Task key dates */}
           <div className="flex flex-nowrap items-center gap-x-3 text-xs overflow-hidden">
+            <span className="text-muted-foreground flex items-center gap-1 shrink-0"><Clock className="h-3 w-3" />:</span>
             <span className="whitespace-nowrap text-muted-foreground flex items-center gap-1"><Flame className="h-3 w-3 shrink-0" />FM: <span className="text-foreground font-medium">{show.fmDeadlineDate ? format(parseDateStr(show.fmDeadlineDate), "M/d") : "N/A"}</span></span>
             <span className="whitespace-nowrap text-muted-foreground flex items-center gap-1"><Signpost className="h-3 w-3 shrink-0" />ID Signs: <span className="text-foreground font-medium">{show.idSignDeadlineDate ? format(parseDateStr(show.idSignDeadlineDate), "M/d") : "N/A"}</span></span>
             <span className="whitespace-nowrap text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3 shrink-0" />Bucket: <span className="text-foreground font-medium">{show.bucketDueDate ? format(parseDateStr(show.bucketDueDate), "M/d") : "N/A"}</span></span>

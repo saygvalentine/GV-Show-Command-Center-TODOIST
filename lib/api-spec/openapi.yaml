@@ -805,6 +805,18 @@ components:
         idSignDate:
           type: string
           nullable: true
+        fmDeadlineDate:
+          type: string
+          format: date
+          nullable: true
+        idSignDeadlineDate:
+          type: string
+          format: date
+          nullable: true
+        bucketDueDate:
+          type: string
+          format: date
+          nullable: true
         tags:
           type: array
           items:

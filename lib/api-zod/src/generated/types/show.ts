@@ -30,5 +30,8 @@ export interface Show {
   fireMarshalDate?: string | null;
   idSignStatus?: string | null;
   idSignDate?: string | null;
+  fmDeadlineDate?: Date | null;
+  idSignDeadlineDate?: Date | null;
+  bucketDueDate?: Date | null;
   tags?: string[];
 }

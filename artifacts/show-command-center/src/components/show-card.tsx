@@ -87,21 +87,12 @@ export function ShowCard({ show }: ShowCardProps) {
 
       <CardContent className="pb-4 flex-1 border-t">
         <div className="space-y-4 pt-4">
-          {/* Deadlines */}
-          {(show.advanceWarehouseDate || show.onlineOrderDeadline || show.discountDeadline) && (
-            <div className="flex flex-nowrap items-center gap-x-2 text-xs overflow-hidden">
-              <Clock className="h-3 w-3 text-muted-foreground/70 shrink-0" />
-              {show.advanceWarehouseDate && (
-                <span className="whitespace-nowrap text-muted-foreground">Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
-              )}
-              {show.onlineOrderDeadline && (
-                <span className="whitespace-nowrap text-muted-foreground">Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
-              )}
-              {show.discountDeadline && (
-                <span className="whitespace-nowrap text-muted-foreground">Disc: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
-              )}
-            </div>
-          )}
+          {/* Task key dates */}
+          <div className="flex flex-nowrap items-center gap-x-3 text-xs overflow-hidden">
+            <span className="whitespace-nowrap text-muted-foreground">FM: <span className="text-foreground font-medium">{show.fmDeadlineDate ? format(parseDateStr(show.fmDeadlineDate), "M/d") : "N/A"}</span></span>
+            <span className="whitespace-nowrap text-muted-foreground">ID Signs: <span className="text-foreground font-medium">{show.idSignDeadlineDate ? format(parseDateStr(show.idSignDeadlineDate), "M/d") : "N/A"}</span></span>
+            <span className="whitespace-nowrap text-muted-foreground">Bucket: <span className="text-foreground font-medium">{show.bucketDueDate ? format(parseDateStr(show.bucketDueDate), "M/d") : "N/A"}</span></span>
+          </div>
           {/* Status Chips */}
           <div className="grid grid-cols-2 gap-2">
             {/* FM */}

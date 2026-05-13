@@ -93,6 +93,11 @@ function computeShowStats(
     }
   }
 
+  // Specific task due dates for the summary line
+  const fmDeadlineTask = tasks.find((t) => t.name === "Hard Deadline" && t.category === "Fire Marshal");
+  const idSignDeadlineTask = tasks.find((t) => t.name === "Submit Order" && t.category === "ID Sign");
+  const bucketDueDateTask = tasks.find((t) => t.name === "Bucket Due Date" && t.category === "Show Bucket");
+
   return {
     taskCount: tasks.length,
     completedTaskCount: tasks.filter((t) => t.completed).length,
@@ -106,6 +111,9 @@ function computeShowStats(
     fireMarshalDate,
     idSignStatus,
     idSignDate,
+    fmDeadlineDate: fmDeadlineTask?.dueDate ?? null,
+    idSignDeadlineDate: idSignDeadlineTask?.dueDate ?? null,
+    bucketDueDate: bucketDueDateTask?.dueDate ?? null,
   };
 }
 

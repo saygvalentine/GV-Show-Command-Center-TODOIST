@@ -41,6 +41,9 @@ export const ListShowsResponseItem = zod.object({
   fireMarshalDate: zod.string().nullish(),
   idSignStatus: zod.string().nullish(),
   idSignDate: zod.string().nullish(),
+  fmDeadlineDate: zod.coerce.date().nullish(),
+  idSignDeadlineDate: zod.coerce.date().nullish(),
+  bucketDueDate: zod.coerce.date().nullish(),
   tags: zod.array(zod.string()).optional(),
 });
 export const ListShowsResponse = zod.array(ListShowsResponseItem);
@@ -92,6 +95,9 @@ export const GetShowResponse = zod
     fireMarshalDate: zod.string().nullish(),
     idSignStatus: zod.string().nullish(),
     idSignDate: zod.string().nullish(),
+    fmDeadlineDate: zod.coerce.date().nullish(),
+    idSignDeadlineDate: zod.coerce.date().nullish(),
+    bucketDueDate: zod.coerce.date().nullish(),
     tags: zod.array(zod.string()).optional(),
   })
   .and(
@@ -184,6 +190,9 @@ export const UpdateShowResponse = zod.object({
   fireMarshalDate: zod.string().nullish(),
   idSignStatus: zod.string().nullish(),
   idSignDate: zod.string().nullish(),
+  fmDeadlineDate: zod.coerce.date().nullish(),
+  idSignDeadlineDate: zod.coerce.date().nullish(),
+  bucketDueDate: zod.coerce.date().nullish(),
   tags: zod.array(zod.string()).optional(),
 });
 
@@ -670,6 +679,9 @@ export const GetDashboardSummaryResponse = zod.object({
       fireMarshalDate: zod.string().nullish(),
       idSignStatus: zod.string().nullish(),
       idSignDate: zod.string().nullish(),
+      fmDeadlineDate: zod.coerce.date().nullish(),
+      idSignDeadlineDate: zod.coerce.date().nullish(),
+      bucketDueDate: zod.coerce.date().nullish(),
       tags: zod.array(zod.string()).optional(),
     })
     .nullish(),

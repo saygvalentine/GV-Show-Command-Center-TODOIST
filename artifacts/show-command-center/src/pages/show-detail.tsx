@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, MapPin, Trash2, CheckCircle2, AlertCircle, Tag, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Trash2, CheckCircle2, AlertCircle, Tag, CalendarSync, Loader2 } from "lucide-react";
 import { UrgencyBadge } from "@/components/urgency-badge";
 import { getUrgencyInfo, formatDate, parseDateStr } from "@/lib/date-utils";
 import { Badge } from "@/components/ui/badge";
@@ -226,7 +226,7 @@ export default function ShowDetail() {
         <Tabs defaultValue={tabParam} className="w-full">
           <div className="flex justify-end mb-3">
             <Button variant="outline" size="sm" onClick={handleGcalSync} disabled={syncGcal.isPending}>
-              {syncGcal.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              {syncGcal.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CalendarSync className="h-4 w-4 mr-2" />}
               Sync to Google Calendar
             </Button>
           </div>

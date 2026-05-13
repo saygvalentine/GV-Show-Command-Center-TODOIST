@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, startOfDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Loader2, Download, CheckCircle2, Circle, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Download, CheckCircle2, Circle, CalendarSync } from "lucide-react";
 import { useGetCalendarEvents, useGetCalendarShowDates, useListShows, useUpdateOfficeTask, useSyncGoogleCalendar, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -214,7 +214,7 @@ export default function Calendar() {
             <Button variant="outline" onClick={handleGcalSync} disabled={syncGcal.isPending} title="Sync to Google Calendar">
               {syncGcal.isPending
                 ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                : <RefreshCw className="h-4 w-4 mr-2" />}
+                : <CalendarSync className="h-4 w-4 mr-2" />}
               Sync to Google Calendar
             </Button>
           </div>

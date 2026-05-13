@@ -36,8 +36,10 @@ async function syncTask(
       if (created?.id) {
         await db.update(tasksTable).set({ gcalEventId: created.id }).where(eq(tasksTable.id, task.id));
       }
+      counters.created++;
+    } else {
+      counters.updated++;
     }
-    counters.updated++;
   } else {
     const created = await gcalRequest("POST", `/calendars/primary/events`, event) as GcalEvent | null;
     if (created?.id) {
@@ -75,8 +77,10 @@ async function syncEblast(
       if (created?.id) {
         await db.update(eblastsTable).set({ gcalEventId: created.id }).where(eq(eblastsTable.id, eblast.id));
       }
+      counters.created++;
+    } else {
+      counters.updated++;
     }
-    counters.updated++;
   } else {
     const created = await gcalRequest("POST", `/calendars/primary/events`, event) as GcalEvent | null;
     if (created?.id) {

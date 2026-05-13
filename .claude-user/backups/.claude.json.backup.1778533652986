@@ -18,7 +18,10 @@
     "continue": 1,
     "ide-upsell-external-terminal": 2,
     "shift-tab": 2,
-    "image-paste": 2
+    "image-paste": 2,
+    "web-app": 2,
+    "remote-control": 2,
+    "voice-mode": 2
   },
   "promptQueueUseCount": 1,
   "cachedGrowthBookFeatures": {
@@ -540,5 +543,5 @@
     }
   },
   "lastPlanModeUse": 1778515804744,
-  "remoteControlUpsellSeenCount": 1
+  "remoteControlUpsellSeenCount": 2
 }

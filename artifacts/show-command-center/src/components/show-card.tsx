@@ -70,6 +70,20 @@ export function ShowCard({ show }: ShowCardProps) {
                 )}
               </div>
             )}
+            {(show.advanceWarehouseDate || show.onlineOrderDeadline || show.discountDeadline) && (
+              <div className="mt-2 flex flex-nowrap items-center gap-x-2 text-xs overflow-hidden">
+                <Clock className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+                {show.advanceWarehouseDate && (
+                  <span className="whitespace-nowrap text-muted-foreground">Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
+                )}
+                {show.onlineOrderDeadline && (
+                  <span className="whitespace-nowrap text-muted-foreground">Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
+                )}
+                {show.discountDeadline && (
+                  <span className="whitespace-nowrap text-muted-foreground">Disc: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex flex-col items-center gap-2 shrink-0">
             <UrgencyBadge dateStr={show.moveInDate} />

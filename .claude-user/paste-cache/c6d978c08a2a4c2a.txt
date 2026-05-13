@@ -1,0 +1,7 @@
+Two separate issues were fixed:
+
+1. Deployment failing (the "no run command" error)
+The previous session had changed the server to always run database migrations on every startup before the server began listening for requests. In production, Replit's health check probe hits /api/healthz almost immediately after the container starts — and since the server was waiting on migrations to finish first, the probe timed out and the deployment failed. The fix was restoring the original check: if the shows table already exists, skip migrations entirely and start up in milliseconds.
+
+2. Missing preset templates
+The preset_tasks table had been created in the production database (Replit's Publish flow handled that), but the 17 default preset rows that live inside the migration SQL never made it in. Since the schema-skip logic was bypassing all migration code, those INSERT statements never ran. The fix added a seedPresetTasks() function that runs on every startup, checks if the table is empty, and inserts all the defaults if so — a one-time self-heal that's safe to leave in permanently.

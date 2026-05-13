@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, showsTable, tasksTable, eblastsTable, linksTable } from "@workspace/db";
+import { db, showsTable, tasksTable, eblastsTable, linksTable, gcalOrphansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   CreateShowBody,
@@ -221,6 +221,20 @@ router.delete("/:showId", async (req, res): Promise<void> => {
   if (!params.success) {
     res.status(400).json({ error: "Invalid show ID" });
     return;
+  }
+
+  const [childTasks, childEblasts] = await Promise.all([
+    db.select({ gcalEventId: tasksTable.gcalEventId }).from(tasksTable).where(eq(tasksTable.showId, params.data.showId)),
+    db.select({ gcalEventId: eblastsTable.gcalEventId }).from(eblastsTable).where(eq(eblastsTable.showId, params.data.showId)),
+  ]);
+
+  const orphanIds = [
+    ...childTasks.map((t) => t.gcalEventId),
+    ...childEblasts.map((e) => e.gcalEventId),
+  ].filter((id): id is string => !!id);
+
+  if (orphanIds.length > 0) {
+    await db.insert(gcalOrphansTable).values(orphanIds.map((gcalEventId) => ({ gcalEventId })));
   }
 
   await db.delete(showsTable).where(eq(showsTable.id, params.data.showId));

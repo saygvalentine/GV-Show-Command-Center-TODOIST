@@ -215,7 +215,7 @@ export default function Calendar() {
               {syncGcal.isPending
                 ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 : <RefreshCw className="h-4 w-4 mr-2" />}
-              Sync to Google
+              Sync to Google Calendar
             </Button>
           </div>
         </div>

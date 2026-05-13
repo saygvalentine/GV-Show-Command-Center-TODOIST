@@ -12,7 +12,7 @@ export async function gcalRequest(
     options.body = body;
     options.headers = { "Content-Type": "application/json" };
   }
-  const response = await connectors.proxy("google-calendar", path, options);
+  const response = await connectors.proxy("google-calendar", `/calendar/v3${path}`, options);
   if (response.status === 404 || response.status === 410) return null;
   if (response.status === 204 || method === "DELETE") return {};
   if (!response.ok) {

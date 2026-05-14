@@ -22,10 +22,10 @@
     "web-app": 2,
     "remote-control": 2,
     "voice-mode": 2,
-    "color-when-multi-clauding": 3,
-    "frontend-design-plugin": 3
+    "color-when-multi-clauding": 3
   },
   "promptQueueUseCount": 1,
+  "showExpandedTodos": true,
   "cachedGrowthBookFeatures": {
     "tengu_prompt_cache_1h_config": {
       "allowlist": [

@@ -82,6 +82,22 @@
       "homepage": "https://github.com/AikidoSec/aikido-claude-plugin"
     },
     {
+      "name": "airtable",
+      "description": "Airtable is the database and operations layer for your agents — whether running product, marketing, sales, ops, HR, or a custom business app. It combines structured data with multiplayer visual surfaces (grid, kanban, calendar, gallery, timeline) humans and agents share — plus sync integrations to Jira, Salesforce, Zendesk, Google Drive, Databricks, and the rest of your stack, all backed by enterprise governance. This plugin makes Claude fluent in Airtable: creating bases and schema, working with records, and sharing UI for collaboration. Bundles the official Airtable MCP server.",
+      "author": {
+        "name": "Airtable"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/Airtable/skills.git",
+        "path": "plugins/airtable",
+        "ref": "main",
+        "sha": "aaeb4f3ec8d462d694a13fe5c3d249c291bf8899"
+      },
+      "homepage": "https://www.airtable.com"
+    },
+    {
       "name": "alloydb",
       "description": "Create, connect, and interact with an AlloyDB for PostgreSQL database and data.",
       "author": {
@@ -657,7 +673,7 @@
     },
     {
       "name": "data-agent-kit-starter-pack",
-      "description": "Specialized suite of skills for data engineers on Google Cloud — architect data pipelines, transform data with dbt, write Spark and BigQuery SQL notebooks, and orchestrate end-to-end workflows across BigQuery, Spanner, BigLake, and Dataproc.",
+      "description": "This plugin provides a specialized suite of skills for data engineers and database practitioners working on Google Cloud. It acts as an expert assistant, allowing you to use natural language prompts in your preferred coding agent to architect complex data pipelines, transform data with dbt, write Spark and BigQuery SQL notebooks, and orchestrate end-to-end workflows across GCP's data ecosystem.",
       "author": {
         "name": "Google LLC"
       },
@@ -665,9 +681,9 @@
       "source": {
         "source": "url",
         "url": "https://github.com/gemini-cli-extensions/data-agent-kit-starter-pack.git",
-        "sha": "7bcfcb77435ec6d544b1131333f2297ca09c3930"
+        "sha": "04c4354242c1192191c76fca2d4b03d94401d9fa"
       },
-      "homepage": "https://cloud.google.com/bigquery"
+      "homepage": "https://github.com/gemini-cli-extensions/data-agent-kit-starter-pack"
     },
     {
       "name": "data-engineering",
@@ -1803,7 +1819,7 @@
         "source": "git-subdir",
         "url": "https://github.com/ServiceNow/sdk.git",
         "path": "providers/claude/plugin",
-        "ref": "main",
+        "ref": "master",
         "sha": "06adf37ca78c270a57f93e7b9dfbb7bf16e24611"
       },
       "homepage": "https://servicenow.github.io/sdk/"

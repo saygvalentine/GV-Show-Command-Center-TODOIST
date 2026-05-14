@@ -1,28 +1,28 @@
 import { useState, useMemo, useEffect } from "react";
-import { Link, useSearch } from "wouter";
+import { useSearch } from "wouter";
 import { differenceInDays, startOfDay } from "date-fns";
-import { 
-  useListShows, 
-  useGetDashboardSummary 
+import {
+  useListShows,
+  useGetDashboardSummary
 } from "@workspace/api-client-react";
 import { ShowCard } from "@/components/show-card";
 import { Layout } from "@/components/layout";
 import { AddShowDialog } from "@/components/add-show-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
-import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Card, CardContent } from "@/components/ui/card";
-import { formatDate, parseDateStr } from "@/lib/date-utils";
+import { parseDateStr } from "@/lib/date-utils";
 import { DashboardWeeklyCalendar } from "@/components/dashboard-weekly-calendar";
 import { OverduePanel } from "@/components/overdue-panel";
+import { DashboardTaskSlider } from "@/components/dashboard-task-slider";
 
 type SortOption = "date-asc" | "date-desc" | "name" | "overdue";
 
@@ -81,39 +81,8 @@ export default function Dashboard() {
     <Layout>
       <div className="container mx-auto p-4 md:p-6 space-y-8">
         
-        {/* Next Up Banner */}
-        {!summaryLoading && summary?.nextUpShow && (
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-primary/20 p-4 rounded-full">
-                <AlertCircle className="h-8 w-8 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-sm font-semibold text-primary uppercase tracking-wider">Next Up</h2>
-                <Link href={`/shows/${summary.nextUpShow.id}`} className="text-2xl font-bold hover:underline">
-                  {summary.nextUpShow.name}
-                </Link>
-                <div className="text-muted-foreground mt-1">
-                  Move-in: {formatDate(summary.nextUpShow.moveInDate)}
-                  {summary.nextUpShow.venue && ` • ${summary.nextUpShow.venue}`}
-                </div>
-              </div>
-            </div>
-            
-            <div className="text-center bg-background rounded-lg p-4 shadow-sm border min-w-[200px]">
-              <div className="text-5xl font-black text-primary">
-                {Math.abs(differenceInDays(startOfDay(parseDateStr(summary.nextUpShow.moveInDate)), today))}
-              </div>
-              <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider mt-1">
-                Days Until Move-in
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {summaryLoading && (
-          <Skeleton className="w-full h-32 rounded-lg" />
-        )}
+        {/* Due Today / Overdue Slider */}
+        <DashboardTaskSlider />
 
         {/* Weekly Calendar */}
         <DashboardWeeklyCalendar />

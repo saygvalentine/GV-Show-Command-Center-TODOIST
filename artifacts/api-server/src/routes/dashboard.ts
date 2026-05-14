@@ -31,7 +31,7 @@ router.get("/overdue", async (req, res): Promise<void> => {
   }[] = [];
 
   for (const task of allTasks) {
-    if (!task.completed && task.dueDate && task.dueDate < todayStr) {
+    if (!task.completed && task.dueDate && task.dueDate <= todayStr) {
       items.push({
         id: task.id,
         type: "task",
@@ -47,7 +47,7 @@ router.get("/overdue", async (req, res): Promise<void> => {
   }
 
   for (const eblast of allEblasts) {
-    if (!eblast.sent && eblast.dueDate && eblast.dueDate < todayStr) {
+    if (!eblast.sent && eblast.dueDate && eblast.dueDate <= todayStr) {
       items.push({
         id: eblast.id,
         type: "eblast",

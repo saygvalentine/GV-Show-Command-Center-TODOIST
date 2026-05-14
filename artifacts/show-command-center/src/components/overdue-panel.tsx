@@ -22,6 +22,7 @@ function chipClass(type: string, category: string | null | undefined) {
 }
 
 function daysLabel(n: number) {
+  if (n === 0) return "today";
   return n === 1 ? "1 day" : `${n} days`;
 }
 
@@ -91,8 +92,8 @@ export function OverduePanel() {
                         </p>
                       )}
                     </div>
-                    <span className="shrink-0 text-xs font-semibold text-red-400 whitespace-nowrap">
-                      {daysLabel(item.daysOverdue)} ago
+                    <span className={`shrink-0 text-xs font-semibold whitespace-nowrap ${item.daysOverdue === 0 ? "text-amber-400" : "text-red-400"}`}>
+                      {item.daysOverdue === 0 ? "due today" : `${daysLabel(item.daysOverdue)} ago`}
                     </span>
                   </Link>
                 ))}

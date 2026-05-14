@@ -1,31 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        oauth2: {
-          initTokenClient(config: {
-            client_id: string;
-            scope: string;
-            callback: (resp: { access_token?: string; expires_in?: number; error?: string }) => void;
-          }): { requestAccessToken(): void };
-        };
-      };
-    };
-  }
-}
+const STORAGE_KEY = "gcal_prefs";
 
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
-const SCOPES = [
-  "https://www.googleapis.com/auth/calendar.events",
-  "https://www.googleapis.com/auth/calendar.readonly",
-].join(" ");
-const STORAGE_KEY = "gcal_auth";
-
-interface StoredAuth {
-  token: string;
-  expiresAt: number;
+interface StoredPrefs {
   taskCalendarId: string;
   eblastCalendarId: string;
 }
@@ -37,133 +14,97 @@ export interface GcalCalendar {
 }
 
 interface GcalContextValue {
-  isConnected: boolean;
-  token: string | null;
   taskCalendarId: string;
   eblastCalendarId: string;
   calendars: GcalCalendar[];
   loadingCalendars: boolean;
-  connect: () => void;
-  disconnect: () => void;
   setTaskCalendarId: (id: string) => void;
   setEblastCalendarId: (id: string) => void;
 }
 
 const GcalContext = createContext<GcalContextValue | null>(null);
 
-function loadStored(): StoredAuth | null {
+function loadPrefs(): StoredPrefs {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<StoredAuth> & { calendarId?: string };
+    if (!raw) {
+      // Migrate from old gcal_auth key
+      const old = localStorage.getItem("gcal_auth");
+      if (old) {
+        const parsed = JSON.parse(old) as { taskCalendarId?: string; eblastCalendarId?: string; calendarId?: string };
+        return {
+          taskCalendarId: parsed.taskCalendarId ?? parsed.calendarId ?? "primary",
+          eblastCalendarId: parsed.eblastCalendarId ?? parsed.calendarId ?? "primary",
+        };
+      }
+      return { taskCalendarId: "primary", eblastCalendarId: "primary" };
+    }
+    const parsed = JSON.parse(raw) as Partial<StoredPrefs>;
     return {
-      token: parsed.token ?? "",
-      expiresAt: parsed.expiresAt ?? 0,
-      taskCalendarId: parsed.taskCalendarId ?? parsed.calendarId ?? "primary",
-      eblastCalendarId: parsed.eblastCalendarId ?? parsed.calendarId ?? "primary",
+      taskCalendarId: parsed.taskCalendarId ?? "primary",
+      eblastCalendarId: parsed.eblastCalendarId ?? "primary",
     };
   } catch {
-    return null;
+    return { taskCalendarId: "primary", eblastCalendarId: "primary" };
   }
 }
 
-function saveStored(auth: StoredAuth) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(auth));
+function savePrefs(prefs: StoredPrefs) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
 }
 
 export function GcalProvider({ children }: { children: React.ReactNode }) {
-  const [auth, setAuth] = useState<StoredAuth | null>(() => {
-    const stored = loadStored();
-    if (!stored || Date.now() >= stored.expiresAt) {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
-    return stored;
-  });
-
+  const [prefs, setPrefs] = useState<StoredPrefs>(loadPrefs);
   const [calendars, setCalendars] = useState<GcalCalendar[]>([]);
   const [loadingCalendars, setLoadingCalendars] = useState(false);
 
-  const fetchCalendars = useCallback(async (token: string) => {
-    setLoadingCalendars(true);
-    try {
-      const res = await fetch("/api/export/google-calendar/calendars", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return;
-      const data = await res.json() as { calendars?: GcalCalendar[] };
-      setCalendars(data.calendars ?? []);
-    } finally {
-      setLoadingCalendars(false);
-    }
-  }, []);
-
   useEffect(() => {
-    if (auth?.token) fetchCalendars(auth.token);
-  }, [auth?.token, fetchCalendars]);
-
-  const connect = useCallback(() => {
-    if (!window.google?.accounts?.oauth2) {
-      console.error("Google Identity Services not loaded yet");
-      return;
-    }
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: (resp) => {
-        if (resp.error || !resp.access_token) return;
-        const expiresAt = Date.now() + (Number(resp.expires_in ?? 3600) - 60) * 1000;
-        const prev = loadStored();
-        const newAuth: StoredAuth = {
-          token: resp.access_token,
-          expiresAt,
-          taskCalendarId: prev?.taskCalendarId ?? "primary",
-          eblastCalendarId: prev?.eblastCalendarId ?? "primary",
-        };
-        saveStored(newAuth);
-        setAuth(newAuth);
-      },
-    });
-    client.requestAccessToken();
-  }, []);
-
-  const disconnect = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    setAuth(null);
-    setCalendars([]);
+    setLoadingCalendars(true);
+    fetch("/api/export/google-calendar/calendars")
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data: { calendars?: GcalCalendar[] }) => {
+        const list = data.calendars ?? [];
+        setCalendars(list);
+        // Resolve "primary" to the actual primary calendar ID so the picker shows a selection
+        const primaryCal = list.find((c) => c.primary);
+        if (primaryCal) {
+          setPrefs((prev) => {
+            const updated = {
+              taskCalendarId: prev.taskCalendarId === "primary" ? primaryCal.id : prev.taskCalendarId,
+              eblastCalendarId: prev.eblastCalendarId === "primary" ? primaryCal.id : prev.eblastCalendarId,
+            };
+            savePrefs(updated);
+            return updated;
+          });
+        }
+      })
+      .catch(() => {/* silently fail — pickers will just be empty */})
+      .finally(() => setLoadingCalendars(false));
   }, []);
 
   const setTaskCalendarId = useCallback((taskCalendarId: string) => {
-    setAuth((prev) => {
-      if (!prev) return prev;
+    setPrefs((prev) => {
       const updated = { ...prev, taskCalendarId };
-      saveStored(updated);
+      savePrefs(updated);
       return updated;
     });
   }, []);
 
   const setEblastCalendarId = useCallback((eblastCalendarId: string) => {
-    setAuth((prev) => {
-      if (!prev) return prev;
+    setPrefs((prev) => {
       const updated = { ...prev, eblastCalendarId };
-      saveStored(updated);
+      savePrefs(updated);
       return updated;
     });
   }, []);
 
-  const isConnected = !!auth && Date.now() < auth.expiresAt;
-
   return (
     <GcalContext.Provider
       value={{
-        isConnected,
-        token: isConnected ? auth.token : null,
-        taskCalendarId: auth?.taskCalendarId ?? "primary",
-        eblastCalendarId: auth?.eblastCalendarId ?? "primary",
+        taskCalendarId: prefs.taskCalendarId,
+        eblastCalendarId: prefs.eblastCalendarId,
         calendars,
         loadingCalendars,
-        connect,
-        disconnect,
         setTaskCalendarId,
         setEblastCalendarId,
       }}

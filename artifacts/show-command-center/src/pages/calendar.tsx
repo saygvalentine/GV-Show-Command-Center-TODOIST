@@ -38,18 +38,10 @@ export default function Calendar() {
   const isLoading = mode === "tasks" ? taskLoading : showDateLoading;
 
   const updateOfficeTask = useUpdateOfficeTask();
-  const { isConnected, token, taskCalendarId, eblastCalendarId } = useGcal();
+  const { taskCalendarId, eblastCalendarId } = useGcal();
   const [syncing, setSyncing] = useState(false);
 
   const handleGcalSync = async () => {
-    if (!isConnected || !token) {
-      toast({
-        title: "Not connected to Google Calendar",
-        description: "Go to Settings to connect your Google account first.",
-        variant: "destructive",
-      });
-      return;
-    }
     setSyncing(true);
     try {
       const qs = new URLSearchParams({
@@ -59,7 +51,6 @@ export default function Calendar() {
       });
       const res = await fetch(`/api/export/google-calendar/sync?${qs}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };

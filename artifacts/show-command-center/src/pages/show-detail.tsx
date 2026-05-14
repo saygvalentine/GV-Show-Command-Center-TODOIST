@@ -42,22 +42,14 @@ export default function ShowDetail() {
   
   const { data: show, isLoading } = useGetShow(showId);
   const deleteShow = useDeleteShow();
-  const { isConnected, token, taskCalendarId, eblastCalendarId } = useGcal();
+  const { taskCalendarId, eblastCalendarId } = useGcal();
   const [syncing, setSyncing] = useState(false);
 
   const handleGcalSync = async () => {
-    if (!isConnected || !token) {
-      toast({
-        title: "Not connected to Google Calendar",
-        description: "Go to Settings to connect your Google account first.",
-        variant: "destructive",
-      });
-      return;
-    }
     setSyncing(true);
     try {
       const url = `/api/export/google-calendar/sync?showId=${showId}&taskCalendarId=${encodeURIComponent(taskCalendarId)}&eblastCalendarId=${encodeURIComponent(eblastCalendarId)}`;
-      const res = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(url, { method: "POST" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
         throw new Error(body.error ?? res.statusText);

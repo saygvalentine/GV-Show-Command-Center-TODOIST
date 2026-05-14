@@ -1,6 +1,5 @@
-import { CalendarSync, LogOut, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useGcal } from "@/contexts/google-calendar-context";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -48,59 +47,38 @@ function CalendarPicker({
 
 export function GoogleCalendarSettings() {
   const {
-    isConnected,
     taskCalendarId,
     eblastCalendarId,
     calendars,
     loadingCalendars,
-    connect,
-    disconnect,
     setTaskCalendarId,
     setEblastCalendarId,
   } = useGcal();
 
   return (
     <div className="rounded-lg border">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div>
-          <p className="font-semibold">Google Calendar</p>
-          <p className="text-sm text-muted-foreground">
-            {isConnected
-              ? "Connected — choose which calendars to sync tasks and e-blasts to."
-              : "Connect your Google account to sync tasks and e-blasts to your calendar."}
-          </p>
-        </div>
-        {isConnected ? (
-          <Button variant="outline" size="sm" onClick={disconnect} className="gap-1.5 shrink-0">
-            <LogOut className="h-3.5 w-3.5" />
-            Disconnect
-          </Button>
-        ) : (
-          <Button size="sm" onClick={connect} className="gap-1.5 shrink-0">
-            <CalendarSync className="h-3.5 w-3.5" />
-            Connect Google Calendar
-          </Button>
-        )}
+      <div className="px-4 py-3">
+        <p className="font-semibold">Google Calendar</p>
+        <p className="text-sm text-muted-foreground">
+          Choose which calendars to sync tasks and e-blasts to.
+        </p>
       </div>
-
-      {isConnected && (
-        <div className="border-t px-4 py-3 space-y-2.5">
-          <CalendarPicker
-            label="Tasks →"
-            value={taskCalendarId}
-            onChange={setTaskCalendarId}
-            calendars={calendars}
-            loading={loadingCalendars}
-          />
-          <CalendarPicker
-            label="e-Blasts →"
-            value={eblastCalendarId}
-            onChange={setEblastCalendarId}
-            calendars={calendars}
-            loading={loadingCalendars}
-          />
-        </div>
-      )}
+      <div className="border-t px-4 py-3 space-y-2.5">
+        <CalendarPicker
+          label="Tasks →"
+          value={taskCalendarId}
+          onChange={setTaskCalendarId}
+          calendars={calendars}
+          loading={loadingCalendars}
+        />
+        <CalendarPicker
+          label="e-Blasts →"
+          value={eblastCalendarId}
+          onChange={setEblastCalendarId}
+          calendars={calendars}
+          loading={loadingCalendars}
+        />
+      </div>
     </div>
   );
 }

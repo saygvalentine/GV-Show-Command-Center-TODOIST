@@ -22,7 +22,8 @@
     "web-app": 2,
     "remote-control": 2,
     "voice-mode": 2,
-    "color-when-multi-clauding": 3
+    "color-when-multi-clauding": 3,
+    "frontend-design-plugin": 3
   },
   "promptQueueUseCount": 1,
   "cachedGrowthBookFeatures": {
@@ -556,5 +557,6 @@
     }
   },
   "lastPlanModeUse": 1778515804744,
-  "remoteControlUpsellSeenCount": 2
+  "remoteControlUpsellSeenCount": 3,
+  "showSpinnerTree": false
 }

@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.run
     pkgs.chromium
     pkgs.gtk3
     pkgs.dbus

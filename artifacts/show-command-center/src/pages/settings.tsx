@@ -34,6 +34,7 @@ import {
 import { Plus, Edit2, Trash2, Check, X, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { getCategoryColor } from "@/lib/date-utils";
 import { useToast } from "@/hooks/use-toast";
+import { GoogleCalendarSettings } from "@/components/google-calendar-settings";
 
 const PRESET_CATEGORIES = [
   "Fire Marshal",
@@ -355,6 +356,8 @@ export default function Settings() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         </div>
+
+        <GoogleCalendarSettings />
 
         <div className="rounded-lg border">
           <button

@@ -1,18 +1,29 @@
-import { ReplitConnectors, type ProxyOptions } from "@replit/connectors-sdk";
-
-const connectors = new ReplitConnectors();
+const GCAL_BASE = "https://www.googleapis.com/calendar/v3";
 
 export async function gcalRequest(
   method: string,
   path: string,
+  token: string,
+  calendarId: string,
   body?: unknown,
 ): Promise<unknown> {
-  const options: ProxyOptions = { method };
+  const actualPath = path.replace(
+    "/calendars/primary/",
+    `/calendars/${encodeURIComponent(calendarId)}/`,
+  );
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+  };
   if (body !== undefined) {
-    options.body = body;
-    options.headers = { "Content-Type": "application/json" };
+    headers["Content-Type"] = "application/json";
   }
-  const response = await connectors.proxy("google-calendar", `/calendar/v3${path}`, options);
+
+  const response = await fetch(`${GCAL_BASE}${actualPath}`, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
 
   if (response.status === 404 || response.status === 410) return null;
   if (!response.ok) {

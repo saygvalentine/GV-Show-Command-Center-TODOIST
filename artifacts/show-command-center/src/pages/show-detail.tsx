@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useLocation, useParams, useSearch } from "wouter";
 import { format, differenceInDays, startOfDay } from "date-fns";
-import { useGetShow, useUpdateShow, useDeleteShow, useSyncGoogleCalendar, getGetShowQueryKey, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
+import { useGetShow, useUpdateShow, useDeleteShow, getGetShowQueryKey, getListShowsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
+import { useGcal } from "@/contexts/google-calendar-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -41,27 +42,42 @@ export default function ShowDetail() {
   
   const { data: show, isLoading } = useGetShow(showId);
   const deleteShow = useDeleteShow();
-  const syncGcal = useSyncGoogleCalendar();
+  const { isConnected, token, calendarId } = useGcal();
+  const [syncing, setSyncing] = useState(false);
 
-  const handleGcalSync = () => {
-    syncGcal.mutate(
-      { params: { showId } },
-      {
-        onSuccess: (data) => {
-          toast({
-            title: "Synced to Google Calendar",
-            description: `${data.created} created, ${data.updated} updated, ${data.deleted} removed`,
-          });
-        },
-        onError: (err) => {
-          toast({
-            title: "Google Calendar sync failed",
-            description: (err as Error).message,
-            variant: "destructive",
-          });
-        },
+  const handleGcalSync = async () => {
+    if (!isConnected || !token) {
+      toast({
+        title: "Not connected to Google Calendar",
+        description: "Go to Settings to connect your Google account first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSyncing(true);
+    try {
+      const res = await fetch(
+        `/api/export/google-calendar/sync?showId=${showId}&calendarId=${encodeURIComponent(calendarId)}`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
+        throw new Error(body.error ?? res.statusText);
       }
-    );
+      const data = await res.json() as { created: number; updated: number; deleted: number };
+      toast({
+        title: "Synced to Google Calendar",
+        description: `${data.created} created, ${data.updated} updated, ${data.deleted} removed`,
+      });
+    } catch (err) {
+      toast({
+        title: "Google Calendar sync failed",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   if (isLoading) {
@@ -225,8 +241,8 @@ export default function ShowDetail() {
 
         <Tabs defaultValue={tabParam} className="w-full">
           <div className="flex justify-end mb-3">
-            <Button variant="outline" size="sm" onClick={handleGcalSync} disabled={syncGcal.isPending}>
-              {syncGcal.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CalendarSync className="h-4 w-4 mr-2" />}
+            <Button variant="outline" size="sm" onClick={handleGcalSync} disabled={syncing}>
+              {syncing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CalendarSync className="h-4 w-4 mr-2" />}
               Sync to Google Calendar
             </Button>
           </div>

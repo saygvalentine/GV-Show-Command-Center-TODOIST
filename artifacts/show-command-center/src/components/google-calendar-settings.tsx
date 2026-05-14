@@ -9,9 +9,55 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+function CalendarPicker({
+  label,
+  value,
+  onChange,
+  calendars,
+  loading,
+}: {
+  label: string;
+  value: string;
+  onChange: (id: string) => void;
+  calendars: { id: string; summary: string; primary?: boolean }[];
+  loading: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-sm font-medium shrink-0 w-20">{label}</span>
+      {loading ? (
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+      ) : (
+        <Select value={value} onValueChange={onChange}>
+          <SelectTrigger className="h-8 text-sm max-w-xs">
+            <SelectValue placeholder="Pick a calendar" />
+          </SelectTrigger>
+          <SelectContent>
+            {calendars.map((cal) => (
+              <SelectItem key={cal.id} value={cal.id}>
+                {cal.summary}
+                {cal.primary ? " (primary)" : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    </div>
+  );
+}
+
 export function GoogleCalendarSettings() {
-  const { isConnected, calendarId, calendars, loadingCalendars, connect, disconnect, setCalendarId } =
-    useGcal();
+  const {
+    isConnected,
+    taskCalendarId,
+    eblastCalendarId,
+    calendars,
+    loadingCalendars,
+    connect,
+    disconnect,
+    setTaskCalendarId,
+    setEblastCalendarId,
+  } = useGcal();
 
   return (
     <div className="rounded-lg border">
@@ -20,8 +66,8 @@ export function GoogleCalendarSettings() {
           <p className="font-semibold">Google Calendar</p>
           <p className="text-sm text-muted-foreground">
             {isConnected
-              ? "Connected — choose which calendar to sync tasks and e-blasts to."
-              : "Connect your Google account to sync tasks and e-blasts to a calendar of your choice."}
+              ? "Connected — choose which calendars to sync tasks and e-blasts to."
+              : "Connect your Google account to sync tasks and e-blasts to your calendar."}
           </p>
         </div>
         {isConnected ? (
@@ -38,25 +84,21 @@ export function GoogleCalendarSettings() {
       </div>
 
       {isConnected && (
-        <div className="border-t px-4 py-3 flex items-center gap-3">
-          <span className="text-sm font-medium shrink-0">Sync to:</span>
-          {loadingCalendars ? (
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          ) : (
-            <Select value={calendarId} onValueChange={setCalendarId}>
-              <SelectTrigger className="h-8 text-sm max-w-xs">
-                <SelectValue placeholder="Pick a calendar" />
-              </SelectTrigger>
-              <SelectContent>
-                {calendars.map((cal) => (
-                  <SelectItem key={cal.id} value={cal.id}>
-                    {cal.summary}
-                    {cal.primary ? " (primary)" : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+        <div className="border-t px-4 py-3 space-y-2.5">
+          <CalendarPicker
+            label="Tasks →"
+            value={taskCalendarId}
+            onChange={setTaskCalendarId}
+            calendars={calendars}
+            loading={loadingCalendars}
+          />
+          <CalendarPicker
+            label="e-Blasts →"
+            value={eblastCalendarId}
+            onChange={setEblastCalendarId}
+            calendars={calendars}
+            loading={loadingCalendars}
+          />
         </div>
       )}
     </div>

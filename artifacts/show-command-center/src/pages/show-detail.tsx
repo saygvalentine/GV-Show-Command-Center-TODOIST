@@ -42,7 +42,7 @@ export default function ShowDetail() {
   
   const { data: show, isLoading } = useGetShow(showId);
   const deleteShow = useDeleteShow();
-  const { isConnected, token, calendarId } = useGcal();
+  const { isConnected, token, taskCalendarId, eblastCalendarId } = useGcal();
   const [syncing, setSyncing] = useState(false);
 
   const handleGcalSync = async () => {
@@ -56,10 +56,8 @@ export default function ShowDetail() {
     }
     setSyncing(true);
     try {
-      const res = await fetch(
-        `/api/export/google-calendar/sync?showId=${showId}&calendarId=${encodeURIComponent(calendarId)}`,
-        { method: "POST", headers: { Authorization: `Bearer ${token}` } },
-      );
+      const url = `/api/export/google-calendar/sync?showId=${showId}&taskCalendarId=${encodeURIComponent(taskCalendarId)}&eblastCalendarId=${encodeURIComponent(eblastCalendarId)}`;
+      const res = await fetch(url, { method: "POST", headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
         throw new Error(body.error ?? res.statusText);

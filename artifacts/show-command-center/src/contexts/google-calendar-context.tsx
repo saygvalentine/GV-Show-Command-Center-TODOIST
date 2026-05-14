@@ -26,7 +26,8 @@ const STORAGE_KEY = "gcal_auth";
 interface StoredAuth {
   token: string;
   expiresAt: number;
-  calendarId: string;
+  taskCalendarId: string;
+  eblastCalendarId: string;
 }
 
 export interface GcalCalendar {
@@ -38,12 +39,14 @@ export interface GcalCalendar {
 interface GcalContextValue {
   isConnected: boolean;
   token: string | null;
-  calendarId: string;
+  taskCalendarId: string;
+  eblastCalendarId: string;
   calendars: GcalCalendar[];
   loadingCalendars: boolean;
   connect: () => void;
   disconnect: () => void;
-  setCalendarId: (id: string) => void;
+  setTaskCalendarId: (id: string) => void;
+  setEblastCalendarId: (id: string) => void;
 }
 
 const GcalContext = createContext<GcalContextValue | null>(null);
@@ -52,7 +55,13 @@ function loadStored(): StoredAuth | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as StoredAuth;
+    const parsed = JSON.parse(raw) as Partial<StoredAuth> & { calendarId?: string };
+    return {
+      token: parsed.token ?? "",
+      expiresAt: parsed.expiresAt ?? 0,
+      taskCalendarId: parsed.taskCalendarId ?? parsed.calendarId ?? "primary",
+      eblastCalendarId: parsed.eblastCalendarId ?? parsed.calendarId ?? "primary",
+    };
   } catch {
     return null;
   }
@@ -78,13 +87,12 @@ export function GcalProvider({ children }: { children: React.ReactNode }) {
   const fetchCalendars = useCallback(async (token: string) => {
     setLoadingCalendars(true);
     try {
-      const res = await fetch(
-        "https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=writer",
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const res = await fetch("/api/export/google-calendar/calendars", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) return;
-      const data = await res.json() as { items?: GcalCalendar[] };
-      setCalendars(data.items ?? []);
+      const data = await res.json() as { calendars?: GcalCalendar[] };
+      setCalendars(data.calendars ?? []);
     } finally {
       setLoadingCalendars(false);
     }
@@ -105,8 +113,13 @@ export function GcalProvider({ children }: { children: React.ReactNode }) {
       callback: (resp) => {
         if (resp.error || !resp.access_token) return;
         const expiresAt = Date.now() + (Number(resp.expires_in ?? 3600) - 60) * 1000;
-        const calendarId = loadStored()?.calendarId ?? "primary";
-        const newAuth: StoredAuth = { token: resp.access_token, expiresAt, calendarId };
+        const prev = loadStored();
+        const newAuth: StoredAuth = {
+          token: resp.access_token,
+          expiresAt,
+          taskCalendarId: prev?.taskCalendarId ?? "primary",
+          eblastCalendarId: prev?.eblastCalendarId ?? "primary",
+        };
         saveStored(newAuth);
         setAuth(newAuth);
       },
@@ -120,17 +133,23 @@ export function GcalProvider({ children }: { children: React.ReactNode }) {
     setCalendars([]);
   }, []);
 
-  const setCalendarId = useCallback(
-    (calendarId: string) => {
-      setAuth((prev) => {
-        if (!prev) return prev;
-        const updated = { ...prev, calendarId };
-        saveStored(updated);
-        return updated;
-      });
-    },
-    [],
-  );
+  const setTaskCalendarId = useCallback((taskCalendarId: string) => {
+    setAuth((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, taskCalendarId };
+      saveStored(updated);
+      return updated;
+    });
+  }, []);
+
+  const setEblastCalendarId = useCallback((eblastCalendarId: string) => {
+    setAuth((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, eblastCalendarId };
+      saveStored(updated);
+      return updated;
+    });
+  }, []);
 
   const isConnected = !!auth && Date.now() < auth.expiresAt;
 
@@ -139,12 +158,14 @@ export function GcalProvider({ children }: { children: React.ReactNode }) {
       value={{
         isConnected,
         token: isConnected ? auth.token : null,
-        calendarId: auth?.calendarId ?? "primary",
+        taskCalendarId: auth?.taskCalendarId ?? "primary",
+        eblastCalendarId: auth?.eblastCalendarId ?? "primary",
         calendars,
         loadingCalendars,
         connect,
         disconnect,
-        setCalendarId,
+        setTaskCalendarId,
+        setEblastCalendarId,
       }}
     >
       {children}

@@ -699,6 +699,34 @@ paths:
                 items:
                   $ref: "#/components/schemas/ShowDateEvent"
 
+  /export/google-calendar/calendars:
+    get:
+      operationId: listGoogleCalendars
+      tags: [export]
+      summary: List user's Google Calendars (requires Bearer token)
+      responses:
+        "200":
+          description: List of calendars
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [calendars]
+                properties:
+                  calendars:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GcalCalendar"
+        "401":
+          description: Missing or invalid authorization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /export/google-calendar/sync:
     post:
       operationId: syncGoogleCalendar
@@ -710,6 +738,16 @@ paths:
           required: false
           schema:
             type: integer
+        - name: taskCalendarId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: eblastCalendarId
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: Sync result
@@ -1306,6 +1344,18 @@ components:
           type: integer
         notes:
           type: string
+          nullable: true
+
+    GcalCalendar:
+      type: object
+      required: [id, summary]
+      properties:
+        id:
+          type: string
+        summary:
+          type: string
+        primary:
+          type: boolean
           nullable: true
 
     GcalSyncResult:

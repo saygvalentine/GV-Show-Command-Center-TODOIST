@@ -142,7 +142,7 @@ router.delete("/:taskId", async (req, res): Promise<void> => {
     .where(and(eq(tasksTable.id, params.data.taskId), eq(tasksTable.showId, params.data.showId)));
 
   if (task?.gcalEventId) {
-    await db.insert(gcalOrphansTable).values({ gcalEventId: task.gcalEventId });
+    await db.insert(gcalOrphansTable).values({ gcalEventId: task.gcalEventId, calendarType: "task" });
   }
 
   await db

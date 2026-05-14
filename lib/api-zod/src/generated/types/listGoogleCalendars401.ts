@@ -6,8 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SyncGoogleCalendarParams = {
-  showId?: number;
-  taskCalendarId?: string;
-  eblastCalendarId?: string;
+export type ListGoogleCalendars401 = {
+  error?: string;
 };

@@ -631,10 +631,25 @@ export const GetCalendarShowDatesResponse = zod.array(
 );
 
 /**
+ * @summary List user's Google Calendars (requires Bearer token)
+ */
+export const ListGoogleCalendarsResponse = zod.object({
+  calendars: zod.array(
+    zod.object({
+      id: zod.string(),
+      summary: zod.string(),
+      primary: zod.boolean().nullish(),
+    }),
+  ),
+});
+
+/**
  * @summary Sync tasks and e-blasts to Google Calendar
  */
 export const SyncGoogleCalendarQueryParams = zod.object({
   showId: zod.coerce.number().optional(),
+  taskCalendarId: zod.coerce.string().optional(),
+  eblastCalendarId: zod.coerce.string().optional(),
 });
 
 export const SyncGoogleCalendarResponse = zod.object({

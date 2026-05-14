@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request } from "express";
 import { db, showsTable, tasksTable, eblastsTable, gcalOrphansTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { gcalRequest, makeGcalEvent } from "../lib/google-calendar-client";
@@ -6,6 +6,12 @@ import { gcalRequest, makeGcalEvent } from "../lib/google-calendar-client";
 const router = Router();
 
 type GcalEvent = { id: string };
+
+function extractToken(req: Request): string | null {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith("Bearer ")) return null;
+  return auth.slice(7);
+}
 
 async function syncTask(
   task: typeof tasksTable.$inferSelect,
@@ -94,7 +100,12 @@ async function syncEblast(
   }
 }
 
-async function drainOrphans(token: string, calendarId: string, counters: { deleted: number }) {
+async function drainOrphans(
+  token: string,
+  taskCalendarId: string,
+  eblastCalendarId: string,
+  counters: { deleted: number },
+) {
   const orphans = await db.select().from(gcalOrphansTable);
   if (orphans.length === 0) return;
 
@@ -102,6 +113,7 @@ async function drainOrphans(token: string, calendarId: string, counters: { delet
   for (let i = 0; i < orphans.length; i += CONCURRENCY) {
     await Promise.all(
       orphans.slice(i, i + CONCURRENCY).map(async (orphan) => {
+        const calendarId = orphan.calendarType === "eblast" ? eblastCalendarId : taskCalendarId;
         await gcalRequest("DELETE", `/calendars/primary/events/${orphan.gcalEventId}`, token, calendarId);
         await db.delete(gcalOrphansTable).where(eq(gcalOrphansTable.id, orphan.id));
         counters.deleted++;
@@ -110,20 +122,42 @@ async function drainOrphans(token: string, calendarId: string, counters: { delet
   }
 }
 
-router.post("/sync", async (req, res): Promise<void> => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
+router.get("/calendars", async (req, res): Promise<void> => {
+  const token = extractToken(req);
+  if (!token) {
     res.status(401).json({ error: "Missing Authorization header — connect Google Calendar in Settings first" });
     return;
   }
-  const token = authHeader.slice(7);
 
-  const rawCalendarId = req.query.calendarId;
-  if (!rawCalendarId || typeof rawCalendarId !== "string") {
-    res.status(400).json({ error: "calendarId query param is required" });
+  try {
+    const response = await fetch(
+      "https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=writer",
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Google Calendar API error ${response.status}: ${text}`);
+    }
+    const data = await response.json() as { items?: { id: string; summary: string; primary?: boolean }[] };
+    res.json({ calendars: data.items ?? [] });
+  } catch (err) {
+    res.status(503).json({ error: (err as Error).message });
+  }
+});
+
+router.post("/sync", async (req, res): Promise<void> => {
+  const token = extractToken(req);
+  if (!token) {
+    res.status(401).json({ error: "Missing Authorization header — connect Google Calendar in Settings first" });
     return;
   }
-  const calendarId = rawCalendarId;
+
+  const taskCalendarId = typeof req.query.taskCalendarId === "string" && req.query.taskCalendarId
+    ? req.query.taskCalendarId
+    : "primary";
+  const eblastCalendarId = typeof req.query.eblastCalendarId === "string" && req.query.eblastCalendarId
+    ? req.query.eblastCalendarId
+    : "primary";
 
   const rawShowId = req.query.showId;
   let showId: number | undefined;
@@ -149,19 +183,15 @@ router.post("/sync", async (req, res): Promise<void> => {
   const showMap = new Map(shows.map((s) => [s.id, s.name]));
 
   const [allTasks, allEblasts] = await Promise.all([
-    showIds.length > 0
-      ? db.select().from(tasksTable).where(inArray(tasksTable.showId, showIds))
-      : [],
-    showIds.length > 0
-      ? db.select().from(eblastsTable).where(inArray(eblastsTable.showId, showIds))
-      : [],
+    showIds.length > 0 ? db.select().from(tasksTable).where(inArray(tasksTable.showId, showIds)) : [],
+    showIds.length > 0 ? db.select().from(eblastsTable).where(inArray(eblastsTable.showId, showIds)) : [],
   ]);
 
   const counters = { created: 0, updated: 0, deleted: 0 };
 
   const allWork = [
-    ...allTasks.map((t) => () => syncTask(t, showMap.get(t.showId) ?? "", token, calendarId, counters)),
-    ...allEblasts.map((e) => () => syncEblast(e, showMap.get(e.showId) ?? "", token, calendarId, counters)),
+    ...allTasks.map((t) => () => syncTask(t, showMap.get(t.showId) ?? "", token, taskCalendarId, counters)),
+    ...allEblasts.map((e) => () => syncEblast(e, showMap.get(e.showId) ?? "", token, eblastCalendarId, counters)),
   ];
 
   const CONCURRENCY = 5;
@@ -169,7 +199,7 @@ router.post("/sync", async (req, res): Promise<void> => {
     for (let i = 0; i < allWork.length; i += CONCURRENCY) {
       await Promise.all(allWork.slice(i, i + CONCURRENCY).map((fn) => fn()));
     }
-    await drainOrphans(token, calendarId, counters);
+    await drainOrphans(token, taskCalendarId, eblastCalendarId, counters);
   } catch (err) {
     res.status(503).json({ error: (err as Error).message });
     return;

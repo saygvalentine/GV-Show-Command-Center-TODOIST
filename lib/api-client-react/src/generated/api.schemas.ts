@@ -260,6 +260,12 @@ export interface OverdueItem {
   notes?: string | null;
 }
 
+export interface GcalCalendar {
+  id: string;
+  summary: string;
+  primary?: boolean | null;
+}
+
 export interface GcalSyncResult {
   ok: boolean;
   created: number;
@@ -301,8 +307,18 @@ export type GetCalendarShowDatesParams = {
   showId?: number;
 };
 
+export type ListGoogleCalendars200 = {
+  calendars: GcalCalendar[];
+};
+
+export type ListGoogleCalendars401 = {
+  error?: string;
+};
+
 export type SyncGoogleCalendarParams = {
   showId?: number;
+  taskCalendarId?: string;
+  eblastCalendarId?: string;
 };
 
 export type SyncGoogleCalendar503 = {

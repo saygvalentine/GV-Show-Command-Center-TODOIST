@@ -141,7 +141,7 @@ router.delete("/:eblastId", async (req, res): Promise<void> => {
     .where(and(eq(eblastsTable.id, params.data.eblastId), eq(eblastsTable.showId, params.data.showId)));
 
   if (eblast?.gcalEventId) {
-    await db.insert(gcalOrphansTable).values({ gcalEventId: eblast.gcalEventId });
+    await db.insert(gcalOrphansTable).values({ gcalEventId: eblast.gcalEventId, calendarType: "eblast" });
   }
 
   await db

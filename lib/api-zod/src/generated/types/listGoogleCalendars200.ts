@@ -5,9 +5,8 @@
  * Show Command Center API
  * OpenAPI spec version: 0.1.0
  */
+import type { GcalCalendar } from "./gcalCalendar";
 
-export type SyncGoogleCalendarParams = {
-  showId?: number;
-  taskCalendarId?: string;
-  eblastCalendarId?: string;
+export type ListGoogleCalendars200 = {
+  calendars: GcalCalendar[];
 };

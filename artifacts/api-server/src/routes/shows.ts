@@ -228,13 +228,15 @@ router.delete("/:showId", async (req, res): Promise<void> => {
     db.select({ gcalEventId: eblastsTable.gcalEventId }).from(eblastsTable).where(eq(eblastsTable.showId, params.data.showId)),
   ]);
 
-  const orphanIds = [
-    ...childTasks.map((t) => t.gcalEventId),
-    ...childEblasts.map((e) => e.gcalEventId),
-  ].filter((id): id is string => !!id);
+  const taskOrphanIds = childTasks.map((t) => t.gcalEventId).filter((id): id is string => !!id);
+  const eblastOrphanIds = childEblasts.map((e) => e.gcalEventId).filter((id): id is string => !!id);
+  const allOrphans = [
+    ...taskOrphanIds.map((gcalEventId) => ({ gcalEventId, calendarType: "task" as const })),
+    ...eblastOrphanIds.map((gcalEventId) => ({ gcalEventId, calendarType: "eblast" as const })),
+  ];
 
-  if (orphanIds.length > 0) {
-    await db.insert(gcalOrphansTable).values(orphanIds.map((gcalEventId) => ({ gcalEventId })));
+  if (allOrphans.length > 0) {
+    await db.insert(gcalOrphansTable).values(allOrphans);
   }
 
   await db.delete(showsTable).where(eq(showsTable.id, params.data.showId));

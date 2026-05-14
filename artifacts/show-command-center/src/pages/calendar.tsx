@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, startOfDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Loader2, Download, CheckCircle2, Circle, CalendarSync } from "lucide-react";
-import { useGetCalendarEvents, useGetCalendarShowDates, useListShows, useUpdateOfficeTask, useSyncGoogleCalendar, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
+import { useGetCalendarEvents, useGetCalendarShowDates, useListShows, useUpdateOfficeTask, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
+import { useGcal } from "@/contexts/google-calendar-context";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,29 +38,47 @@ export default function Calendar() {
   const isLoading = mode === "tasks" ? taskLoading : showDateLoading;
 
   const updateOfficeTask = useUpdateOfficeTask();
-  const syncGcal = useSyncGoogleCalendar();
+  const { isConnected, token, taskCalendarId, eblastCalendarId } = useGcal();
+  const [syncing, setSyncing] = useState(false);
 
-  const handleGcalSync = () => {
-    const params: { showId?: number } = {};
-    if (selectedShowId !== "all") params.showId = Number(selectedShowId);
-    syncGcal.mutate(
-      { params },
-      {
-        onSuccess: (data) => {
-          toast({
-            title: "Synced to Google Calendar",
-            description: `${data.created} created, ${data.updated} updated, ${data.deleted} removed`,
-          });
-        },
-        onError: (err) => {
-          toast({
-            title: "Google Calendar sync failed",
-            description: (err as Error).message,
-            variant: "destructive",
-          });
-        },
+  const handleGcalSync = async () => {
+    if (!isConnected || !token) {
+      toast({
+        title: "Not connected to Google Calendar",
+        description: "Go to Settings to connect your Google account first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSyncing(true);
+    try {
+      const qs = new URLSearchParams({
+        taskCalendarId,
+        eblastCalendarId,
+        ...(selectedShowId !== "all" ? { showId: selectedShowId } : {}),
+      });
+      const res = await fetch(`/api/export/google-calendar/sync?${qs}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
+        throw new Error(body.error ?? res.statusText);
       }
-    );
+      const data = await res.json() as { created: number; updated: number; deleted: number };
+      toast({
+        title: "Synced to Google Calendar",
+        description: `${data.created} created, ${data.updated} updated, ${data.deleted} removed`,
+      });
+    } catch (err) {
+      toast({
+        title: "Google Calendar sync failed",
+        description: (err as Error).message,
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -211,8 +230,8 @@ export default function Calendar() {
               <Download className="h-4 w-4 mr-2" />
               Export .ics
             </Button>
-            <Button variant="outline" onClick={handleGcalSync} disabled={syncGcal.isPending} title="Sync to Google Calendar">
-              {syncGcal.isPending
+            <Button variant="outline" onClick={handleGcalSync} disabled={syncing} title="Sync to Google Calendar">
+              {syncing
                 ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 : <CalendarSync className="h-4 w-4 mr-2" />}
               Sync to Google Calendar

@@ -33,6 +33,8 @@ import type {
   GetCalendarShowDatesParams,
   HealthStatus,
   Link,
+  ListGoogleCalendars200,
+  ListGoogleCalendars401,
   ListOfficeTasksParams,
   OfficeTask,
   OverdueItem,
@@ -2616,6 +2618,81 @@ export function useGetCalendarShowDates<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetCalendarShowDatesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List user's Google Calendars (requires Bearer token)
+ */
+export const getListGoogleCalendarsUrl = () => {
+  return `/api/export/google-calendar/calendars`;
+};
+
+export const listGoogleCalendars = async (
+  options?: RequestInit,
+): Promise<ListGoogleCalendars200> => {
+  return customFetch<ListGoogleCalendars200>(getListGoogleCalendarsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListGoogleCalendarsQueryKey = () => {
+  return [`/api/export/google-calendar/calendars`] as const;
+};
+
+export const getListGoogleCalendarsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listGoogleCalendars>>,
+  TError = ErrorType<ListGoogleCalendars401>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listGoogleCalendars>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListGoogleCalendarsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listGoogleCalendars>>
+  > = ({ signal }) => listGoogleCalendars({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listGoogleCalendars>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListGoogleCalendarsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listGoogleCalendars>>
+>;
+export type ListGoogleCalendarsQueryError = ErrorType<ListGoogleCalendars401>;
+
+/**
+ * @summary List user's Google Calendars (requires Bearer token)
+ */
+
+export function useListGoogleCalendars<
+  TData = Awaited<ReturnType<typeof listGoogleCalendars>>,
+  TError = ErrorType<ListGoogleCalendars401>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listGoogleCalendars>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListGoogleCalendarsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

@@ -264,7 +264,7 @@ export function DashboardTaskSlider() {
   if (pomodoroOpen) {
     return (
       <div className={`rounded-xl border ${outerBorder}`}>
-        <div className="px-4 pt-4 pb-4 flex flex-col gap-2">
+        <div className="px-4 pt-4 pb-4 flex flex-col gap-2 min-h-[168px] justify-between">
 
           {/* Row 1: Back (left) · chip (true center) · Focus Timer (right) */}
           <div className="relative flex items-center">
@@ -281,19 +281,12 @@ export function DashboardTaskSlider() {
             <span className={`ml-auto text-xs font-bold uppercase tracking-widest ${accentText}`}>Focus Timer</span>
           </div>
 
-          {/* Row 2: task name + show·date — centered */}
-          <div className="flex flex-col items-center gap-0.5 text-center">
-            <p className="text-xl font-bold leading-snug">{item.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {item.showName}
-              <span className="mx-1.5 opacity-40">•</span>
-              Due {formatDate(item.dueDate)}
-            </p>
-          </div>
+          {/* Row 2: task name — centered */}
+          <p className="text-xl font-bold leading-snug text-center">{item.name}</p>
 
           {/* Row 3: timer readout — centered */}
           <div className="flex flex-col items-center gap-0.5">
-            <span className={`text-4xl font-black tabular-nums tracking-tight ${selectedPreset !== null ? accentText : "text-muted-foreground/30"}`}>
+            <span className={`text-3xl font-black tabular-nums tracking-tight ${selectedPreset !== null ? accentText : "text-muted-foreground/30"}`}>
               {selectedPreset !== null ? formatTime(timeLeft) : "--:--"}
             </span>
             {timesUp && <span className={`text-xs font-semibold ${accentText}`}>Time's up!</span>}
@@ -346,7 +339,7 @@ export function DashboardTaskSlider() {
   // ── Default slider view ───────────────────────────────────────────────────
   return (
     <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
-      <div className="px-4 pt-5 pb-4 flex items-start gap-4">
+      <div className="px-4 pt-5 pb-4 flex items-start gap-4 min-h-[168px]">
 
         {/* Left: accent icon */}
         <div className={`rounded-full p-2.5 shrink-0 mt-0.5 ${iconRing}`}>

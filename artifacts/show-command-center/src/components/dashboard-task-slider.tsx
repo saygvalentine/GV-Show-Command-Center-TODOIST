@@ -351,36 +351,51 @@ export function DashboardTaskSlider() {
   // ── Default slider view ───────────────────────────────────────────────────
   return (
     <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
-      <div className="p-4 flex items-center gap-4">
+      <div className="px-4 pt-4 pb-3 flex flex-col gap-2">
 
-        {/* Left: accent icon */}
-        <div className={`rounded-full p-2.5 shrink-0 ${iconRing}`}>
-          <AlertTriangle className={`h-5 w-5 ${accentText}`} />
+        {/* Row 1: icon + urgency label + category chip — nav right */}
+        <div className="flex items-center gap-2">
+          <div className={`rounded-full p-1.5 shrink-0 ${iconRing}`}>
+            <AlertTriangle className={`h-3.5 w-3.5 ${accentText}`} />
+          </div>
+          <span className={`text-xs font-bold uppercase tracking-widest shrink-0 ${accentText}`}>
+            {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
+          </span>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border shrink-0 ${chipClass(item.type, item.category)}`}>
+            {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
+          </span>
+          <div className="flex-1" />
+          <div className="flex items-center gap-0.5 shrink-0">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prev} disabled={safeIndex === 0}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs text-muted-foreground tabular-nums font-medium px-1 select-none">
+              {safeIndex + 1} of {total}
+            </span>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={next} disabled={safeIndex === total - 1}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        {/* Centre: label + name + subtitle + note */}
-        <div className="flex-1 min-w-0">
-          <p className={`text-[10px] font-bold uppercase tracking-widest ${accentText}`}>
-            {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
-          </p>
-          <div className="flex items-center gap-2 mt-0.5 min-w-0">
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-sm border shrink-0 ${chipClass(item.type, item.category)}`}>
-              {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
-            </span>
-            <p className="text-sm font-bold leading-snug truncate">{item.name}</p>
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {item.showName}
-            <span className="mx-1.5 opacity-40">•</span>
-            Due {formatDate(item.dueDate)}
-          </p>
+        {/* Row 2: task name */}
+        <p className="text-base font-bold leading-snug">{item.name}</p>
 
+        {/* Row 3: show · due date */}
+        <p className="text-sm text-muted-foreground">
+          {item.showName}
+          <span className="mx-1.5 opacity-40">•</span>
+          Due {formatDate(item.dueDate)}
+        </p>
+
+        {/* Row 4: note + actions */}
+        <div className="flex items-center gap-3 mt-0.5">
           {/* Note */}
-          <div className="mt-1.5">
+          <div className="flex-1 min-w-0">
             {!isNoteOpen ? (
               <button
                 onClick={openNote}
-                className="flex items-center gap-1.5 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors group"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group"
               >
                 <ChevronDown className="h-3 w-3 shrink-0 opacity-50 group-hover:opacity-80" />
                 <span className="truncate">{currentNote || "Add a note…"}</span>
@@ -401,45 +416,31 @@ export function DashboardTaskSlider() {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Right: count card + nav */}
-        <div className="shrink-0 rounded-lg border border-border bg-background/60 px-3 py-2 flex flex-col items-center gap-1 min-w-[56px]">
-          <span className={`text-2xl font-black tabular-nums leading-none ${accentText}`}>{safeIndex + 1}</span>
-          <span className="text-[10px] text-muted-foreground leading-none">of {total}</span>
-          <div className="flex items-center gap-0.5 mt-0.5">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={prev} disabled={safeIndex === 0}>
-              <ChevronLeft className="h-3.5 w-3.5" />
+          {/* Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={openPomodoro}>
+              <Timer className="h-3.5 w-3.5" />
+              Pomodoro
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={next} disabled={safeIndex === total - 1}>
-              <ChevronRight className="h-3.5 w-3.5" />
+            <Button
+              size="sm"
+              className={`gap-1.5 ${completeBtn}`}
+              onClick={markComplete}
+              disabled={isCompleting}
+            >
+              <Check className="h-3.5 w-3.5" />
+              {completionLabel}
             </Button>
+            <Link href={`/shows/${item.showId}?tab=${showTab}`}>
+              <Button variant="outline" size="sm">Open</Button>
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* Footer: actions + open link + dots */}
-      <div className="px-4 pb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            className={`gap-1.5 ${completeBtn}`}
-            onClick={markComplete}
-            disabled={isCompleting}
-          >
-            <Check className="h-3.5 w-3.5" />
-            {completionLabel}
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openPomodoro} title="Focus timer">
-            <Timer className="h-4 w-4" />
-          </Button>
-          <Link href={`/shows/${item.showId}?tab=${showTab}`}>
-            <Button variant="outline" size="sm">Open</Button>
-          </Link>
-        </div>
-
+        {/* Pagination dots */}
         {total > 1 && total <= 10 && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 mt-0.5">
             {items.map((_, i) => (
               <button
                 key={i}

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import {
   ChevronLeft, ChevronRight, ChevronDown,
-  Check, Timer, Play, Pause, RotateCcw, ArrowLeft, AlertTriangle,
+  Check, Timer, Play, Pause, RotateCcw, ArrowLeft, AlertTriangle, Edit2, Loader2,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -12,10 +12,144 @@ import {
   getGetOverdueItemsQueryKey,
   getGetDashboardSummaryQueryKey,
 } from "@workspace/api-client-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date-utils";
+
+const PRESET_CATEGORIES = [
+  "Fire Marshal", "ID Sign", "Warehouse Manifest",
+  "Show Bucket", "Vehicle Spotting", "Electrical",
+];
+
+const editItemSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  category: z.string().optional(),
+  dueDate: z.string().optional(),
+  dueDateRule: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+function EditItemDialog({ item, open, onOpenChange, onSuccess }: {
+  item: any;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSuccess: () => void;
+}) {
+  const { toast } = useToast();
+  const updateTask = useUpdateTask();
+  const updateEblast = useUpdateEblast();
+
+  const form = useForm<z.infer<typeof editItemSchema>>({
+    resolver: zodResolver(editItemSchema),
+    defaultValues: { name: "", category: "", dueDate: "", dueDateRule: "", notes: "" },
+  });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: item.name,
+        category: item.category ?? "",
+        dueDate: item.dueDate ? String(item.dueDate).split("T")[0] : "",
+        dueDateRule: item.dueDateRule ?? "",
+        notes: item.notes ?? "",
+      });
+    }
+  }, [open, item]);
+
+  const onSubmit = (data: z.infer<typeof editItemSchema>) => {
+    if (item.type === "task") {
+      updateTask.mutate(
+        { showId: item.showId, taskId: item.id, data },
+        {
+          onSuccess: () => { toast({ title: "Task updated" }); onOpenChange(false); onSuccess(); },
+          onError: () => toast({ title: "Error updating task", variant: "destructive" }),
+        }
+      );
+    } else {
+      updateEblast.mutate(
+        { showId: item.showId, eblastId: item.id, data },
+        {
+          onSuccess: () => { toast({ title: "eBlast updated" }); onOpenChange(false); onSuccess(); },
+          onError: () => toast({ title: "Error updating eBlast", variant: "destructive" }),
+        }
+      );
+    }
+  };
+
+  const isPending = updateTask.isPending || updateEblast.isPending;
+  const isTask = item.type === "task";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md" aria-describedby={undefined}>
+        <DialogHeader>
+          <DialogTitle>Edit {isTask ? "Task" : "E-Blast"}</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField control={form.control} name="name" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name *</FormLabel>
+                <FormControl><Input {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <div className="grid grid-cols-2 gap-4">
+              {isTask && (
+                <FormField control={form.control} name="category" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="None" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {PRESET_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+              )}
+              <FormField control={form.control} name="dueDate" render={({ field }) => (
+                <FormItem className={!isTask ? "col-span-2" : ""}>
+                  <FormLabel>Due Date</FormLabel>
+                  <FormControl><Input type="date" {...field} /></FormControl>
+                </FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="dueDateRule" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Due Date Rule</FormLabel>
+                <FormControl><Input placeholder="e.g. 30 cal days before move-in" {...field} /></FormControl>
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="notes" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl><Textarea className="resize-none" rows={3} {...field} /></FormControl>
+              </FormItem>
+            )} />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const CATEGORY_COLORS: Record<string, string> = {
   "Show Bucket":        "bg-blue-500/15 text-blue-400 border-blue-500/30",
@@ -52,6 +186,7 @@ export function DashboardTaskSlider() {
   const [savedFlash, setSavedFlash] = useState<Record<string, boolean>>({});
   const [completing, setCompleting] = useState<Record<string, boolean>>({});
   const [noteOpen, setNoteOpen] = useState<Record<string, boolean>>({});
+  const [editOpen, setEditOpen] = useState(false);
 
   // Pomodoro state
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -415,6 +550,9 @@ export function DashboardTaskSlider() {
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={openPomodoro} title="Pomodoro timer">
               <Timer className="h-3.5 w-3.5" />
             </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setEditOpen(true)} title="Edit">
+              <Edit2 className="h-3.5 w-3.5" />
+            </Button>
             <Button
               size="sm"
               className={`gap-1.5 ${completeBtn}`}
@@ -448,6 +586,12 @@ export function DashboardTaskSlider() {
         )}
         </div>{/* /content */}
       </div>
+      <EditItemDialog
+        item={item}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSuccess={invalidate}
+      />
     </div>
   );
 }

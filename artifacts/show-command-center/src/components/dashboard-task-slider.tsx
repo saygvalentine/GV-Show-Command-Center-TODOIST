@@ -484,8 +484,8 @@ export function DashboardTaskSlider() {
       <div className="px-4 pt-5 pb-4 flex items-start gap-4 min-h-[168px]">
 
         {/* Left: accent icon */}
-        <div className={`rounded-full p-2.5 shrink-0 mt-0.5 ${iconRing}`}>
-          <AlertTriangle className={`h-4 w-4 ${accentText}`} />
+        <div className={`rounded-full p-2.5 shrink-0 self-center ${iconRing}`}>
+          <AlertTriangle className={`h-5 w-5 ${accentText}`} />
         </div>
 
         {/* Content */}

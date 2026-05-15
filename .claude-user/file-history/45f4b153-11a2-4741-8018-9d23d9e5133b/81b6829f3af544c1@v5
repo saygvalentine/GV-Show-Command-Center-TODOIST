@@ -500,10 +500,8 @@ export function DashboardTaskSlider() {
             </span>
           </div>
 
-          {/* Row 2: task name — clickable link to show detail */}
-          <Link href={`/shows/${item.showId}?tab=${showTab}`}>
-            <p className="text-xl font-bold leading-snug hover:underline cursor-pointer">{item.name}</p>
-          </Link>
+          {/* Row 2: task name */}
+          <p className="text-xl font-bold leading-snug">{item.name}</p>
 
           {/* Row 3: show · due date */}
           <p className="text-sm text-muted-foreground">
@@ -574,25 +572,20 @@ export function DashboardTaskSlider() {
             </Button>
           </div>
 
-          {/* Days until move-in box */}
-          {moveInDays !== null && moveInUrgency && (
-            <div className={`flex flex-col items-center gap-0 leading-none text-center px-3 py-1.5 rounded-lg border ${
-              isToday ? "border-amber-500/40 bg-amber-500/[0.06]" : "border-red-500/40 bg-red-500/[0.06]"
-            }`}>
+          {/* Days until move-in */}
+          {moveInDays !== null && moveInUrgency ? (
+            <div className="flex flex-col items-center gap-0 leading-none text-center">
               <span className={`text-3xl font-black tabular-nums tracking-tight ${moveInUrgency.textClass}`}>
                 {Math.abs(moveInDays)}
               </span>
               <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">
                 {moveInDays < 0 ? "Days Ago" : "Days"}
               </span>
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 mt-0.5">Move-In</span>
-              {item.moveInDate && (
-                <span className="text-[9px] text-muted-foreground/50 mt-1 whitespace-nowrap">
-                  {formatDate(item.moveInDate)}
-                </span>
-              )}
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 mt-0.5">
+                Move-In
+              </span>
             </div>
-          )}
+          ) : <div />}
 
           {/* Action buttons */}
           <div className="flex items-center gap-1.5 flex-wrap justify-center">
@@ -611,6 +604,9 @@ export function DashboardTaskSlider() {
               <Check className="h-3.5 w-3.5" />
               {completionLabel}
             </Button>
+            <Link href={`/shows/${item.showId}?tab=${showTab}`}>
+              <Button variant="outline" size="sm">Open</Button>
+            </Link>
           </div>
 
         </div>{/* /right panel */}

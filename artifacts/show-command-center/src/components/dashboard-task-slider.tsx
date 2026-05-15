@@ -266,8 +266,8 @@ export function DashboardTaskSlider() {
       <div className={`rounded-xl border ${outerBorder}`}>
         <div className="px-4 pt-4 pb-4 flex flex-col gap-2">
 
-          {/* Row 1: Back (left) · chip (center) · Focus Timer (right) */}
-          <div className="flex items-center">
+          {/* Row 1: Back (left) · chip (true center) · Focus Timer (right) */}
+          <div className="relative flex items-center">
             <button
               onClick={closePomodoro}
               className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -275,12 +275,10 @@ export function DashboardTaskSlider() {
               <ArrowLeft className="h-3 w-3" />
               Back
             </button>
-            <div className="flex-1 flex justify-center">
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${chipClass(item.type, item.category)}`}>
-                {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
-              </span>
-            </div>
-            <span className={`text-xs font-bold uppercase tracking-widest ${accentText}`}>Focus Timer</span>
+            <span className={`absolute left-1/2 -translate-x-1/2 text-xs font-semibold px-2 py-0.5 rounded-md border ${chipClass(item.type, item.category)}`}>
+              {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
+            </span>
+            <span className={`ml-auto text-xs font-bold uppercase tracking-widest ${accentText}`}>Focus Timer</span>
           </div>
 
           {/* Row 2: task name + show·date — centered */}

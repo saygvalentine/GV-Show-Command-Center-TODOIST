@@ -264,92 +264,82 @@ export function DashboardTaskSlider() {
   if (pomodoroOpen) {
     return (
       <div className={`rounded-xl border ${outerBorder}`}>
-        <div className="px-4 pt-5 pb-4 flex items-start gap-4">
+        <div className="px-4 pt-4 pb-4 flex flex-col gap-2">
 
-          {/* Left: same accent icon */}
-          <div className={`rounded-full p-2.5 shrink-0 mt-0.5 ${iconRing}`}>
-            <Timer className={`h-4 w-4 ${accentText}`} />
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0 flex flex-col gap-2">
-
-            {/* Row 1: Back + chip + spacer + Focus Timer label */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={closePomodoro}
-                className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
-              >
-                <ArrowLeft className="h-3 w-3" />
-                Back
-              </button>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border shrink-0 ${chipClass(item.type, item.category)}`}>
+          {/* Row 1: Back (left) · chip (center) · Focus Timer (right) */}
+          <div className="flex items-center">
+            <button
+              onClick={closePomodoro}
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              Back
+            </button>
+            <div className="flex-1 flex justify-center">
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${chipClass(item.type, item.category)}`}>
                 {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
               </span>
-              <div className="flex-1" />
-              <span className={`text-xs font-bold uppercase tracking-widest ${accentText}`}>Focus Timer</span>
             </div>
+            <span className={`text-xs font-bold uppercase tracking-widest ${accentText}`}>Focus Timer</span>
+          </div>
 
-            {/* Row 2: task name */}
+          {/* Row 2: task name + show·date — centered */}
+          <div className="flex flex-col items-center gap-0.5 text-center">
             <p className="text-xl font-bold leading-snug">{item.name}</p>
-
-            {/* Row 3: show · date */}
             <p className="text-sm text-muted-foreground">
               {item.showName}
               <span className="mx-1.5 opacity-40">•</span>
               Due {formatDate(item.dueDate)}
             </p>
+          </div>
 
-            {/* Row 4: preset pills + timer + controls — all inline */}
-            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              {/* Preset buttons */}
-              {([0, 1, 2] as const).map(i => {
-                const isSelected = selectedPreset === i;
-                return (
-                  <div key={i} className="flex items-center gap-0.5">
-                    <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => adjustPreset(i, -1)} disabled={presets[i] <= 1}>
-                      <span className="text-xs leading-none">−</span>
-                    </Button>
-                    <button
-                      onClick={() => selectPreset(i)}
-                      className={`px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
-                        isSelected
-                          ? "bg-primary/15 border-primary/40 text-primary"
-                          : "border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground"
-                      }`}
-                    >
-                      {presets[i]}m
-                    </button>
-                    <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => adjustPreset(i, 1)}>
-                      <span className="text-xs leading-none">+</span>
-                    </Button>
-                  </div>
-                );
-              })}
+          {/* Row 3: timer readout — centered */}
+          <div className="flex flex-col items-center gap-0.5">
+            <span className={`text-4xl font-black tabular-nums tracking-tight ${selectedPreset !== null ? accentText : "text-muted-foreground/30"}`}>
+              {selectedPreset !== null ? formatTime(timeLeft) : "--:--"}
+            </span>
+            {timesUp && <span className={`text-xs font-semibold ${accentText}`}>Time's up!</span>}
+          </div>
 
-              <div className="flex-1" />
+          {/* Row 4: presets + Start/Reset — all centered on one line */}
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            {([0, 1, 2] as const).map(i => {
+              const isSelected = selectedPreset === i;
+              return (
+                <div key={i} className="flex items-center gap-0.5">
+                  <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => adjustPreset(i, -1)} disabled={presets[i] <= 1}>
+                    <span className="text-xs leading-none">−</span>
+                  </Button>
+                  <button
+                    onClick={() => selectPreset(i)}
+                    className={`px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
+                      isSelected
+                        ? "bg-primary/15 border-primary/40 text-primary"
+                        : "border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+                    }`}
+                  >
+                    {presets[i]}m
+                  </button>
+                  <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => adjustPreset(i, 1)}>
+                    <span className="text-xs leading-none">+</span>
+                  </Button>
+                </div>
+              );
+            })}
 
-              {/* Timer readout */}
-              <span className={`text-2xl font-black tabular-nums tracking-tight ${selectedPreset !== null ? accentText : "text-muted-foreground/30"}`}>
-                {selectedPreset !== null ? formatTime(timeLeft) : "--:--"}
-              </span>
-              {timesUp && <span className={`text-xs font-semibold ${accentText}`}>Time's up!</span>}
+            <div className="w-px h-4 bg-border mx-1" />
 
-              {/* Start / Pause */}
-              <Button size="sm" className={`gap-1.5 ${completeBtn}`} onClick={toggleTimer} disabled={selectedPreset === null}>
-                {isRunning
-                  ? <><Pause className="h-3.5 w-3.5" /> Pause</>
-                  : <><Play className="h-3.5 w-3.5" /> Start</>
-                }
-              </Button>
+            <Button size="sm" className={`gap-1.5 ${completeBtn}`} onClick={toggleTimer} disabled={selectedPreset === null}>
+              {isRunning
+                ? <><Pause className="h-3.5 w-3.5" /> Pause</>
+                : <><Play className="h-3.5 w-3.5" /> Start</>
+              }
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={resetTimer} disabled={selectedPreset === null} title="Reset">
+              <RotateCcw className="h-3.5 w-3.5" />
+            </Button>
+          </div>
 
-              {/* Reset */}
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={resetTimer} disabled={selectedPreset === null} title="Reset">
-                <RotateCcw className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-
-          </div>{/* /content */}
         </div>
       </div>
     );

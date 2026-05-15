@@ -579,18 +579,13 @@ export function DashboardTaskSlider() {
             <div className={`flex flex-col items-center gap-0 leading-none text-center py-2 rounded-lg border w-full ${
               isToday ? "border-amber-500/40 bg-amber-500/[0.06]" : "border-red-500/40 bg-red-500/[0.06]"
             }`}>
-              <span className={`text-3xl font-black tabular-nums tracking-tight ${moveInUrgency.textClass}`}>
+              <span className={`text-4xl font-black tabular-nums tracking-tight ${moveInUrgency.textClass}`}>
                 {Math.abs(moveInDays)}
               </span>
-              <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">
+              <span className="text-xs uppercase font-semibold tracking-wider text-muted-foreground">
                 {moveInDays < 0 ? "Days Ago" : "Days"}
               </span>
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 mt-0.5">Move-In</span>
-              {item.moveInDate && (
-                <span className="text-[9px] text-muted-foreground/50 mt-1 whitespace-nowrap">
-                  {formatDate(item.moveInDate)}
-                </span>
-              )}
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mt-0.5">Move-In</span>
             </div>
           )}
 

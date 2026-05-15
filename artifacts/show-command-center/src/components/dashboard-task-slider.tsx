@@ -513,36 +513,24 @@ export function DashboardTaskSlider() {
             Due {formatDate(item.dueDate)}
           </p>
 
-          {/* Row 3b: warehouse / online / discount deadlines */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-            {item.advanceWarehouseDate && (
-              <span className="flex items-center gap-1 whitespace-nowrap">
-                <Warehouse className="h-3 w-3 shrink-0" /><span className="font-medium text-foreground">{format(parseDateStr(item.advanceWarehouseDate), "M/d")}</span>
+          {/* Row 3b: all 6 deadlines on one line */}
+          <div className="flex items-center gap-0 text-[11px] text-muted-foreground overflow-hidden">
+            {[
+              { icon: <Warehouse className="h-3 w-3 shrink-0" />, date: item.advanceWarehouseDate },
+              { icon: <Globe className="h-3 w-3 shrink-0" />, date: item.onlineOrderDeadline },
+              { icon: <DollarSign className="h-3 w-3 shrink-0" />, date: item.discountDeadline },
+              { icon: <Flame className="h-3 w-3 shrink-0" />, date: item.fmDeadlineDate },
+              { icon: <Signpost className="h-3 w-3 shrink-0" />, date: item.idSignDeadlineDate },
+              { icon: <Briefcase className="h-3 w-3 shrink-0" />, date: item.bucketDueDate },
+            ].map((d, i) => (
+              <span key={i} className="flex items-center whitespace-nowrap">
+                {i > 0 && <span className="mx-1.5 opacity-40">|</span>}
+                {d.icon}
+                <span className="ml-1 font-medium text-foreground">
+                  {d.date ? format(parseDateStr(d.date), "M/d") : "N/A"}
+                </span>
               </span>
-            )}
-            {item.onlineOrderDeadline && (
-              <span className="flex items-center gap-1 whitespace-nowrap">
-                <Globe className="h-3 w-3 shrink-0" /><span className="font-medium text-foreground">{format(parseDateStr(item.onlineOrderDeadline), "M/d")}</span>
-              </span>
-            )}
-            {item.discountDeadline && (
-              <span className="flex items-center gap-1 whitespace-nowrap">
-                <DollarSign className="h-3 w-3 shrink-0" /><span className="font-medium text-foreground">{format(parseDateStr(item.discountDeadline), "M/d")}</span>
-              </span>
-            )}
-          </div>
-
-          {/* Row 3c: FM / ID Signs / Bucket deadlines */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1 whitespace-nowrap">
-              <Flame className="h-3 w-3 shrink-0" /><span className="font-medium text-foreground">{item.fmDeadlineDate ? format(parseDateStr(item.fmDeadlineDate), "M/d") : "N/A"}</span>
-            </span>
-            <span className="flex items-center gap-1 whitespace-nowrap">
-              <Signpost className="h-3 w-3 shrink-0" /><span className="font-medium text-foreground">{item.idSignDeadlineDate ? format(parseDateStr(item.idSignDeadlineDate), "M/d") : "N/A"}</span>
-            </span>
-            <span className="flex items-center gap-1 whitespace-nowrap">
-              <Briefcase className="h-3 w-3 shrink-0" /><span className="font-medium text-foreground">{item.bucketDueDate ? format(parseDateStr(item.bucketDueDate), "M/d") : "N/A"}</span>
-            </span>
+            ))}
           </div>
 
           {/* Row 4: note */}

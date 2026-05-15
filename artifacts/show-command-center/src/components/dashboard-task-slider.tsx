@@ -524,7 +524,8 @@ export function DashboardTaskSlider() {
               { icon: <Briefcase className="h-3 w-3 shrink-0" />, date: item.bucketDueDate },
             ].map((d, i) => (
               <span key={i} className="flex items-center whitespace-nowrap">
-                {i > 0 && <span className="mx-1.5 opacity-40">|</span>}
+                {i > 0 && i !== 3 && <span className="mx-1.5 opacity-40">|</span>}
+                {i === 3 && <span className="mx-2 opacity-70 font-bold text-sm">|</span>}
                 {d.icon}
                 <span className="ml-1 font-medium text-foreground">
                   {d.date ? format(parseDateStr(d.date), "M/d") : "N/A"}

@@ -490,41 +490,27 @@ export function DashboardTaskSlider() {
         {/* Content */}
         <div className="flex-1 min-w-0 flex flex-col gap-2">
 
-        {/* Row 1: urgency label + category chip — nav right */}
-        <div className="flex items-center gap-2">
-          <span className={`text-xs font-bold uppercase tracking-widest shrink-0 ${accentText}`}>
-            {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
-          </span>
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border shrink-0 ${chipClass(item.type, item.category)}`}>
-            {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
-          </span>
-          <div className="flex-1" />
-          <div className="flex items-center gap-0.5 shrink-0">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prev} disabled={safeIndex === 0}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs text-muted-foreground tabular-nums font-medium px-1 select-none">
-              {safeIndex + 1} of {total}
+          {/* Row 1: urgency label + category chip */}
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-bold uppercase tracking-widest shrink-0 ${accentText}`}>
+              {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
             </span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={next} disabled={safeIndex === total - 1}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border shrink-0 ${chipClass(item.type, item.category)}`}>
+              {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
+            </span>
           </div>
-        </div>
 
-        {/* Row 2: task name */}
-        <p className="text-xl font-bold leading-snug">{item.name}</p>
+          {/* Row 2: task name */}
+          <p className="text-xl font-bold leading-snug">{item.name}</p>
 
-        {/* Row 3: show · due date */}
-        <p className="text-sm text-muted-foreground">
-          {item.showName}
-          <span className="mx-1.5 opacity-40">•</span>
-          Due {formatDate(item.dueDate)}
-        </p>
+          {/* Row 3: show · due date */}
+          <p className="text-sm text-muted-foreground">
+            {item.showName}
+            <span className="mx-1.5 opacity-40">•</span>
+            Due {formatDate(item.dueDate)}
+          </p>
 
-        {/* Row 4: note + actions */}
-        <div className="flex items-center gap-3 mt-0.5">
-          {/* Note */}
+          {/* Row 4: note */}
           <div className="flex-1 min-w-0">
             {!isNoteOpen ? (
               <button
@@ -551,8 +537,58 @@ export function DashboardTaskSlider() {
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Pagination dots */}
+          {total > 1 && total <= 10 && (
+            <div className="flex items-center gap-1">
+              {items.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setIndex(i)}
+                  className={`rounded-full transition-all ${
+                    i === safeIndex
+                      ? `h-1.5 w-4 ${isToday ? "bg-amber-400" : "bg-red-400"}`
+                      : "h-1.5 w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>{/* /content */}
+
+        {/* Right panel: nav · days counter · action buttons — stacked vertically */}
+        <div className="w-px self-stretch bg-border/50 shrink-0 mx-1" />
+        <div className="flex flex-col items-center justify-between shrink-0 gap-2">
+
+          {/* Nav arrows */}
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prev} disabled={safeIndex === 0}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs text-muted-foreground tabular-nums font-medium px-1 select-none whitespace-nowrap">
+              {safeIndex + 1} of {total}
+            </span>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={next} disabled={safeIndex === total - 1}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Days until move-in */}
+          {moveInDays !== null && moveInUrgency ? (
+            <div className="flex flex-col items-center gap-0 leading-none text-center">
+              <span className={`text-3xl font-black tabular-nums tracking-tight ${moveInUrgency.textClass}`}>
+                {Math.abs(moveInDays)}
+              </span>
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">
+                {moveInDays < 0 ? "Days Ago" : "Days"}
+              </span>
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 mt-0.5">
+                Move-In
+              </span>
+            </div>
+          ) : <div />}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={openPomodoro} title="Pomodoro timer">
               <Timer className="h-3.5 w-3.5" />
             </Button>
@@ -572,43 +608,8 @@ export function DashboardTaskSlider() {
               <Button variant="outline" size="sm">Open</Button>
             </Link>
           </div>
-        </div>
 
-        {/* Pagination dots */}
-        {total > 1 && total <= 10 && (
-          <div className="flex items-center gap-1 mt-0.5">
-            {items.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setIndex(i)}
-                className={`rounded-full transition-all ${
-                  i === safeIndex
-                    ? `h-1.5 w-4 ${isToday ? "bg-amber-400" : "bg-red-400"}`
-                    : "h-1.5 w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-        </div>{/* /content */}
-
-        {/* Right: days until move-in */}
-        {moveInDays !== null && moveInUrgency && (
-          <>
-            <div className="w-px self-stretch bg-border/50 shrink-0 mx-1" />
-            <div className="flex flex-col items-center justify-center gap-0.5 shrink-0 min-w-[52px]">
-              <span className={`text-3xl font-black tabular-nums tracking-tight leading-none ${moveInUrgency.textClass}`}>
-                {Math.abs(moveInDays)}
-              </span>
-              <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground leading-none">
-                {moveInDays < 0 ? "Days Ago" : "Days"}
-              </span>
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 leading-none mt-0.5">
-                Move-In
-              </span>
-            </div>
-          </>
-        )}
+        </div>{/* /right panel */}
       </div>
       <EditItemDialog
         item={item}

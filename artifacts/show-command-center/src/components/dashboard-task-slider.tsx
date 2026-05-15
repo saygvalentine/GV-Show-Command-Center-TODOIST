@@ -517,8 +517,8 @@ export function DashboardTaskSlider() {
           <div className="flex items-center gap-0 text-[11px] text-muted-foreground overflow-hidden">
             {[
               { icon: <Warehouse className="h-3 w-3 shrink-0" />, date: item.advanceWarehouseDate },
-              { icon: <Globe className="h-3 w-3 shrink-0" />, date: item.onlineOrderDeadline },
               { icon: <DollarSign className="h-3 w-3 shrink-0" />, date: item.discountDeadline },
+              { icon: <Globe className="h-3 w-3 shrink-0" />, date: item.onlineOrderDeadline },
               { icon: <Flame className="h-3 w-3 shrink-0" />, date: item.fmDeadlineDate },
               { icon: <Signpost className="h-3 w-3 shrink-0" />, date: item.idSignDeadlineDate },
               { icon: <Briefcase className="h-3 w-3 shrink-0" />, date: item.bucketDueDate },

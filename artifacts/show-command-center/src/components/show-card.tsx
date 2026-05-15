@@ -62,11 +62,11 @@ export function ShowCard({ show }: ShowCardProps) {
                 {show.advanceWarehouseDate && (
                   <span className="whitespace-nowrap text-muted-foreground">Adv. WH: <span className="text-foreground font-medium">{format(parseDateStr(show.advanceWarehouseDate), "M/d")}</span></span>
                 )}
-                {show.onlineOrderDeadline && (
-                  <span className="whitespace-nowrap text-muted-foreground">Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
-                )}
                 {show.discountDeadline && (
                   <span className="whitespace-nowrap text-muted-foreground">Disc: <span className="text-foreground font-medium">{format(parseDateStr(show.discountDeadline), "M/d")}</span></span>
+                )}
+                {show.onlineOrderDeadline && (
+                  <span className="whitespace-nowrap text-muted-foreground">Online: <span className="text-foreground font-medium">{format(parseDateStr(show.onlineOrderDeadline), "M/d")}</span></span>
                 )}
               </div>
             )}

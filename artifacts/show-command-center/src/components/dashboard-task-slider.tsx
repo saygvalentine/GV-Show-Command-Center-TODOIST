@@ -481,15 +481,15 @@ export function DashboardTaskSlider() {
 
   return (
     <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
-      <div className="px-4 pt-5 pb-4 flex items-start gap-4 min-h-[168px]">
+      <div className="px-6 pt-6 pb-5 flex items-start gap-6 min-h-[185px]">
 
         {/* Left: accent icon */}
-        <div className={`rounded-full p-2.5 shrink-0 self-center ${iconRing}`}>
+        <div className={`rounded-full p-3.5 shrink-0 self-center ${iconRing}`}>
           <AlertTriangle className={`h-10 w-10 ${accentText}`} />
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
+        <div className="flex-1 min-w-0 flex flex-col gap-2.5">
 
           {/* Row 1: urgency label + category chip */}
           <div className="flex items-center gap-2">

@@ -351,13 +351,18 @@ export function DashboardTaskSlider() {
   // ── Default slider view ───────────────────────────────────────────────────
   return (
     <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
-      <div className="px-4 pt-4 pb-3 flex flex-col gap-2">
+      <div className="px-4 pt-4 pb-3 flex items-start gap-4">
 
-        {/* Row 1: icon + urgency label + category chip — nav right */}
+        {/* Left: accent icon */}
+        <div className={`rounded-full p-2.5 shrink-0 mt-0.5 ${iconRing}`}>
+          <AlertTriangle className={`h-4 w-4 ${accentText}`} />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+
+        {/* Row 1: urgency label + category chip — nav right */}
         <div className="flex items-center gap-2">
-          <div className={`rounded-full p-1.5 shrink-0 ${iconRing}`}>
-            <AlertTriangle className={`h-3.5 w-3.5 ${accentText}`} />
-          </div>
           <span className={`text-xs font-bold uppercase tracking-widest shrink-0 ${accentText}`}>
             {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
           </span>
@@ -419,9 +424,8 @@ export function DashboardTaskSlider() {
 
           {/* Actions */}
           <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={openPomodoro}>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={openPomodoro} title="Pomodoro timer">
               <Timer className="h-3.5 w-3.5" />
-              Pomodoro
             </Button>
             <Button
               size="sm"
@@ -454,6 +458,7 @@ export function DashboardTaskSlider() {
             ))}
           </div>
         )}
+        </div>{/* /content */}
       </div>
     </div>
   );

@@ -17,4 +17,5 @@ export interface OverdueItem {
   category?: string | null;
   daysOverdue: number;
   notes?: string | null;
+  moveInDate?: Date | null;
 }

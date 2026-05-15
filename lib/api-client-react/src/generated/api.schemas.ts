@@ -258,6 +258,7 @@ export interface OverdueItem {
   category?: string | null;
   daysOverdue: number;
   notes?: string | null;
+  moveInDate?: string | null;
 }
 
 export interface GcalCalendar {

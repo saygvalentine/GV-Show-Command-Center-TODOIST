@@ -16,7 +16,7 @@ router.get("/overdue", async (req, res): Promise<void> => {
   const allTasks = await db.select().from(tasksTable);
   const allEblasts = await db.select().from(eblastsTable);
 
-  const showMap = Object.fromEntries(shows.map((s) => [s.id, s.name]));
+  const showMap = Object.fromEntries(shows.map((s) => [s.id, { name: s.name, moveInDate: s.moveInDate }]));
 
   const items: {
     id: number;
@@ -28,6 +28,7 @@ router.get("/overdue", async (req, res): Promise<void> => {
     category: string | null;
     daysOverdue: number;
     notes: string | null;
+    moveInDate: string | null;
   }[] = [];
 
   for (const task of allTasks) {
@@ -36,12 +37,13 @@ router.get("/overdue", async (req, res): Promise<void> => {
         id: task.id,
         type: "task",
         showId: task.showId,
-        showName: showMap[task.showId] ?? "Unknown Show",
+        showName: showMap[task.showId]?.name ?? "Unknown Show",
         name: task.name,
         dueDate: task.dueDate,
         category: task.category ?? null,
         daysOverdue: daysOverdueCount(task.dueDate, today.getTime()),
         notes: task.notes ?? null,
+        moveInDate: showMap[task.showId]?.moveInDate ?? null,
       });
     }
   }
@@ -52,12 +54,13 @@ router.get("/overdue", async (req, res): Promise<void> => {
         id: eblast.id,
         type: "eblast",
         showId: eblast.showId,
-        showName: showMap[eblast.showId] ?? "Unknown Show",
+        showName: showMap[eblast.showId]?.name ?? "Unknown Show",
         name: eblast.name,
         dueDate: eblast.dueDate,
         category: null,
         daysOverdue: daysOverdueCount(eblast.dueDate, today.getTime()),
         notes: null,
+        moveInDate: showMap[eblast.showId]?.moveInDate ?? null,
       });
     }
   }

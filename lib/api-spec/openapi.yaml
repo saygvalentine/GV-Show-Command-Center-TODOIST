@@ -1345,6 +1345,10 @@ components:
         notes:
           type: string
           nullable: true
+        moveInDate:
+          type: string
+          format: date
+          nullable: true
 
     GcalCalendar:
       type: object

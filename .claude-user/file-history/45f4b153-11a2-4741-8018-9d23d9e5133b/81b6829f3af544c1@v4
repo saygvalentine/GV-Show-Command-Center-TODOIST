@@ -23,8 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate, parseDateStr, getUrgencyInfo } from "@/lib/date-utils";
-import { differenceInDays, startOfDay } from "date-fns";
+import { formatDate } from "@/lib/date-utils";
 
 const PRESET_CATEGORIES = [
   "Fire Marshal", "ID Sign", "Warehouse Manifest",
@@ -473,11 +472,6 @@ export function DashboardTaskSlider() {
   }
 
   // ── Default slider view ───────────────────────────────────────────────────
-  const moveInDays = item.moveInDate
-    ? differenceInDays(startOfDay(parseDateStr(item.moveInDate)), startOfDay(new Date()))
-    : null;
-  const moveInUrgency = item.moveInDate ? getUrgencyInfo(item.moveInDate) : null;
-
   return (
     <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
       <div className="px-4 pt-5 pb-4 flex items-start gap-4 min-h-[168px]">
@@ -591,24 +585,6 @@ export function DashboardTaskSlider() {
           </div>
         )}
         </div>{/* /content */}
-
-        {/* Right: days until move-in */}
-        {moveInDays !== null && moveInUrgency && (
-          <>
-            <div className="w-px self-stretch bg-border/50 shrink-0 mx-1" />
-            <div className="flex flex-col items-center justify-center gap-0.5 shrink-0 min-w-[52px]">
-              <span className={`text-3xl font-black tabular-nums tracking-tight leading-none ${moveInUrgency.textClass}`}>
-                {Math.abs(moveInDays)}
-              </span>
-              <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground leading-none">
-                {moveInDays < 0 ? "Days Ago" : "Days"}
-              </span>
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 leading-none mt-0.5">
-                Move-In
-              </span>
-            </div>
-          </>
-        )}
       </div>
       <EditItemDialog
         item={item}

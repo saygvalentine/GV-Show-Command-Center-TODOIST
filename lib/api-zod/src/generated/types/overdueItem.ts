@@ -18,4 +18,7 @@ export interface OverdueItem {
   daysOverdue: number;
   notes?: string | null;
   moveInDate?: Date | null;
+  fmDeadlineDate?: Date | null;
+  idSignDeadlineDate?: Date | null;
+  bucketDueDate?: Date | null;
 }

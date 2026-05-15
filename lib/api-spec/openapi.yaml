@@ -1349,6 +1349,18 @@ components:
           type: string
           format: date
           nullable: true
+        fmDeadlineDate:
+          type: string
+          format: date
+          nullable: true
+        idSignDeadlineDate:
+          type: string
+          format: date
+          nullable: true
+        bucketDueDate:
+          type: string
+          format: date
+          nullable: true
 
     GcalCalendar:
       type: object

@@ -259,6 +259,9 @@ export interface OverdueItem {
   daysOverdue: number;
   notes?: string | null;
   moveInDate?: string | null;
+  fmDeadlineDate?: string | null;
+  idSignDeadlineDate?: string | null;
+  bucketDueDate?: string | null;
 }
 
 export interface GcalCalendar {

@@ -16,7 +16,13 @@ router.get("/overdue", async (req, res): Promise<void> => {
   const allTasks = await db.select().from(tasksTable);
   const allEblasts = await db.select().from(eblastsTable);
 
-  const showMap = Object.fromEntries(shows.map((s) => [s.id, { name: s.name, moveInDate: s.moveInDate }]));
+  const showMap = Object.fromEntries(shows.map((s) => [s.id, {
+    name: s.name,
+    moveInDate: s.moveInDate,
+    fmDeadlineDate: s.fmDeadlineDate ?? null,
+    idSignDeadlineDate: s.idSignDeadlineDate ?? null,
+    bucketDueDate: s.bucketDueDate ?? null,
+  }]));
 
   const items: {
     id: number;
@@ -29,6 +35,9 @@ router.get("/overdue", async (req, res): Promise<void> => {
     daysOverdue: number;
     notes: string | null;
     moveInDate: string | null;
+    fmDeadlineDate: string | null;
+    idSignDeadlineDate: string | null;
+    bucketDueDate: string | null;
   }[] = [];
 
   for (const task of allTasks) {
@@ -44,6 +53,9 @@ router.get("/overdue", async (req, res): Promise<void> => {
         daysOverdue: daysOverdueCount(task.dueDate, today.getTime()),
         notes: task.notes ?? null,
         moveInDate: showMap[task.showId]?.moveInDate ?? null,
+        fmDeadlineDate: showMap[task.showId]?.fmDeadlineDate ?? null,
+        idSignDeadlineDate: showMap[task.showId]?.idSignDeadlineDate ?? null,
+        bucketDueDate: showMap[task.showId]?.bucketDueDate ?? null,
       });
     }
   }
@@ -61,6 +73,9 @@ router.get("/overdue", async (req, res): Promise<void> => {
         daysOverdue: daysOverdueCount(eblast.dueDate, today.getTime()),
         notes: null,
         moveInDate: showMap[eblast.showId]?.moveInDate ?? null,
+        fmDeadlineDate: showMap[eblast.showId]?.fmDeadlineDate ?? null,
+        idSignDeadlineDate: showMap[eblast.showId]?.idSignDeadlineDate ?? null,
+        bucketDueDate: showMap[eblast.showId]?.bucketDueDate ?? null,
       });
     }
   }

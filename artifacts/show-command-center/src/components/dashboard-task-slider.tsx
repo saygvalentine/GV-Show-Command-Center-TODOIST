@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import {
   ChevronLeft, ChevronRight, ChevronDown,
   Check, Timer, Play, Pause, RotateCcw, ArrowLeft, AlertTriangle, Edit2, Loader2,
+  Flame, Signpost, Briefcase,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -24,7 +25,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, parseDateStr, getUrgencyInfo } from "@/lib/date-utils";
-import { differenceInDays, startOfDay } from "date-fns";
+import { differenceInDays, startOfDay, format } from "date-fns";
 
 const PRESET_CATEGORIES = [
   "Fire Marshal", "ID Sign", "Warehouse Manifest",
@@ -511,6 +512,19 @@ export function DashboardTaskSlider() {
             <span className="mx-1.5 opacity-40">•</span>
             Due {formatDate(item.dueDate)}
           </p>
+
+          {/* Row 3b: key deadlines */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1 whitespace-nowrap">
+              <Flame className="h-3 w-3 shrink-0" />FM:&nbsp;<span className="font-medium text-foreground">{item.fmDeadlineDate ? format(parseDateStr(item.fmDeadlineDate), "M/d") : "N/A"}</span>
+            </span>
+            <span className="flex items-center gap-1 whitespace-nowrap">
+              <Signpost className="h-3 w-3 shrink-0" />ID Signs:&nbsp;<span className="font-medium text-foreground">{item.idSignDeadlineDate ? format(parseDateStr(item.idSignDeadlineDate), "M/d") : "N/A"}</span>
+            </span>
+            <span className="flex items-center gap-1 whitespace-nowrap">
+              <Briefcase className="h-3 w-3 shrink-0" />Bucket:&nbsp;<span className="font-medium text-foreground">{item.bucketDueDate ? format(parseDateStr(item.bucketDueDate), "M/d") : "N/A"}</span>
+            </span>
+          </div>
 
           {/* Row 4: note */}
           <div className="flex-1 min-w-0">

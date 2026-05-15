@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import {
   ChevronLeft, ChevronRight, ChevronDown,
-  Check, Timer, Play, Pause, RotateCcw, ArrowLeft, AlertTriangle,
+  Check, Timer, Play, Pause, RotateCcw, ArrowLeft,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -250,99 +250,105 @@ export function DashboardTaskSlider() {
 
   const showTab = item.type === "eblast" ? "eblasts" : "tasks";
   const completionLabel = item.type === "eblast" ? "Mark Sent" : "Mark Complete";
-  const outerBorder = isToday ? "border-amber-500/35 bg-amber-500/[0.06]" : "border-red-500/35 bg-red-500/[0.06]";
-  const iconRing = isToday ? "bg-amber-500/20" : "bg-red-500/20";
-  const completeBtn = isToday
-    ? "bg-amber-500 hover:bg-amber-400 text-black"
-    : "bg-red-500 hover:bg-red-400 text-white";
-  // kept for pomodoro view compat
-  const headerBand = isToday
-    ? "bg-amber-500/20 border-b border-amber-500/35"
-    : "bg-red-500/20 border-b border-red-500/35";
+  const cardBg = isToday ? "bg-amber-500/5 border-amber-500/20" : "bg-red-500/5 border-red-500/20";
 
   // ── Pomodoro view ─────────────────────────────────────────────────────────
   if (pomodoroOpen) {
     return (
-      <div className={`rounded-lg border overflow-hidden ${outerBorder}`}>
-        {/* Header band */}
-        <div className={`px-4 py-3 flex items-center justify-between ${headerBand}`}>
-          <button
-            onClick={closePomodoro}
-            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back
-          </button>
-          <span className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest ${accentText}`}>
-            <Timer className="h-3.5 w-3.5" />
-            Focus Timer
+      <div className={`rounded-lg border p-5 flex flex-col gap-5 ${cardBg}`}>
+        {/* Back button */}
+        <button
+          onClick={closePomodoro}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors w-fit"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back
+        </button>
+
+        {/* Centered task info */}
+        <div className="flex flex-col items-center gap-1.5 text-center">
+          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${chipClass(item.type, item.category)}`}>
+            {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
           </span>
+          <p className="text-xl font-bold leading-tight">{item.name}</p>
+          <p className="text-sm text-muted-foreground">
+            {item.showName}
+            <span className="mx-1.5 opacity-40">•</span>
+            Due {formatDate(item.dueDate)}
+          </p>
         </div>
 
-        <div className="px-4 py-5 flex flex-col gap-5">
-          {/* Centered task info */}
-          <div className="flex flex-col items-center gap-1.5 text-center">
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-sm border ${chipClass(item.type, item.category)}`}>
-              {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
-            </span>
-            <p className="text-xl font-bold leading-tight">{item.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {item.showName}
-              <span className="mx-1.5 opacity-40">•</span>
-              Due {formatDate(item.dueDate)}
-            </p>
-          </div>
+        {/* Timer display */}
+        <div className="flex flex-col items-center gap-1">
+          <span className={`text-6xl font-black tabular-nums tracking-tight ${selectedPreset !== null ? accentText : "text-muted-foreground/40"}`}>
+            {selectedPreset !== null ? formatTime(timeLeft) : "--:--"}
+          </span>
+          {timesUp && (
+            <span className={`text-xs font-semibold ${accentText}`}>Time's up!</span>
+          )}
+        </div>
 
-          {/* Timer display */}
-          <div className="flex flex-col items-center gap-1">
-            <span className={`text-6xl font-black tabular-nums tracking-tight ${selectedPreset !== null ? accentText : "text-muted-foreground/40"}`}>
-              {selectedPreset !== null ? formatTime(timeLeft) : "--:--"}
-            </span>
-            {timesUp && (
-              <span className={`text-xs font-semibold ${accentText}`}>Time's up!</span>
-            )}
-          </div>
+        {/* Preset buttons */}
+        <div className="flex items-center justify-center gap-3">
+          {([0, 1, 2] as const).map(i => {
+            const isSelected = selectedPreset === i;
+            return (
+              <div key={i} className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => adjustPreset(i, -1)}
+                  disabled={presets[i] <= 1}
+                >
+                  <span className="text-sm leading-none">−</span>
+                </Button>
+                <button
+                  onClick={() => selectPreset(i)}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
+                    isSelected
+                      ? "bg-primary/15 border-primary/40 text-primary"
+                      : "border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground"
+                  }`}
+                >
+                  {presets[i]} min
+                </button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => adjustPreset(i, 1)}
+                >
+                  <span className="text-sm leading-none">+</span>
+                </Button>
+              </div>
+            );
+          })}
+        </div>
 
-          {/* Preset buttons */}
-          <div className="flex items-center justify-center gap-3">
-            {([0, 1, 2] as const).map(i => {
-              const isSelected = selectedPreset === i;
-              return (
-                <div key={i} className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => adjustPreset(i, -1)} disabled={presets[i] <= 1}>
-                    <span className="text-sm leading-none">−</span>
-                  </Button>
-                  <button
-                    onClick={() => selectPreset(i)}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium border transition-colors ${
-                      isSelected
-                        ? "bg-primary/15 border-primary/40 text-primary"
-                        : "border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground"
-                    }`}
-                  >
-                    {presets[i]} min
-                  </button>
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => adjustPreset(i, 1)}>
-                    <span className="text-sm leading-none">+</span>
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Start / Pause + Reset */}
-          <div className="flex items-center justify-center gap-3">
-            <Button size="sm" className={`gap-1.5 min-w-[100px] ${completeBtn}`} onClick={toggleTimer} disabled={selectedPreset === null}>
-              {isRunning
-                ? <><Pause className="h-3.5 w-3.5" /> Pause</>
-                : <><Play className="h-3.5 w-3.5" /> Start</>
-              }
-            </Button>
-            <Button variant="ghost" size="sm" className="gap-1.5" onClick={resetTimer} disabled={selectedPreset === null}>
-              <RotateCcw className="h-3.5 w-3.5" />
-              Reset
-            </Button>
-          </div>
+        {/* Start / Pause + Reset */}
+        <div className="flex items-center justify-center gap-3">
+          <Button
+            size="sm"
+            className="gap-1.5 min-w-[100px]"
+            onClick={toggleTimer}
+            disabled={selectedPreset === null}
+          >
+            {isRunning
+              ? <><Pause className="h-3.5 w-3.5" /> Pause</>
+              : <><Play className="h-3.5 w-3.5" /> Start</>
+            }
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5"
+            onClick={resetTimer}
+            disabled={selectedPreset === null}
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Reset
+          </Button>
         </div>
       </div>
     );
@@ -350,80 +356,80 @@ export function DashboardTaskSlider() {
 
   // ── Default slider view ───────────────────────────────────────────────────
   return (
-    <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
-      <div className="p-4 flex items-center gap-4">
-
-        {/* Left: accent icon */}
-        <div className={`rounded-full p-2.5 shrink-0 ${iconRing}`}>
-          <AlertTriangle className={`h-5 w-5 ${accentText}`} />
+    <div
+      className={`rounded-lg border p-5 flex flex-col gap-4 transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${cardBg}`}
+    >
+      {/* Header: urgency label + counter + arrows */}
+      <div className="flex items-center justify-between gap-3">
+        <span className={`text-xs font-bold uppercase tracking-widest ${accentText}`}>
+          {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "day" : "days"} overdue`}
+        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground tabular-nums">{safeIndex + 1} / {total}</span>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prev} disabled={safeIndex === 0}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={next} disabled={safeIndex === total - 1}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
+      </div>
 
-        {/* Centre: label + name + subtitle + note */}
-        <div className="flex-1 min-w-0">
-          <p className={`text-[10px] font-bold uppercase tracking-widest ${accentText}`}>
-            {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
-          </p>
-          <div className="flex items-center gap-2 mt-0.5 min-w-0">
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-sm border shrink-0 ${chipClass(item.type, item.category)}`}>
+      {/* Task info */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${chipClass(item.type, item.category)}`}>
               {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
             </span>
-            <p className="text-sm font-bold leading-snug truncate">{item.name}</p>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-lg font-semibold leading-tight">{item.name}</p>
+          <p className="text-sm text-muted-foreground">
             {item.showName}
             <span className="mx-1.5 opacity-40">•</span>
             Due {formatDate(item.dueDate)}
           </p>
-
-          {/* Note */}
-          <div className="mt-1.5">
-            {!isNoteOpen ? (
-              <button
-                onClick={openNote}
-                className="flex items-center gap-1.5 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <ChevronDown className="h-3 w-3 shrink-0 opacity-50 group-hover:opacity-80" />
-                <span className="truncate">{currentNote || "Add a note…"}</span>
-              </button>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <Textarea
-                  key={key}
-                  autoFocus
-                  value={currentNote}
-                  onChange={e => setNoteDrafts(p => ({ ...p, [key]: e.target.value }))}
-                  onBlur={closeNote}
-                  placeholder="Add a note…"
-                  className="resize-none text-xs min-h-[48px]"
-                  rows={2}
-                />
-                {savedFlash[key] && <span className="text-xs text-muted-foreground">Saved</span>}
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Right: count card + nav */}
-        <div className="shrink-0 rounded-lg border border-border bg-background/60 px-3 py-2 flex flex-col items-center gap-1 min-w-[56px]">
-          <span className={`text-2xl font-black tabular-nums leading-none ${accentText}`}>{safeIndex + 1}</span>
-          <span className="text-[10px] text-muted-foreground leading-none">of {total}</span>
-          <div className="flex items-center gap-0.5 mt-0.5">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={prev} disabled={safeIndex === 0}>
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={next} disabled={safeIndex === total - 1}>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
+        <Link href={`/shows/${item.showId}?tab=${showTab}`} className="shrink-0">
+          <Button variant="outline" size="sm">Open</Button>
+        </Link>
       </div>
 
-      {/* Footer: actions + open link + dots */}
-      <div className="px-4 pb-3 flex items-center justify-between gap-3">
+      {/* Note — compact single line, expands on click */}
+      {!isNoteOpen ? (
+        <button
+          onClick={openNote}
+          className="flex items-center gap-1.5 w-full text-left text-sm text-muted-foreground hover:text-foreground transition-colors group"
+        >
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50 group-hover:opacity-80" />
+          <span className="truncate">{currentNote || "Add a note…"}</span>
+        </button>
+      ) : (
+        <div className="flex flex-col gap-1">
+          <Textarea
+            key={key}
+            autoFocus
+            value={currentNote}
+            onChange={e => setNoteDrafts(p => ({ ...p, [key]: e.target.value }))}
+            onBlur={closeNote}
+            placeholder="Add a note…"
+            className="resize-none text-sm min-h-[64px]"
+            rows={2}
+          />
+          {savedFlash[key] && (
+            <span className="text-xs text-muted-foreground">Saved</span>
+          )}
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button
+            variant="default"
             size="sm"
-            className={`gap-1.5 ${completeBtn}`}
+            className="gap-1.5"
             onClick={markComplete}
             disabled={isCompleting}
           >
@@ -433,11 +439,9 @@ export function DashboardTaskSlider() {
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openPomodoro} title="Focus timer">
             <Timer className="h-4 w-4" />
           </Button>
-          <Link href={`/shows/${item.showId}?tab=${showTab}`}>
-            <Button variant="outline" size="sm">Open</Button>
-          </Link>
         </div>
 
+        {/* Dot indicators */}
         {total > 1 && total <= 10 && (
           <div className="flex items-center gap-1">
             {items.map((_, i) => (

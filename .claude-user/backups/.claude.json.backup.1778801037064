@@ -1,8 +1,8 @@
 {
-  "numStartups": 3,
+  "numStartups": 4,
   "installMethod": "global",
   "tipsHistory": {
-    "new-user-warmup": 1,
+    "new-user-warmup": 4,
     "plan-mode-for-complex-tasks": 1,
     "memory-command": 1,
     "theme-command": 1,
@@ -461,7 +461,7 @@
   "seenNotifications": {},
   "migrationVersion": 13,
   "userID": "364a81271629d3f5752624ef60dfc775a333dacbe67d4f88554e3ecf5412c498",
-  "changelogLastFetched": 1778723064725,
+  "changelogLastFetched": 1778799900446,
   "oauthAccount": {
     "accountUuid": "2f1c2066-a9d4-4365-ad77-58dd6cb6cd34",
     "emailAddress": "saygvalentine@gmail.com",
@@ -506,10 +506,10 @@
       ],
       "exampleFilesGeneratedAt": 1778513874266,
       "hasCompletedProjectOnboarding": true,
-      "lastHintSessionId": "e56b072b-1a28-4677-88cc-e974ebde1c45",
-      "lastSessionFirstPrompt": "What google calendar is my project connected to when i sync?",
-      "lastSessionModified": 1778723086476,
-      "lastVersionBase": "2.1.139"
+      "lastHintSessionId": "fbc7c93c-93db-4a0f-a75c-06117b01f510",
+      "lastSessionFirstPrompt": "I want to repurpose the \"next up\" card at the top",
+      "lastSessionModified": 1778799920661,
+      "lastVersionBase": "2.1.141"
     }
   },
   "cachedExperimentFeatures": [
@@ -536,8 +536,8 @@
       "timestamp": 1778723065166
     }
   },
-  "lastReleaseNotesSeen": "2.1.139",
-  "opus47LaunchSeenCount": 3,
+  "lastReleaseNotesSeen": "2.1.141",
+  "opus47LaunchSeenCount": 4,
   "routineFiredWatermark": "2026-05-11T15:37:54.126Z",
   "clientDataCache": null,
   "additionalModelOptionsCache": [],
@@ -548,7 +548,8 @@
   "officialMarketplaceAutoInstalled": true,
   "cachedExtraUsageDisabledReason": null,
   "claudeAiMcpEverConnected": [
-    "claude.ai Notion"
+    "claude.ai Notion",
+    "claude.ai Era Context"
   ],
   "skillUsage": {
     "init": {

@@ -250,15 +250,16 @@ export function DashboardTaskSlider() {
 
   const showTab = item.type === "eblast" ? "eblasts" : "tasks";
   const completionLabel = item.type === "eblast" ? "Mark Sent" : "Mark Complete";
-  const outerBorder = isToday ? "border-amber-500/35 bg-amber-500/[0.06]" : "border-red-500/35 bg-red-500/[0.06]";
-  const iconRing = isToday ? "bg-amber-500/20" : "bg-red-500/20";
-  const completeBtn = isToday
-    ? "bg-amber-500 hover:bg-amber-400 text-black"
-    : "bg-red-500 hover:bg-red-400 text-white";
-  // kept for pomodoro view compat
   const headerBand = isToday
     ? "bg-amber-500/20 border-b border-amber-500/35"
     : "bg-red-500/20 border-b border-red-500/35";
+  const outerBorder = isToday ? "border-amber-500/40" : "border-red-500/40";
+  const footerBand = isToday
+    ? "border-t border-amber-500/25 bg-amber-500/5"
+    : "border-t border-red-500/25 bg-red-500/5";
+  const completeBtn = isToday
+    ? "bg-amber-500 hover:bg-amber-400 text-black"
+    : "bg-red-500 hover:bg-red-400 text-white";
 
   // ── Pomodoro view ─────────────────────────────────────────────────────────
   if (pomodoroOpen) {
@@ -350,76 +351,71 @@ export function DashboardTaskSlider() {
 
   // ── Default slider view ───────────────────────────────────────────────────
   return (
-    <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
-      <div className="p-4 flex items-center gap-4">
-
-        {/* Left: accent icon */}
-        <div className={`rounded-full p-2.5 shrink-0 ${iconRing}`}>
-          <AlertTriangle className={`h-5 w-5 ${accentText}`} />
-        </div>
-
-        {/* Centre: label + name + subtitle + note */}
-        <div className="flex-1 min-w-0">
-          <p className={`text-[10px] font-bold uppercase tracking-widest ${accentText}`}>
-            {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
-          </p>
-          <div className="flex items-center gap-2 mt-0.5 min-w-0">
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-sm border shrink-0 ${chipClass(item.type, item.category)}`}>
-              {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
-            </span>
-            <p className="text-sm font-bold leading-snug truncate">{item.name}</p>
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {item.showName}
-            <span className="mx-1.5 opacity-40">•</span>
-            Due {formatDate(item.dueDate)}
-          </p>
-
-          {/* Note */}
-          <div className="mt-1.5">
-            {!isNoteOpen ? (
-              <button
-                onClick={openNote}
-                className="flex items-center gap-1.5 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <ChevronDown className="h-3 w-3 shrink-0 opacity-50 group-hover:opacity-80" />
-                <span className="truncate">{currentNote || "Add a note…"}</span>
-              </button>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <Textarea
-                  key={key}
-                  autoFocus
-                  value={currentNote}
-                  onChange={e => setNoteDrafts(p => ({ ...p, [key]: e.target.value }))}
-                  onBlur={closeNote}
-                  placeholder="Add a note…"
-                  className="resize-none text-xs min-h-[48px]"
-                  rows={2}
-                />
-                {savedFlash[key] && <span className="text-xs text-muted-foreground">Saved</span>}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right: count card + nav */}
-        <div className="shrink-0 rounded-lg border border-border bg-background/60 px-3 py-2 flex flex-col items-center gap-1 min-w-[56px]">
-          <span className={`text-2xl font-black tabular-nums leading-none ${accentText}`}>{safeIndex + 1}</span>
-          <span className="text-[10px] text-muted-foreground leading-none">of {total}</span>
-          <div className="flex items-center gap-0.5 mt-0.5">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={prev} disabled={safeIndex === 0}>
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={next} disabled={safeIndex === total - 1}>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+    <div className={`rounded-lg border overflow-hidden transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
+      {/* Header band */}
+      <div className={`px-4 py-3 flex items-center justify-between ${headerBand}`}>
+        <span className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest ${accentText}`}>
+          <AlertTriangle className="h-3.5 w-3.5" />
+          {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
+        </span>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-muted-foreground tabular-nums font-medium mr-1">{safeIndex + 1}/{total}</span>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prev} disabled={safeIndex === 0}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={next} disabled={safeIndex === total - 1}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
-      {/* Footer: actions + open link + dots */}
-      <div className="px-4 pb-3 flex items-center justify-between gap-3">
+      {/* Body */}
+      <div className="px-4 py-4 flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-2 min-w-0">
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-sm border w-fit ${chipClass(item.type, item.category)}`}>
+              {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
+            </span>
+            <p className="text-base font-bold leading-snug">{item.name}</p>
+            <p className="text-sm text-muted-foreground">
+              {item.showName}
+              <span className="mx-1.5 opacity-40">•</span>
+              Due {formatDate(item.dueDate)}
+            </p>
+          </div>
+          <Link href={`/shows/${item.showId}?tab=${showTab}`} className="shrink-0">
+            <Button variant="outline" size="sm">Open</Button>
+          </Link>
+        </div>
+
+        {/* Note */}
+        {!isNoteOpen ? (
+          <button
+            onClick={openNote}
+            className="flex items-center gap-1.5 w-full text-left text-sm text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50 group-hover:opacity-80" />
+            <span className="truncate">{currentNote || "Add a note…"}</span>
+          </button>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <Textarea
+              key={key}
+              autoFocus
+              value={currentNote}
+              onChange={e => setNoteDrafts(p => ({ ...p, [key]: e.target.value }))}
+              onBlur={closeNote}
+              placeholder="Add a note…"
+              className="resize-none text-sm min-h-[64px]"
+              rows={2}
+            />
+            {savedFlash[key] && <span className="text-xs text-muted-foreground">Saved</span>}
+          </div>
+        )}
+      </div>
+
+      {/* Footer band */}
+      <div className={`px-4 py-3 flex items-center justify-between gap-3 ${footerBand}`}>
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -433,9 +429,6 @@ export function DashboardTaskSlider() {
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openPomodoro} title="Focus timer">
             <Timer className="h-4 w-4" />
           </Button>
-          <Link href={`/shows/${item.showId}?tab=${showTab}`}>
-            <Button variant="outline" size="sm">Open</Button>
-          </Link>
         </div>
 
         {total > 1 && total <= 10 && (

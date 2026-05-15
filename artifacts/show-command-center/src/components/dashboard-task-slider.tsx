@@ -485,7 +485,7 @@ export function DashboardTaskSlider() {
 
         {/* Left: accent icon */}
         <div className={`rounded-full p-2.5 shrink-0 self-center ${iconRing}`}>
-          <AlertTriangle className={`h-5 w-5 ${accentText}`} />
+          <AlertTriangle className={`h-10 w-10 ${accentText}`} />
         </div>
 
         {/* Content */}

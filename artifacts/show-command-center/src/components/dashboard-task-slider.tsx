@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import {
   ChevronLeft, ChevronRight, ChevronDown,
   Check, Timer, Play, Pause, RotateCcw, ArrowLeft, AlertTriangle, Edit2, Loader2,
-  Flame, Signpost, Briefcase,
+  Flame, Signpost, Briefcase, Warehouse, Globe, DollarSign,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -517,17 +517,17 @@ export function DashboardTaskSlider() {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
             {item.advanceWarehouseDate && (
               <span className="flex items-center gap-1 whitespace-nowrap">
-                Adv. WH:&nbsp;<span className="font-medium text-foreground">{format(parseDateStr(item.advanceWarehouseDate), "M/d")}</span>
+                <Warehouse className="h-3 w-3 shrink-0" /><span className="font-medium text-foreground">{format(parseDateStr(item.advanceWarehouseDate), "M/d")}</span>
               </span>
             )}
             {item.onlineOrderDeadline && (
               <span className="flex items-center gap-1 whitespace-nowrap">
-                Online:&nbsp;<span className="font-medium text-foreground">{format(parseDateStr(item.onlineOrderDeadline), "M/d")}</span>
+                <Globe className="h-3 w-3 shrink-0" /><span className="font-medium text-foreground">{format(parseDateStr(item.onlineOrderDeadline), "M/d")}</span>
               </span>
             )}
             {item.discountDeadline && (
               <span className="flex items-center gap-1 whitespace-nowrap">
-                Disc:&nbsp;<span className="font-medium text-foreground">{format(parseDateStr(item.discountDeadline), "M/d")}</span>
+                <DollarSign className="h-3 w-3 shrink-0" /><span className="font-medium text-foreground">{format(parseDateStr(item.discountDeadline), "M/d")}</span>
               </span>
             )}
           </div>

@@ -351,7 +351,7 @@ export function DashboardTaskSlider() {
   // ── Default slider view ───────────────────────────────────────────────────
   return (
     <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
-      <div className="px-4 pt-4 pb-3 flex items-start gap-4">
+      <div className="px-4 pt-5 pb-4 flex items-start gap-4">
 
         {/* Left: accent icon */}
         <div className={`rounded-full p-2.5 shrink-0 mt-0.5 ${iconRing}`}>
@@ -384,7 +384,7 @@ export function DashboardTaskSlider() {
         </div>
 
         {/* Row 2: task name */}
-        <p className="text-base font-bold leading-snug">{item.name}</p>
+        <p className="text-xl font-bold leading-snug">{item.name}</p>
 
         {/* Row 3: show · due date */}
         <p className="text-sm text-muted-foreground">

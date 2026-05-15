@@ -473,11 +473,6 @@ export function DashboardTaskSlider() {
   }
 
   // ── Default slider view ───────────────────────────────────────────────────
-  const moveInDays = item.moveInDate
-    ? differenceInDays(startOfDay(parseDateStr(item.moveInDate)), startOfDay(new Date()))
-    : null;
-  const moveInUrgency = item.moveInDate ? getUrgencyInfo(item.moveInDate) : null;
-
   return (
     <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
       <div className="px-4 pt-5 pb-4 flex items-start gap-4 min-h-[168px]">
@@ -572,20 +567,7 @@ export function DashboardTaskSlider() {
             </Button>
           </div>
 
-          {/* Days until move-in */}
-          {moveInDays !== null && moveInUrgency ? (
-            <div className="flex flex-col items-center gap-0 leading-none text-center">
-              <span className={`text-3xl font-black tabular-nums tracking-tight ${moveInUrgency.textClass}`}>
-                {Math.abs(moveInDays)}
-              </span>
-              <span className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground">
-                {moveInDays < 0 ? "Days Ago" : "Days"}
-              </span>
-              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/60 mt-0.5">
-                Move-In
-              </span>
-            </div>
-          ) : <div />}
+          <div />
 
           {/* Action buttons */}
           <div className="flex items-center gap-1.5 flex-wrap justify-center">

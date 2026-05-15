@@ -15,7 +15,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
-  CheckCircle2, Clock, Trash2, Edit2,
+  CheckCircle2, Clock, Trash2, Edit2, AlertTriangle,
   Plus, Calendar as CalendarIcon, MessageSquare,
   ChevronDown, ChevronUp, Loader2, Mail
 } from "lucide-react";
@@ -71,10 +71,11 @@ export function EblastList({ show }: { show: Show }) {
   const [sentOpen, setSentOpen] = useState(false);
 
   const grouped = useMemo(() => {
-    if (!eblasts) return { overdue: [], upcoming: [], sent: [] };
-    
+    if (!eblasts) return { overdue: [], dueToday: [], upcoming: [], sent: [] };
+
     const today = startOfDay(new Date());
     const overdue = [];
+    const dueToday = [];
     const upcoming = [];
     const sent = [];
 
@@ -83,14 +84,13 @@ export function EblastList({ show }: { show: Show }) {
         sent.push(e);
         continue;
       }
-      
+
       if (e.dueDate) {
         const dueDate = startOfDay(parseDateStr(e.dueDate));
-        if (differenceInDays(dueDate, today) < 0) {
-          overdue.push(e);
-        } else {
-          upcoming.push(e);
-        }
+        const diff = differenceInDays(dueDate, today);
+        if (diff < 0) overdue.push(e);
+        else if (diff === 0) dueToday.push(e);
+        else upcoming.push(e);
       } else {
         upcoming.push(e);
       }
@@ -107,14 +107,14 @@ export function EblastList({ show }: { show: Show }) {
       if (!b.dueDate) return -1;
       return parseDateStr(a.dueDate).getTime() - parseDateStr(b.dueDate).getTime();
     });
-    
+
     sent.sort((a, b) => {
       if (!a.sentAt) return 1;
       if (!b.sentAt) return -1;
       return new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime();
     });
 
-    return { overdue, upcoming, sent };
+    return { overdue, dueToday, upcoming, sent };
   }, [eblasts]);
 
   const toggleStatus = (id: number, currentSent: boolean) => {
@@ -153,6 +153,20 @@ export function EblastList({ show }: { show: Show }) {
         <AddEblastDialog show={show} />
       </div>
 
+      {grouped.dueToday.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-amber-400 font-semibold uppercase tracking-wider text-sm">
+            <AlertTriangle className="h-4 w-4" />
+            Due Today
+          </div>
+          <div className="grid gap-2 border-amber-500/20 border rounded-lg p-2 bg-amber-500/5">
+            {grouped.dueToday.map(e => (
+              <EblastRow key={e.id} item={e} showId={show.id} onToggle={() => toggleStatus(e.id, e.sent)} onDelete={() => remove(e.id)} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {grouped.overdue.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-red-500 font-semibold uppercase tracking-wider text-sm">
@@ -183,8 +197,8 @@ export function EblastList({ show }: { show: Show }) {
           </div>
         </div>
       )}
-      
-      {grouped.upcoming.length === 0 && grouped.overdue.length === 0 && (
+
+      {grouped.upcoming.length === 0 && grouped.overdue.length === 0 && grouped.dueToday.length === 0 && (
         <div className="text-center py-10 border-2 border-dashed rounded-lg text-muted-foreground">
           No pending eBlasts.
         </div>

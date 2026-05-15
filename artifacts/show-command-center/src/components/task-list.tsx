@@ -18,7 +18,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2, Circle, Clock, Edit2, Trash2,
-  Plus, Calendar as CalendarIcon, MessageSquare, AlertCircle,
+  Plus, Calendar as CalendarIcon, MessageSquare, AlertCircle, AlertTriangle,
   ChevronDown, ChevronUp, Loader2, Filter, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -120,6 +120,7 @@ export function TaskList({ show }: { show: Show }) {
   const groupedTasks = useMemo(() => {
     const today = startOfDay(new Date());
     const overdue: any[] = [];
+    const dueToday: any[] = [];
     const upcoming: any[] = [];
     const completed: any[] = [];
 
@@ -127,7 +128,9 @@ export function TaskList({ show }: { show: Show }) {
       if (t.completed) { completed.push(t); continue; }
       if (t.dueDate) {
         const dueDate = startOfDay(parseDateStr(t.dueDate));
-        if (differenceInDays(dueDate, today) < 0) overdue.push(t);
+        const diff = differenceInDays(dueDate, today);
+        if (diff < 0) overdue.push(t);
+        else if (diff === 0) dueToday.push(t);
         else upcoming.push(t);
       } else {
         upcoming.push(t);
@@ -136,6 +139,7 @@ export function TaskList({ show }: { show: Show }) {
 
     return {
       overdue: applySortToTasks(overdue, sortMode),
+      dueToday: applySortToTasks(dueToday, sortMode),
       upcoming: applySortToTasks(upcoming, sortMode),
       completed: completed.sort((a, b) => {
         if (!a.completedAt) return 1;
@@ -281,6 +285,20 @@ export function TaskList({ show }: { show: Show }) {
 
       {groupMode === "status" && (
         <div className="space-y-8">
+          {groupedTasks.dueToday.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-semibold uppercase tracking-wider text-sm">
+                <AlertTriangle className="h-4 w-4" />
+                Due Today
+              </div>
+              <div className="grid gap-2 border-amber-500/20 border rounded-lg p-2 bg-amber-500/5">
+                {groupedTasks.dueToday.map(t => (
+                  <TaskRow key={t.id} task={t} showId={show.id} onToggle={() => toggleTask(t.id, t.completed)} onDelete={() => removeTask(t.id)} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {groupedTasks.overdue.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-red-500 font-semibold uppercase tracking-wider text-sm">
@@ -312,7 +330,7 @@ export function TaskList({ show }: { show: Show }) {
             </div>
           )}
 
-          {groupedTasks.upcoming.length === 0 && groupedTasks.overdue.length === 0 && (
+          {groupedTasks.upcoming.length === 0 && groupedTasks.overdue.length === 0 && groupedTasks.dueToday.length === 0 && (
             <div className="text-center py-10 border-2 border-dashed rounded-lg text-muted-foreground">
               {filterCategories.length > 0 ? "No pending tasks match the active filter." : "No pending tasks."}
             </div>

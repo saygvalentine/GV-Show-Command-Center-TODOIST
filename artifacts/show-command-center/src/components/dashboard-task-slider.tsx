@@ -559,14 +559,14 @@ export function DashboardTaskSlider() {
 
         {/* Right panel: nav · days counter · action buttons — stacked vertically */}
         <div className="w-px self-stretch bg-border/50 shrink-0 mx-1" />
-        <div className="flex flex-col items-center justify-between shrink-0 gap-2">
+        <div className="flex flex-col items-center justify-between shrink-0 gap-2 w-[200px]">
 
-          {/* Nav arrows */}
-          <div className="flex items-center gap-0.5">
+          {/* Nav arrows — full width */}
+          <div className="flex items-center justify-between w-full">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prev} disabled={safeIndex === 0}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-xs text-muted-foreground tabular-nums font-medium px-1 select-none whitespace-nowrap">
+            <span className="text-xs text-muted-foreground tabular-nums font-medium select-none whitespace-nowrap">
               {safeIndex + 1} of {total}
             </span>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={next} disabled={safeIndex === total - 1}>
@@ -574,9 +574,9 @@ export function DashboardTaskSlider() {
             </Button>
           </div>
 
-          {/* Days until move-in box */}
+          {/* Days until move-in box — full width */}
           {moveInDays !== null && moveInUrgency && (
-            <div className={`flex flex-col items-center gap-0 leading-none text-center px-3 py-1.5 rounded-lg border ${
+            <div className={`flex flex-col items-center gap-0 leading-none text-center py-2 rounded-lg border w-full ${
               isToday ? "border-amber-500/40 bg-amber-500/[0.06]" : "border-red-500/40 bg-red-500/[0.06]"
             }`}>
               <span className={`text-3xl font-black tabular-nums tracking-tight ${moveInUrgency.textClass}`}>
@@ -594,17 +594,17 @@ export function DashboardTaskSlider() {
             </div>
           )}
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-1.5 flex-wrap justify-center">
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={openPomodoro} title="Pomodoro timer">
+          {/* Action buttons — full width */}
+          <div className="flex items-center gap-1.5 justify-between w-full">
+            <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={openPomodoro} title="Pomodoro timer">
               <Timer className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setEditOpen(true)} title="Edit">
+            <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditOpen(true)} title="Edit">
               <Edit2 className="h-3.5 w-3.5" />
             </Button>
             <Button
               size="sm"
-              className={`gap-1.5 ${completeBtn}`}
+              className={`gap-1.5 flex-1 ${completeBtn}`}
               onClick={markComplete}
               disabled={isCompleting}
             >

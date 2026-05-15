@@ -1361,6 +1361,18 @@ components:
           type: string
           format: date
           nullable: true
+        advanceWarehouseDate:
+          type: string
+          format: date
+          nullable: true
+        onlineOrderDeadline:
+          type: string
+          format: date
+          nullable: true
+        discountDeadline:
+          type: string
+          format: date
+          nullable: true
 
     GcalCalendar:
       type: object

@@ -513,7 +513,26 @@ export function DashboardTaskSlider() {
             Due {formatDate(item.dueDate)}
           </p>
 
-          {/* Row 3b: key deadlines */}
+          {/* Row 3b: warehouse / online / discount deadlines */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+            {item.advanceWarehouseDate && (
+              <span className="flex items-center gap-1 whitespace-nowrap">
+                Adv. WH:&nbsp;<span className="font-medium text-foreground">{format(parseDateStr(item.advanceWarehouseDate), "M/d")}</span>
+              </span>
+            )}
+            {item.onlineOrderDeadline && (
+              <span className="flex items-center gap-1 whitespace-nowrap">
+                Online:&nbsp;<span className="font-medium text-foreground">{format(parseDateStr(item.onlineOrderDeadline), "M/d")}</span>
+              </span>
+            )}
+            {item.discountDeadline && (
+              <span className="flex items-center gap-1 whitespace-nowrap">
+                Disc:&nbsp;<span className="font-medium text-foreground">{format(parseDateStr(item.discountDeadline), "M/d")}</span>
+              </span>
+            )}
+          </div>
+
+          {/* Row 3c: FM / ID Signs / Bucket deadlines */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1 whitespace-nowrap">
               <Flame className="h-3 w-3 shrink-0" />FM:&nbsp;<span className="font-medium text-foreground">{item.fmDeadlineDate ? format(parseDateStr(item.fmDeadlineDate), "M/d") : "N/A"}</span>

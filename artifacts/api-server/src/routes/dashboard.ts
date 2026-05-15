@@ -22,6 +22,9 @@ router.get("/overdue", async (req, res): Promise<void> => {
     fmDeadlineDate: s.fmDeadlineDate ?? null,
     idSignDeadlineDate: s.idSignDeadlineDate ?? null,
     bucketDueDate: s.bucketDueDate ?? null,
+    advanceWarehouseDate: s.advanceWarehouseDate ?? null,
+    onlineOrderDeadline: s.onlineOrderDeadline ?? null,
+    discountDeadline: s.discountDeadline ?? null,
   }]));
 
   const items: {
@@ -38,6 +41,9 @@ router.get("/overdue", async (req, res): Promise<void> => {
     fmDeadlineDate: string | null;
     idSignDeadlineDate: string | null;
     bucketDueDate: string | null;
+    advanceWarehouseDate: string | null;
+    onlineOrderDeadline: string | null;
+    discountDeadline: string | null;
   }[] = [];
 
   for (const task of allTasks) {
@@ -56,6 +62,9 @@ router.get("/overdue", async (req, res): Promise<void> => {
         fmDeadlineDate: showMap[task.showId]?.fmDeadlineDate ?? null,
         idSignDeadlineDate: showMap[task.showId]?.idSignDeadlineDate ?? null,
         bucketDueDate: showMap[task.showId]?.bucketDueDate ?? null,
+        advanceWarehouseDate: showMap[task.showId]?.advanceWarehouseDate ?? null,
+        onlineOrderDeadline: showMap[task.showId]?.onlineOrderDeadline ?? null,
+        discountDeadline: showMap[task.showId]?.discountDeadline ?? null,
       });
     }
   }
@@ -76,6 +85,9 @@ router.get("/overdue", async (req, res): Promise<void> => {
         fmDeadlineDate: showMap[eblast.showId]?.fmDeadlineDate ?? null,
         idSignDeadlineDate: showMap[eblast.showId]?.idSignDeadlineDate ?? null,
         bucketDueDate: showMap[eblast.showId]?.bucketDueDate ?? null,
+        advanceWarehouseDate: showMap[eblast.showId]?.advanceWarehouseDate ?? null,
+        onlineOrderDeadline: showMap[eblast.showId]?.onlineOrderDeadline ?? null,
+        discountDeadline: showMap[eblast.showId]?.discountDeadline ?? null,
       });
     }
   }

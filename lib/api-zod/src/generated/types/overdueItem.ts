@@ -21,4 +21,7 @@ export interface OverdueItem {
   fmDeadlineDate?: Date | null;
   idSignDeadlineDate?: Date | null;
   bucketDueDate?: Date | null;
+  advanceWarehouseDate?: Date | null;
+  onlineOrderDeadline?: Date | null;
+  discountDeadline?: Date | null;
 }

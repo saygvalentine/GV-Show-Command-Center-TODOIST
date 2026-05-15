@@ -262,6 +262,9 @@ export interface OverdueItem {
   fmDeadlineDate?: string | null;
   idSignDeadlineDate?: string | null;
   bucketDueDate?: string | null;
+  advanceWarehouseDate?: string | null;
+  onlineOrderDeadline?: string | null;
+  discountDeadline?: string | null;
 }
 
 export interface GcalCalendar {

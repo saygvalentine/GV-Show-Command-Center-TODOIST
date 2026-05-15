@@ -676,6 +676,9 @@ export const GetOverdueItemsResponseItem = zod.object({
   fmDeadlineDate: zod.coerce.date().nullish(),
   idSignDeadlineDate: zod.coerce.date().nullish(),
   bucketDueDate: zod.coerce.date().nullish(),
+  advanceWarehouseDate: zod.coerce.date().nullish(),
+  onlineOrderDeadline: zod.coerce.date().nullish(),
+  discountDeadline: zod.coerce.date().nullish(),
 });
 export const GetOverdueItemsResponse = zod.array(GetOverdueItemsResponseItem);
 

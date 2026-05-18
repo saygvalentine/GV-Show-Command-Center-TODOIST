@@ -26,8 +26,7 @@
     "frontend-design-plugin": 3,
     "goal-command-nudge": 5,
     "custom-agents": 6,
-    "guest-passes": 6,
-    "feedback-command": 6
+    "guest-passes": 6
   },
   "promptQueueUseCount": 1,
   "cachedGrowthBookFeatures": {

@@ -25,9 +25,7 @@
     "color-when-multi-clauding": 3,
     "frontend-design-plugin": 3,
     "goal-command-nudge": 5,
-    "custom-agents": 6,
-    "guest-passes": 6,
-    "feedback-command": 6
+    "custom-agents": 6
   },
   "promptQueueUseCount": 1,
   "cachedGrowthBookFeatures": {

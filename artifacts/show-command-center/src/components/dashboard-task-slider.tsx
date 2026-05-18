@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import {
-  ChevronLeft, ChevronRight, ChevronDown,
+  ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Check, Timer, Play, Pause, RotateCcw, ArrowLeft, AlertTriangle, Edit2, Loader2,
   Flame, Signpost, Briefcase, Warehouse, Globe, DollarSign,
 } from "lucide-react";
@@ -20,7 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -189,6 +191,7 @@ export function DashboardTaskSlider() {
   const [completing, setCompleting] = useState<Record<string, boolean>>({});
   const [noteOpen, setNoteOpen] = useState<Record<string, boolean>>({});
   const [editOpen, setEditOpen] = useState(false);
+  const [overdueOpen, setOverdueOpen] = useState(false);
 
   // Pomodoro state
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -206,6 +209,11 @@ export function DashboardTaskSlider() {
       .filter(i => i.daysOverdue > 0)
       .sort((a, b) => b.daysOverdue - a.daysOverdue);
     return [...dueToday, ...overdue];
+  }, [rawItems]);
+
+  const overdueItems = useMemo(() => {
+    if (!rawItems) return [];
+    return [...rawItems].sort((a, b) => b.daysOverdue - a.daysOverdue);
   }, [rawItems]);
 
   // Seed note drafts when items load
@@ -397,11 +405,18 @@ export function DashboardTaskSlider() {
     ? "bg-amber-500/20 border-b border-amber-500/35"
     : "bg-red-500/20 border-b border-red-500/35";
 
-  // ── Pomodoro view ─────────────────────────────────────────────────────────
-  if (pomodoroOpen) {
-    return (
-      <div className={`rounded-xl border ${outerBorder}`}>
-        <div className="px-4 pt-4 pb-4 flex flex-col gap-2 min-h-[168px] justify-between">
+  // ── Default slider view ───────────────────────────────────────────────────
+  const moveInDays = item.moveInDate
+    ? differenceInDays(startOfDay(parseDateStr(item.moveInDate)), startOfDay(new Date()))
+    : null;
+  const moveInUrgency = item.moveInDate ? getUrgencyInfo(item.moveInDate) : null;
+
+  return (
+    <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
+
+      {/* ── Pomodoro view ──────────────────────────────────────────────────── */}
+      {pomodoroOpen ? (
+        <div className="px-6 pt-6 pb-5 flex flex-col gap-2 min-h-[185px] justify-between">
 
           {/* Row 1: Back (left) · chip (true center) · Focus Timer (right) */}
           <div className="relative flex items-center">
@@ -423,7 +438,7 @@ export function DashboardTaskSlider() {
 
           {/* Row 3: timer readout — centered */}
           <div className="flex flex-col items-center gap-0.5">
-            <span className={`text-3xl font-black tabular-nums tracking-tight ${selectedPreset !== null ? accentText : "text-muted-foreground/30"}`}>
+            <span className={`text-5xl font-black tabular-nums tracking-tight ${selectedPreset !== null ? accentText : "text-muted-foreground/30"}`}>
               {selectedPreset !== null ? formatTime(timeLeft) : "--:--"}
             </span>
             {timesUp && <span className={`text-xs font-semibold ${accentText}`}>Time's up!</span>}
@@ -469,169 +484,206 @@ export function DashboardTaskSlider() {
           </div>
 
         </div>
-      </div>
-    );
-  }
+      ) : (
+        /* ── Slider view ───────────────────────────────────────────────────── */
+        <div className="px-6 pt-6 pb-5 flex items-start gap-6 min-h-[185px]">
 
-  // ── Default slider view ───────────────────────────────────────────────────
-  const moveInDays = item.moveInDate
-    ? differenceInDays(startOfDay(parseDateStr(item.moveInDate)), startOfDay(new Date()))
-    : null;
-  const moveInUrgency = item.moveInDate ? getUrgencyInfo(item.moveInDate) : null;
-
-  return (
-    <div className={`rounded-xl border transition-opacity duration-300 ${isCompleting ? "opacity-40 pointer-events-none" : ""} ${outerBorder}`}>
-      <div className="px-6 pt-6 pb-5 flex items-start gap-6 min-h-[185px]">
-
-        {/* Left: accent icon */}
-        <div className={`rounded-full p-3.5 shrink-0 self-center ${iconRing}`}>
-          <AlertTriangle className={`h-10 w-10 ${accentText}`} />
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2.5">
-
-          {/* Row 1: urgency label + category chip */}
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-bold uppercase tracking-widest shrink-0 ${accentText}`}>
-              {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
-            </span>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border shrink-0 ${chipClass(item.type, item.category)}`}>
-              {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
-            </span>
+          {/* Left: accent icon */}
+          <div className={`rounded-full p-3.5 shrink-0 self-center ${iconRing}`}>
+            <AlertTriangle className={`h-10 w-10 ${accentText}`} />
           </div>
 
-          {/* Row 2: task name — clickable link to show detail */}
-          <Link href={`/shows/${item.showId}?tab=${showTab}`}>
-            <p className="text-xl font-bold leading-snug hover:underline cursor-pointer">{item.name}</p>
-          </Link>
+          {/* Content */}
+          <div className="flex-1 min-w-0 flex flex-col gap-2.5">
 
-          {/* Row 3: show · due date */}
-          <p className="text-sm text-muted-foreground">
-            {item.showName}
-            <span className="mx-1.5 opacity-40">•</span>
-            Due {formatDate(item.dueDate)}
-          </p>
-
-          {/* Row 3b: all 6 deadlines on one line */}
-          <div className="flex items-center gap-0 text-[11px] text-muted-foreground overflow-hidden">
-            {[
-              { icon: <Warehouse className="h-3 w-3 shrink-0" />, date: item.advanceWarehouseDate },
-              { icon: <DollarSign className="h-3 w-3 shrink-0" />, date: item.discountDeadline },
-              { icon: <Globe className="h-3 w-3 shrink-0" />, date: item.onlineOrderDeadline },
-              { icon: <Flame className="h-3 w-3 shrink-0" />, date: item.fmDeadlineDate },
-              { icon: <Signpost className="h-3 w-3 shrink-0" />, date: item.idSignDeadlineDate },
-              { icon: <Briefcase className="h-3 w-3 shrink-0" />, date: item.bucketDueDate },
-            ].map((d, i) => (
-              <span key={i} className="flex items-center whitespace-nowrap">
-                {i > 0 && i !== 3 && <span className="mx-1.5 opacity-40">|</span>}
-                {i === 3 && <span className="mx-2 opacity-70 font-bold text-sm">|</span>}
-                {d.icon}
-                <span className="ml-1 font-medium text-foreground">
-                  {d.date ? format(parseDateStr(d.date), "M/d") : "N/A"}
-                </span>
+            {/* Row 1: urgency label + category chip */}
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-bold uppercase tracking-widest shrink-0 ${accentText}`}>
+                {isToday ? "Due Today" : `${item.daysOverdue} ${item.daysOverdue === 1 ? "Day" : "Days"} Overdue`}
               </span>
-            ))}
-          </div>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border shrink-0 ${chipClass(item.type, item.category)}`}>
+                {item.type === "eblast" ? "E-Blast" : (item.category ?? "Task")}
+              </span>
+            </div>
 
-          {/* Row 4: note */}
-          <div className="flex-1 min-w-0">
-            {!isNoteOpen ? (
-              <button
-                onClick={openNote}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group"
-              >
-                <ChevronDown className="h-3 w-3 shrink-0 opacity-50 group-hover:opacity-80" />
-                <span className="truncate">{currentNote || "Add a note…"}</span>
-              </button>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <Textarea
-                  key={key}
-                  autoFocus
-                  value={currentNote}
-                  onChange={e => setNoteDrafts(p => ({ ...p, [key]: e.target.value }))}
-                  onBlur={closeNote}
-                  placeholder="Add a note…"
-                  className="resize-none text-xs min-h-[48px]"
-                  rows={2}
-                />
-                {savedFlash[key] && <span className="text-xs text-muted-foreground">Saved</span>}
-              </div>
-            )}
-          </div>
+            {/* Row 2: task name — clickable link to show detail */}
+            <Link href={`/shows/${item.showId}?tab=${showTab}`}>
+              <p className="text-xl font-bold leading-snug hover:underline cursor-pointer">{item.name}</p>
+            </Link>
 
-          {/* Pagination dots */}
-          {total > 1 && total <= 10 && (
-            <div className="flex items-center gap-1">
-              {items.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setIndex(i)}
-                  className={`rounded-full transition-all ${
-                    i === safeIndex
-                      ? `h-1.5 w-4 ${isToday ? "bg-amber-400" : "bg-red-400"}`
-                      : "h-1.5 w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  }`}
-                />
+            {/* Row 3: show · due date */}
+            <p className="text-sm text-muted-foreground">
+              {item.showName}
+              <span className="mx-1.5 opacity-40">•</span>
+              Due {formatDate(item.dueDate)}
+            </p>
+
+            {/* Row 3b: all 6 deadlines on one line */}
+            <div className="flex items-center gap-0 text-[11px] text-muted-foreground overflow-hidden">
+              {[
+                { icon: <Warehouse className="h-3 w-3 shrink-0" />, date: item.advanceWarehouseDate },
+                { icon: <DollarSign className="h-3 w-3 shrink-0" />, date: item.discountDeadline },
+                { icon: <Globe className="h-3 w-3 shrink-0" />, date: item.onlineOrderDeadline },
+                { icon: <Flame className="h-3 w-3 shrink-0" />, date: item.fmDeadlineDate },
+                { icon: <Signpost className="h-3 w-3 shrink-0" />, date: item.idSignDeadlineDate },
+                { icon: <Briefcase className="h-3 w-3 shrink-0" />, date: item.bucketDueDate },
+              ].map((d, i) => (
+                <span key={i} className="flex items-center whitespace-nowrap">
+                  {i > 0 && i !== 3 && <span className="mx-1.5 opacity-40">|</span>}
+                  {i === 3 && <span className="mx-2 opacity-70 font-bold text-sm">|</span>}
+                  {d.icon}
+                  <span className="ml-1 font-medium text-foreground">
+                    {d.date ? format(parseDateStr(d.date), "M/d") : "N/A"}
+                  </span>
+                </span>
               ))}
             </div>
-          )}
-        </div>{/* /content */}
 
-        {/* Right panel: nav · days counter · action buttons — stacked vertically */}
-        <div className="w-px self-stretch bg-border/50 shrink-0 mx-1" />
-        <div className="flex flex-col items-center justify-between shrink-0 gap-2 w-[200px]">
-
-          {/* Nav arrows — full width */}
-          <div className="flex items-center justify-between w-full">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prev} disabled={safeIndex === 0}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs text-muted-foreground tabular-nums font-medium select-none whitespace-nowrap">
-              {safeIndex + 1} of {total}
-            </span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={next} disabled={safeIndex === total - 1}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Days until move-in box — full width */}
-          {moveInDays !== null && moveInUrgency && (
-            <div className={`flex flex-col items-center gap-0 leading-none text-center py-2 rounded-lg border w-full ${
-              isToday ? "border-amber-500/40 bg-amber-500/[0.06]" : "border-red-500/40 bg-red-500/[0.06]"
-            }`}>
-              <span className={`text-4xl font-black tabular-nums tracking-tight ${moveInUrgency.textClass}`}>
-                {Math.abs(moveInDays)}
-              </span>
-              <span className="text-xs uppercase font-semibold tracking-wider text-muted-foreground">
-                {moveInDays < 0 ? "Days Ago" : "Days"}
-              </span>
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mt-0.5">Move-In</span>
+            {/* Row 4: note */}
+            <div className="flex-1 min-w-0">
+              {!isNoteOpen ? (
+                <button
+                  onClick={openNote}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+                >
+                  <ChevronDown className="h-3 w-3 shrink-0 opacity-50 group-hover:opacity-80" />
+                  <span className="truncate">{currentNote || "Add a note…"}</span>
+                </button>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <Textarea
+                    key={key}
+                    autoFocus
+                    value={currentNote}
+                    onChange={e => setNoteDrafts(p => ({ ...p, [key]: e.target.value }))}
+                    onBlur={closeNote}
+                    placeholder="Add a note…"
+                    className="resize-none text-xs min-h-[48px]"
+                    rows={2}
+                  />
+                  {savedFlash[key] && <span className="text-xs text-muted-foreground">Saved</span>}
+                </div>
+              )}
             </div>
-          )}
 
-          {/* Action buttons — full width */}
-          <div className="flex items-center gap-1.5 justify-between w-full">
-            <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={openPomodoro} title="Pomodoro timer">
-              <Timer className="h-3.5 w-3.5" />
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditOpen(true)} title="Edit">
-              <Edit2 className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              size="sm"
-              className={`gap-1.5 flex-1 ${completeBtn}`}
-              onClick={markComplete}
-              disabled={isCompleting}
-            >
-              <Check className="h-3.5 w-3.5" />
-              {completionLabel}
-            </Button>
+            {/* Pagination dots */}
+            {total > 1 && total <= 10 && (
+              <div className="flex items-center gap-1">
+                {items.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setIndex(i)}
+                    className={`rounded-full transition-all ${
+                      i === safeIndex
+                        ? `h-1.5 w-4 ${isToday ? "bg-amber-400" : "bg-red-400"}`
+                        : "h-1.5 w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>{/* /content */}
+
+          {/* Right panel: nav · days counter · action buttons — stacked vertically */}
+          <div className="w-px self-stretch bg-border/50 shrink-0 mx-1" />
+          <div className="flex flex-col items-center justify-between shrink-0 gap-2 w-[200px]">
+
+            {/* Nav arrows — full width */}
+            <div className="flex items-center justify-between w-full">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={prev} disabled={safeIndex === 0}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-xs text-muted-foreground tabular-nums font-medium select-none whitespace-nowrap">
+                {safeIndex + 1} of {total}
+              </span>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={next} disabled={safeIndex === total - 1}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Days until move-in box — full width */}
+            {moveInDays !== null && moveInUrgency && (
+              <div className={`flex flex-col items-center gap-0 leading-none text-center py-2 rounded-lg border w-full ${
+                isToday ? "border-amber-500/40 bg-amber-500/[0.06]" : "border-red-500/40 bg-red-500/[0.06]"
+              }`}>
+                <span className={`text-4xl font-black tabular-nums tracking-tight ${moveInUrgency.textClass}`}>
+                  {Math.abs(moveInDays)}
+                </span>
+                <span className="text-xs uppercase font-semibold tracking-wider text-muted-foreground">
+                  {moveInDays < 0 ? "Days Ago" : "Days"}
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mt-0.5">Move-In</span>
+              </div>
+            )}
+
+            {/* Action buttons — full width */}
+            <div className="flex items-center gap-1.5 justify-between w-full">
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={openPomodoro} title="Pomodoro timer">
+                <Timer className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditOpen(true)} title="Edit">
+                <Edit2 className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                className={`gap-1.5 flex-1 ${completeBtn}`}
+                onClick={markComplete}
+                disabled={isCompleting}
+              >
+                <Check className="h-3.5 w-3.5" />
+                {completionLabel}
+              </Button>
+            </div>
+
+          </div>{/* /right panel */}
+        </div>
+      )}
+
+      {/* ── Overdue bar ─────────────────────────────────────────────────────── */}
+      <div className="border-t border-border/50" />
+      <Collapsible open={overdueOpen} onOpenChange={setOverdueOpen}>
+        <div className="px-4 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+            <span className="text-sm font-semibold">Overdue</span>
+            <Badge variant="destructive" className="h-5 px-1.5 text-xs">{overdueItems.length}</Badge>
           </div>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 px-2 gap-1">
+              {overdueOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              <span className="text-xs">{overdueOpen ? "Hide" : "Show"}</span>
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent>
+          <div className="divide-y border-t border-border/30 pb-2">
+            {overdueItems.map(oi => (
+              <Link
+                key={`${oi.type}-${oi.id}`}
+                href={`/shows/${oi.showId}?tab=${oi.type === "eblast" ? "eblasts" : "tasks"}`}
+                className="flex items-center justify-between gap-3 px-4 py-2 group hover:bg-muted/40 transition-colors"
+              >
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded border ${chipClass(oi.type, oi.category)}`}>
+                      {oi.type === "eblast" ? "E-Blast" : (oi.category ?? "Task")}
+                    </span>
+                    <span className="text-sm truncate group-hover:text-primary transition-colors">{oi.name}</span>
+                    <span className="hidden sm:inline shrink-0 text-xs text-muted-foreground">— {oi.showName}</span>
+                  </div>
+                  {oi.notes && (
+                    <p className="text-xs text-muted-foreground pl-1 truncate">{oi.notes}</p>
+                  )}
+                </div>
+                <span className={`shrink-0 text-xs font-semibold whitespace-nowrap ${oi.daysOverdue === 0 ? "text-amber-400" : "text-red-400"}`}>
+                  {oi.daysOverdue === 0 ? "due today" : `${oi.daysOverdue === 1 ? "1 day" : `${oi.daysOverdue} days`} ago`}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
-        </div>{/* /right panel */}
-      </div>
       <EditItemDialog
         item={item}
         open={editOpen}

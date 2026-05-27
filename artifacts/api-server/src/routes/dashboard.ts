@@ -146,13 +146,12 @@ router.get("/summary", async (req, res): Promise<void> => {
     let fireMarshalStatus = null;
     let fireMarshalDate = null;
     if (fireMarshalTasks.length > 0) {
-      const allDone = fireMarshalTasks.every((t) => t.completed);
-      fireMarshalStatus = allDone ? "Submitted" : "In Progress";
-      if (allDone) {
-        const lastDone = fireMarshalTasks.filter((t) => t.completedAt).sort(
-          (a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime()
-        )[0];
-        fireMarshalDate = lastDone?.completedAt?.toISOString() ?? null;
+      const keyFmTask = fireMarshalTasks.find((t) => t.name === "Submit To FM/EC");
+      if (keyFmTask?.completed) {
+        fireMarshalStatus = "Submitted";
+        fireMarshalDate = keyFmTask.completedAt?.toISOString() ?? null;
+      } else {
+        fireMarshalStatus = "In Progress";
       }
     }
 
@@ -160,13 +159,10 @@ router.get("/summary", async (req, res): Promise<void> => {
     let idSignStatus = null;
     let idSignDate = null;
     if (idSignTasks.length > 0) {
-      const allDone = idSignTasks.every((t) => t.completed);
-      if (allDone) {
+      const keyIdTask = idSignTasks.find((t) => t.name === "Submit Order");
+      if (keyIdTask?.completed) {
         idSignStatus = "Ordered";
-        const lastDone = idSignTasks
-          .filter((t) => t.completedAt)
-          .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())[0];
-        idSignDate = lastDone?.completedAt?.toISOString() ?? null;
+        idSignDate = keyIdTask.completedAt?.toISOString() ?? null;
       } else {
         idSignStatus = "In Progress";
       }

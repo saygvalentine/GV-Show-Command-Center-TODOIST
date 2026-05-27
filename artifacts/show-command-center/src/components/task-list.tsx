@@ -19,7 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2, Circle, Clock, Edit2, Trash2,
   Plus, Calendar as CalendarIcon, MessageSquare, AlertCircle, AlertTriangle,
-  ChevronDown, ChevronUp, Loader2, Filter, X
+  ChevronDown, ChevronUp, Loader2, Filter, X, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -404,6 +404,15 @@ export function TaskList({ show }: { show: Show }) {
   );
 }
 
+const KEY_TASKS: { category: string; name: string }[] = [
+  { category: "Fire Marshal", name: "Submit To FM/EC" },
+  { category: "ID Sign", name: "Submit Order" },
+];
+
+function isKeyTask(task: any) {
+  return KEY_TASKS.some((k) => k.category === task.category && k.name === task.name);
+}
+
 const editTaskSchema = z.object({
   name: z.string().min(1, "Name is required"),
   category: z.string().optional(),
@@ -495,6 +504,9 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
+            {isKeyTask(task) && (
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 shrink-0" />
+            )}
             <span className={`relative font-medium transition-colors duration-500 ${task.completed ? 'text-muted-foreground' : ''}`}>
               {task.name}
               <span
@@ -559,11 +571,13 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit}>
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
+            {!isKeyTask(task) && (
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit}>
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+            )}
             <DialogContent className="max-w-md" aria-describedby={undefined}>
               <DialogHeader>
                 <DialogTitle>Edit Task</DialogTitle>
@@ -641,7 +655,7 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
             </DialogContent>
           </Dialog>
 
-          <AlertDialog>
+          {!isKeyTask(task) && <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
                 <Trash2 className="h-4 w-4" />
@@ -661,7 +675,7 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
-          </AlertDialog>
+          </AlertDialog>}
         </div>
       </div>
 

@@ -571,47 +571,49 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            {!isKeyTask(task) && (
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit}>
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-            )}
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
             <DialogContent className="max-w-md" aria-describedby={undefined}>
               <DialogHeader>
                 <DialogTitle>Edit Task</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Task Name *</FormLabel>
-                        <FormControl><Input {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-2 gap-4">
+                  {!isKeyTask(task) && (
                     <FormField
                       control={form.control}
-                      name="category"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="None" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                              <SelectItem value="none">None</SelectItem>
-                              {PRESET_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Task Name *</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
+                  )}
+                  <div className={!isKeyTask(task) ? "grid grid-cols-2 gap-4" : ""}>
+                    {!isKeyTask(task) && (
+                      <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="None" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">None</SelectItem>
+                                {PRESET_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    )}
                     <FormField
                       control={form.control}
                       name="dueDate"
@@ -623,26 +625,30 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
                       )}
                     />
                   </div>
-                  <FormField
-                    control={form.control}
-                    name="dueDateRule"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Due Date Rule</FormLabel>
-                        <FormControl><Input placeholder="e.g. 30 cal days before move-in" {...field} /></FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notes</FormLabel>
-                        <FormControl><Textarea className="resize-none" rows={3} {...field} /></FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  {!isKeyTask(task) && (
+                    <FormField
+                      control={form.control}
+                      name="dueDateRule"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Due Date Rule</FormLabel>
+                          <FormControl><Input placeholder="e.g. 30 cal days before move-in" {...field} /></FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  {!isKeyTask(task) && (
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notes</FormLabel>
+                          <FormControl><Textarea className="resize-none" rows={3} {...field} /></FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   <div className="flex justify-end gap-2 pt-2">
                     <Button variant="outline" type="button" onClick={() => setEditOpen(false)}>Cancel</Button>
                     <Button type="submit" disabled={updateTask.isPending}>

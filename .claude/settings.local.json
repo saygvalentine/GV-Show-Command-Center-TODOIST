@@ -20,9 +20,15 @@
       "mcp__testsprite__testsprite_generate_code_summary",
       "mcp__testsprite__testsprite_generate_standardized_prd",
       "mcp__testsprite__testsprite_generate_frontend_test_plan",
-      "mcp__testsprite__testsprite_generate_code_and_execute"
+      "mcp__testsprite__testsprite_generate_code_and_execute",
+      "Read(//root/**)",
+      "Read(//home/runner/**)"
     ]
   },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "testsprite"
+  ],
   "hooks": {
     "PostToolUse": [
       {
@@ -35,9 +41,5 @@
         ]
       }
     ]
-  },
-  "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "testsprite"
-  ]
+  }
 }

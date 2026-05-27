@@ -3,7 +3,7 @@
   "installMethod": "global",
   "tipsHistory": {
     "new-user-warmup": 4,
-    "plan-mode-for-complex-tasks": 8,
+    "plan-mode-for-complex-tasks": 1,
     "memory-command": 1,
     "theme-command": 1,
     "default-permission-mode-config": 1,

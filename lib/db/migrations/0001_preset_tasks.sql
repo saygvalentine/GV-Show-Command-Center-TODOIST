@@ -11,7 +11,7 @@ CREATE TABLE "preset_tasks" (
 --> statement-breakpoint
 INSERT INTO "preset_tasks" ("name", "category", "due_date_offset", "due_date_unit", "due_date_direction", "due_date_anchor") VALUES
   ('Initial Contact Account Executive', 'Fire Marshal', 60, 'cal', 'before', 'moveInDate'),
-  ('Submit To FM/EC', 'Fire Marshal', 30, 'biz', 'before', 'moveInDate'),
+  ('Check In / Submit', 'Fire Marshal', 30, 'biz', 'before', 'moveInDate'),
   ('Hard Deadline', 'Fire Marshal', 30, 'cal', 'before', 'moveInDate'),
   ('Contact Client / Give Deadline', 'ID Sign', 30, 'cal', 'before', 'moveInDate'),
   ('ID Sign Deadline', 'ID Sign', 12, 'biz', 'before', 'moveInDate'),

@@ -572,9 +572,15 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit}>
-                <Edit2 className="h-4 w-4" />
-              </Button>
+              {isKeyTask(task) ? (
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit} title="Edit due date">
+                  <CalendarIcon className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openEdit}>
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              )}
             </DialogTrigger>
             <DialogContent className="max-w-md" aria-describedby={undefined}>
               <DialogHeader>

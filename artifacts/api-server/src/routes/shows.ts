@@ -89,7 +89,12 @@ function computeShowStats(
 
   // Specific task due dates for the summary line
   const fmDeadlineTask = tasks.find((t) => t.name === "Hard Deadline" && t.category === "Fire Marshal");
-  const idSignDeadlineTask = tasks.find((t) => t.name === "ID Sign Deadline" && t.category === "ID Sign");
+  // Falls back to the key task's due date for shows/configs where the
+  // separate "ID Sign Deadline" preset isn't used and only the submit
+  // task tracks a due date.
+  const idSignDeadlineTask =
+    tasks.find((t) => t.name === "ID Sign Deadline" && t.category === "ID Sign") ??
+    idSignTasks.find((t) => t.name === "Submit ID Sign Order");
   const bucketDueDateTask = tasks.find((t) => t.name === "Bucket Due Date" && t.category === "Show Bucket");
 
   return {

@@ -31,10 +31,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit2, Trash2, Check, X, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Edit2, Trash2, Check, X, Loader2, ChevronDown, ChevronRight, Star } from "lucide-react";
 import { getCategoryColor } from "@/lib/date-utils";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleCalendarSettings } from "@/components/google-calendar-settings";
+import { isKeyTask } from "@/components/task-list";
 
 const PRESET_CATEGORIES = [
   "Fire Marshal",
@@ -282,7 +283,12 @@ function CategorySection({
               className="group flex items-center justify-between gap-3 px-3 py-2 rounded-md border bg-card hover:border-primary/30 transition-colors"
             >
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium">{preset.name}</span>
+                <span className="text-sm font-medium inline-flex items-center gap-1">
+                  {isKeyTask({ category: preset.category, name: preset.name }) && (
+                    <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />
+                  )}
+                  {preset.name}
+                </span>
                 <span className="ml-3 text-xs text-muted-foreground italic">
                   {ruleLabel(preset)}
                 </span>

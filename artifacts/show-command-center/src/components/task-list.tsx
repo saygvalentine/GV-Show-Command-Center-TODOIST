@@ -404,13 +404,13 @@ export function TaskList({ show }: { show: Show }) {
   );
 }
 
-const KEY_TASKS: { category: string; name: string }[] = [
+export const KEY_TASKS: { category: string; name: string }[] = [
   { category: "Fire Marshal", name: "Submit To FM/EC" },
   { category: "ID Sign", name: "Submit ID Sign Order" },
   { category: "Show Bucket", name: "Bucket Due Date" },
 ];
 
-function isKeyTask(task: any) {
+export function isKeyTask(task: any) {
   return KEY_TASKS.some((k) => k.category === task.category && k.name === task.name);
 }
 

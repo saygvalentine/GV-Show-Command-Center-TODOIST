@@ -407,6 +407,7 @@ export function TaskList({ show }: { show: Show }) {
 const KEY_TASKS: { category: string; name: string }[] = [
   { category: "Fire Marshal", name: "Submit To FM/EC" },
   { category: "ID Sign", name: "Submit Order" },
+  { category: "Show Bucket", name: "Bucket Due Date" },
 ];
 
 function isKeyTask(task: any) {
@@ -882,7 +883,12 @@ function AddTaskDialog({ show }: { show: Show }) {
                     >
                       <Checkbox checked={selectedPresets.includes(idx)} disabled={!p.requires} className="mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <span className="font-medium text-sm block">{p.name}</span>
+                        <span className="font-medium text-sm flex items-center gap-1">
+                          {isKeyTask({ category: p.cat, name: p.name }) && (
+                            <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />
+                          )}
+                          {p.name}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {!p.requires
                             ? "Missing required show date"

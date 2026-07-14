@@ -27,8 +27,75 @@ from typing import Optional, Tuple, Dict, Any, List
 
 import extensibility
 import review_api
-from _base import debug_log, _record_usage, _PV, PROVENANCE_TAG  # noqa: F401
+from _base import debug_log, _record_usage, _record_http_error, _PV, PROVENANCE_TAG, state_dir as _resolve_state_dir  # noqa: F401
 from session_state import with_locked_state
+
+
+def _inject_agent_sdk_venv_into_syspath(state_dir):
+    """Prepend the agent-SDK venv's site-packages to sys.path so the SDK
+    import below picks it up when the user's system Python doesn't have it.
+
+    Called from two fallback sites (3P SDK + agentic_review); shared here so
+    Windows pywin32 handling stays in one place.
+
+    Returns True if any path was added.
+
+    POSIX venv layout: `agent-sdk-venv/lib/pythonX.Y/site-packages`
+    Windows venv layout: `agent-sdk-venv/Lib/site-packages` (capital L, no
+    pythonX.Y subdir). The SDK transitively imports pywin32 on Windows, and
+    pywin32's `.pth` files (which add `win32/`, `win32/lib/` to sys.path and
+    register the DLL search dir via `pywin32_bootstrap.py`) are processed
+    ONLY by Python's `site.py` at interpreter startup — not when we manually
+    insert a path here. Without the bootstrap, the SDK's
+    `mcp.client.stdio → mcp.os.win32.utilities → pywintypes` import chain
+    fails with `ModuleNotFoundError: pywintypes` and the agentic reviewer
+    falls back to single-shot silently. Replicate what site.py would do.
+    """
+    venv_root = os.path.join(state_dir, "agent-sdk-venv")
+    candidates = (
+        glob.glob(os.path.join(venv_root, "lib", "python*", "site-packages"))
+        + glob.glob(os.path.join(venv_root, "Lib", "site-packages"))
+        # `pip install --target` fallback (ensure_agent_sdk BUILT_TARGET, used
+        # when venv can't bootstrap pip): a FLAT layout — packages sit directly
+        # in agent-sdk-libs/, not under a site-packages subdir. See #2154
+        # follow-up. The pywin32 .pth bootstrap below applies here too (target
+        # installs don't process .pth at runtime, same as a manual venv insert).
+        + [os.path.join(state_dir, "agent-sdk-libs")]
+    )
+    added = False
+    for sp in candidates:
+        if not os.path.isdir(sp) or sp in sys.path:
+            continue
+        sys.path.insert(0, sp)
+        added = True
+        if sys.platform == "win32":
+            _bootstrap_pywin32(sp)
+    return added
+
+
+def _bootstrap_pywin32(site_packages_dir):
+    """Manually replicate the pywin32 `.pth` bootstrap so a venv added via
+    `sys.path.insert()` (not site.py) can still import `pywintypes`. No-op
+    when the venv doesn't include pywin32. Failures are swallowed — the
+    SDK import below will raise its own ImportError and the caller's
+    fallback path handles it cleanly."""
+    try:
+        win32 = os.path.join(site_packages_dir, "win32")
+        win32_lib = os.path.join(win32, "lib")
+        for d in (win32, win32_lib):
+            if os.path.isdir(d) and d not in sys.path:
+                sys.path.insert(0, d)
+        bootstrap = os.path.join(win32_lib, "pywin32_bootstrap.py")
+        if os.path.isfile(bootstrap):
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(
+                "pywin32_bootstrap", bootstrap,
+            )
+            if spec and spec.loader:
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+    except Exception as e:
+        debug_log(f"pywin32 bootstrap failed (may break SDK import on Windows): {e}")
 
 
 # Plan Security Check Configuration
@@ -294,16 +361,8 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
         # Try the venv ensure_agent_sdk.py builds. Same fallback logic as
         # agentic_review() — duplicated here so the 3P path doesn't require
         # the agentic path to have run first.
-        _state_dir = os.environ.get(
-            "SECURITY_WARNINGS_STATE_DIR",
-            os.path.expanduser("~/.claude/security"),
-        )
-        for _sp in glob.glob(
-            os.path.join(_state_dir, "agent-sdk-venv", "lib",
-                         "python*", "site-packages")
-        ):
-            if os.path.isdir(_sp) and _sp not in sys.path:
-                sys.path.insert(0, _sp)
+        _state_dir = _resolve_state_dir()
+        _inject_agent_sdk_venv_into_syspath(_state_dir)
         try:
             import asyncio as _asyncio  # noqa: F811
             from claude_agent_sdk import (  # noqa: F401,F811
@@ -315,6 +374,7 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
         except Exception as e:
             debug_log(f"3P sdk-single-turn: SDK unavailable ({e})")
             _last_call_claude_http_error = -1
+            _record_http_error(-1)
             return None
 
     cli_path = os.environ.get("SG_AGENTIC_CLI_PATH") or None
@@ -372,6 +432,7 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
     except _asyncio.TimeoutError:
         debug_log("3P sdk-single-turn: timeout after 60s")
         _last_call_claude_http_error = -1
+        _record_http_error(-1)
         return None
     except Exception as e:
         debug_log(f"3P sdk-single-turn: query failed ({e})")
@@ -380,6 +441,7 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
             for _l in _captured_stderr[:20]:
                 debug_log(f"  | {_l.rstrip()}")
         _last_call_claude_http_error = -1
+        _record_http_error(-1)
         return None
 
 
@@ -426,10 +488,21 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
         "max_tokens": max_tokens,
         "system": CLAUDE_CODE_SYSTEM_PROMPT,
         "messages": [{"role": "user", "content": prompt}],
-        "output_format": {
-            "type": "json_schema",
-            "schema": output_schema
-        }
+        # API moved the structured-output schema from top-level `output_format`
+        # to `output_config.format` per
+        # https://platform.claude.com/docs/en/build-with-claude/structured-outputs.
+        # The old form "continues to work for a transition period" for some
+        # auth modes (API key + non-streaming), but is rejected with
+        # `invalid_request_error: output_format: This field is deprecated.
+        # Use 'output_config.format' instead.` for others (OAuth Bearer +
+        # newer CLI versions hit it consistently — reporter saw 462 errors
+        # in one day). See #2098.
+        "output_config": {
+            "format": {
+                "type": "json_schema",
+                "schema": output_schema,
+            },
+        },
     }
     if thinking_budget > 0:
         # Models trained on adaptive thinking (4.6+) reject the budget_tokens
@@ -437,7 +510,10 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
         # models (4.5 and earlier, all 3.x) reject adaptive. Pick by model.
         if _model_supports_adaptive_thinking(payload["model"]):
             payload["thinking"] = {"type": "adaptive"}
-            payload["output_config"] = {"effort": "high"}
+            # Merge `effort` into the existing output_config dict (which
+            # now carries the `format` schema) rather than reassigning —
+            # otherwise the schema is silently overwritten. See #2098.
+            payload["output_config"]["effort"] = "high"
         else:
             payload["thinking"] = {
                 "type": "enabled",
@@ -475,6 +551,7 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
                 error_body = e.read().decode("utf-8") if e.fp else ""
                 debug_log(f"API error: {e.code} - {error_body[:200]}")
                 _last_call_claude_http_error = e.code
+                _record_http_error(e.code)
                 return None
         except (urllib.error.URLError, TimeoutError) as e:
             if attempt < 2:
@@ -484,6 +561,7 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
             else:
                 debug_log(f"Request failed after retries: {e}")
                 _last_call_claude_http_error = -1
+                _record_http_error(-1)
                 return None
 
     if not response_data:
@@ -492,6 +570,7 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
         # call uses the token; record the 401 so callers don't see error=None.
         if _last_call_claude_http_error is None:
             _last_call_claude_http_error = 401
+            _record_http_error(401)
         return None
 
     # Find the text block (skip thinking blocks)
@@ -1089,18 +1168,8 @@ def agentic_review(
         # ~/.claude/security/ with the SDK installed; try that as a fallback
         # before giving up. The system import is attempted first so users
         # who DO have it never touch the venv.
-        _venv_tried = False
-        _state_dir = os.environ.get(
-            "SECURITY_WARNINGS_STATE_DIR",
-            os.path.expanduser("~/.claude/security"),
-        )
-        for _sp in glob.glob(
-            os.path.join(_state_dir, "agent-sdk-venv", "lib",
-                         "python*", "site-packages")
-        ):
-            if os.path.isdir(_sp) and _sp not in sys.path:
-                sys.path.insert(0, _sp)
-                _venv_tried = True
+        _state_dir = _resolve_state_dir()
+        _venv_tried = _inject_agent_sdk_venv_into_syspath(_state_dir)
         try:
             import asyncio as _asyncio  # noqa: F811
 

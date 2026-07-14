@@ -43,7 +43,7 @@ async function seedPresetTasks() {
   await db.execute(sql`
     INSERT INTO preset_tasks (name, category, due_date_offset, due_date_unit, due_date_direction, due_date_anchor) VALUES
       ('Initial Contact Account Executive', 'Fire Marshal', 60, 'cal', 'before', 'moveInDate'),
-      ('Check In / Submit', 'Fire Marshal', 30, 'biz', 'before', 'moveInDate'),
+      ('Submit To FM/EC', 'Fire Marshal', 30, 'biz', 'before', 'moveInDate'),
       ('Hard Deadline', 'Fire Marshal', 30, 'cal', 'before', 'moveInDate'),
       ('Contact Client / Give Deadline', 'ID Sign', 30, 'cal', 'before', 'moveInDate'),
       ('ID Sign Deadline', 'ID Sign', 12, 'biz', 'before', 'moveInDate'),
@@ -82,6 +82,14 @@ async function runMigrations() {
   `);
   await db.execute(sql`
     UPDATE tasks SET category = 'ID Sign' WHERE category = 'ID Sign Production'
+  `);
+  // Fix preset task name mismatch: seed used 'Check In / Submit' but key-task
+  // detection in shows/dashboard routes expects 'Submit To FM/EC'
+  await db.execute(sql`
+    UPDATE preset_tasks SET name = 'Submit To FM/EC' WHERE name = 'Check In / Submit' AND category = 'Fire Marshal'
+  `);
+  await db.execute(sql`
+    UPDATE tasks SET name = 'Submit To FM/EC' WHERE name = 'Check In / Submit' AND category = 'Fire Marshal'
   `);
   logger.info("Startup complete");
 }

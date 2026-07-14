@@ -7,6 +7,14 @@ async function waitForApp(page: Page) {
   );
 }
 
+async function openPresetSection(page: Page) {
+  const toggle = page.locator("button").filter({ hasText: /preset task templates/i }).first();
+  const content = page.locator("h3").filter({ hasText: "Fire Marshal" }).first();
+  const isExpanded = await content.isVisible().catch(() => false);
+  if (!isExpanded) await toggle.click();
+  await expect(content).toBeVisible({ timeout: 5_000 });
+}
+
 /** Find the category section container by its heading text. */
 function categorySection(page: Page, cat: string) {
   return page
@@ -55,6 +63,7 @@ test.describe("Settings — Preset Tasks", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/settings");
     await waitForApp(page);
+    await openPresetSection(page);
   });
 
   // ─── Navigation ──────────────────────────────────────────────────────────
@@ -92,7 +101,7 @@ test.describe("Settings — Preset Tasks", () => {
     await expect(
       page.getByText("Initial Contact Account Executive"),
     ).toBeVisible();
-    await expect(page.getByText("Check In / Submit")).toBeVisible();
+    await expect(page.getByText("Submit To FM/EC")).toBeVisible();
     await expect(page.getByText("Hard Deadline")).toBeVisible();
   });
 
@@ -221,6 +230,7 @@ test.describe("Settings — Preset Tasks", () => {
     // Add a uniquely named preset
     await page.goto("/settings");
     await waitForApp(page);
+    await openPresetSection(page);
     const name = `PW Integration ${Date.now()}`;
     await addPreset(page, "Electrical", name, 3);
 
@@ -236,6 +246,7 @@ test.describe("Settings — Preset Tasks", () => {
     // Cleanup
     await page.goto("/settings");
     await waitForApp(page);
+    await openPresetSection(page);
     await deletePreset(page, name);
   });
 });

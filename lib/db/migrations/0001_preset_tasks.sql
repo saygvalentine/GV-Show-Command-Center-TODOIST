@@ -15,7 +15,7 @@ INSERT INTO "preset_tasks" ("name", "category", "due_date_offset", "due_date_uni
   ('Hard Deadline', 'Fire Marshal', 30, 'cal', 'before', 'moveInDate'),
   ('Contact Client / Give Deadline', 'ID Sign', 30, 'cal', 'before', 'moveInDate'),
   ('ID Sign Deadline', 'ID Sign', 12, 'biz', 'before', 'moveInDate'),
-  ('Submit Order', 'ID Sign', 8, 'biz', 'before', 'moveInDate'),
+  ('Submit ID Sign Order', 'ID Sign', 8, 'biz', 'before', 'moveInDate'),
   ('Contact Declared but Not Received', 'Warehouse Manifest', 3, 'biz', 'before', 'advanceWarehouseDate'),
   ('Get Bucket Due Dates & Quantities', 'Show Bucket', 10, 'biz', 'before', 'moveInDate'),
   ('Create Carpet Plan', 'Show Bucket', 1, 'cal', 'after', 'onlineOrderDeadline'),

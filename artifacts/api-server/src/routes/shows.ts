@@ -78,7 +78,7 @@ function computeShowStats(
   let idSignStatus: string | null = null;
   let idSignDate: string | null = null;
   if (idSignTasks.length > 0) {
-    const keyIdTask = idSignTasks.find((t) => t.name === "Submit Order");
+    const keyIdTask = idSignTasks.find((t) => t.name === "Submit ID Sign Order");
     if (keyIdTask?.completed) {
       idSignStatus = "Ordered";
       idSignDate = keyIdTask.completedAt?.toISOString() ?? null;

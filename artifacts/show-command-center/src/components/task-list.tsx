@@ -406,7 +406,7 @@ export function TaskList({ show }: { show: Show }) {
 
 const KEY_TASKS: { category: string; name: string }[] = [
   { category: "Fire Marshal", name: "Submit To FM/EC" },
-  { category: "ID Sign", name: "Submit Order" },
+  { category: "ID Sign", name: "Submit ID Sign Order" },
   { category: "Show Bucket", name: "Bucket Due Date" },
 ];
 

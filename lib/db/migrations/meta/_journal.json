@@ -44,5 +44,12 @@
       "tag": "0005_rename_fm_submit_task",
       "breakpoints": true
     }
+    ,{
+      "idx": 6,
+      "version": "7",
+      "when": 1784050800000,
+      "tag": "0006_rename_id_sign_submit_order",
+      "breakpoints": true
+    }
   ]
 }

@@ -165,7 +165,7 @@ router.get("/summary", async (req, res): Promise<void> => {
     let idSignStatus = null;
     let idSignDate = null;
     if (idSignTasks.length > 0) {
-      const keyIdTask = idSignTasks.find((t) => t.name === "Submit Order");
+      const keyIdTask = idSignTasks.find((t) => t.name === "Submit ID Sign Order");
       if (keyIdTask?.completed) {
         idSignStatus = "Ordered";
         idSignDate = keyIdTask.completedAt?.toISOString() ?? null;

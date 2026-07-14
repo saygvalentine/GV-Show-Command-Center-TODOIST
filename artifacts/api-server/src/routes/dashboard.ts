@@ -16,16 +16,22 @@ router.get("/overdue", async (req, res): Promise<void> => {
   const allTasks = await db.select().from(tasksTable);
   const allEblasts = await db.select().from(eblastsTable);
 
-  const showMap = Object.fromEntries(shows.map((s) => [s.id, {
-    name: s.name,
-    moveInDate: s.moveInDate,
-    fmDeadlineDate: s.fmDeadlineDate ?? null,
-    idSignDeadlineDate: s.idSignDeadlineDate ?? null,
-    bucketDueDate: s.bucketDueDate ?? null,
-    advanceWarehouseDate: s.advanceWarehouseDate ?? null,
-    onlineOrderDeadline: s.onlineOrderDeadline ?? null,
-    discountDeadline: s.discountDeadline ?? null,
-  }]));
+  const showMap = Object.fromEntries(shows.map((s) => {
+    const showTasks = allTasks.filter((t) => t.showId === s.id);
+    const fmDeadlineTask = showTasks.find((t) => t.name === "Hard Deadline" && t.category === "Fire Marshal");
+    const idSignDeadlineTask = showTasks.find((t) => t.name === "ID Sign Deadline" && t.category === "ID Sign");
+    const bucketDueDateTask = showTasks.find((t) => t.name === "Bucket Due Date" && t.category === "Show Bucket");
+    return [s.id, {
+      name: s.name,
+      moveInDate: s.moveInDate,
+      fmDeadlineDate: fmDeadlineTask?.dueDate ?? null,
+      idSignDeadlineDate: idSignDeadlineTask?.dueDate ?? null,
+      bucketDueDate: bucketDueDateTask?.dueDate ?? null,
+      advanceWarehouseDate: s.advanceWarehouseDate ?? null,
+      onlineOrderDeadline: s.onlineOrderDeadline ?? null,
+      discountDeadline: s.discountDeadline ?? null,
+    }];
+  }));
 
   const items: {
     id: number;

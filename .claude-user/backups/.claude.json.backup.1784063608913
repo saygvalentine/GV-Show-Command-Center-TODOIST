@@ -856,5 +856,12 @@
   },
   "feedbackSurveyState": {
     "lastShownTime": 1784058700367
+  },
+  "pluginUsage": {
+    "claude-notifications-go@claude-notifications-go": {
+      "usageCount": 10,
+      "lastUsedAt": 1784063242255,
+      "lastUsedNumStartups": 10
+    }
   }
 }

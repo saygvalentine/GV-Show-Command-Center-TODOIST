@@ -783,6 +783,10 @@
     "run": {
       "usageCount": 1,
       "lastUsedAt": 1784052245093
+    },
+    "doctor": {
+      "usageCount": 1,
+      "lastUsedAt": 1784062200230
     }
   },
   "lastPlanModeUse": 1778880810943,
@@ -852,5 +856,12 @@
   },
   "feedbackSurveyState": {
     "lastShownTime": 1784058700367
+  },
+  "pluginUsage": {
+    "claude-notifications-go@claude-notifications-go": {
+      "usageCount": 11,
+      "lastUsedAt": 1784063548838,
+      "lastUsedNumStartups": 10
+    }
   }
 }

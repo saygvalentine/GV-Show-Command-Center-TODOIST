@@ -6,5 +6,13 @@
     },
     "installLocation": "/home/runner/workspace/.claude-user/plugins/marketplaces/claude-plugins-official",
     "lastUpdated": "2026-07-14T17:33:32.659Z"
+  },
+  "claude-notifications-go": {
+    "source": {
+      "source": "github",
+      "repo": "777genius/claude-notifications-go"
+    },
+    "installLocation": "/home/runner/workspace/.claude-user/plugins/marketplaces/claude-notifications-go",
+    "lastUpdated": "2026-07-14T20:49:20.115Z"
   }
 }

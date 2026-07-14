@@ -1,0 +1,18 @@
+{
+    "name": "claude-notifications-go",
+    "version": "1.40.0",
+    "description": "Smart notifications for Claude Code task statuses (Go implementation)",
+    "author": {
+        "name": "777genius",
+        "email": "iliyazelenkog@gmail.com"
+    },
+    "license": "GPL-3.0",
+    "repository": "https://github.com/777genius/claude-notifications-go",
+    "keywords": ["notifications", "alerts", "productivity", "go"],
+    "commands": [
+        "./commands/init.md",
+        "./commands/settings.md",
+        "./commands/notifications-init.md",
+        "./commands/notifications-settings.md"
+    ]
+}

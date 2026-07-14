@@ -849,5 +849,8 @@
   "autoCompactWindowsCache": null,
   "tipLifetimeShownCounts": {
     "artifact-publish-plan": 1
+  },
+  "feedbackSurveyState": {
+    "lastShownTime": 1784058700367
   }
 }

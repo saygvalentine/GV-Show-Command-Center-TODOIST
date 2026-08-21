@@ -443,7 +443,7 @@ function TaskRow({ task, showId, onToggle, onDelete }: { task: any, showId: numb
   const onUpdateCompletedAt = (dateStr: string) => {
     if (!dateStr) return;
     updateTask.mutate(
-      { showId, taskId: task.id, data: { completedAt: new Date(dateStr).toISOString() } as any },
+      { showId, taskId: task.id, data: { completedAt: parseDateStr(dateStr).toISOString() } as any },
       {
         onSuccess: () => {
           toast({ title: "Completion date updated" });

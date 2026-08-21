@@ -92,3 +92,8 @@
 {"display":"what do you suggset?","pastedContents":{},"timestamp":1787337193954,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
 {"display":"We need to plan a bit of a large feature overhaul","pastedContents":{},"timestamp":1787337364935,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
 {"display":"nevermind that. What is the status of teh google calendar function?","pastedContents":{},"timestamp":1787338524641,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"yes","pastedContents":{},"timestamp":1787338770184,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"fyi i am in PST","pastedContents":{},"timestamp":1787340450493,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"what is the current workflow for the connected gcalendar?","pastedContents":{},"timestamp":1787343914796,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"Does the replit conection sync to a particular cal or just the main one?","pastedContents":{},"timestamp":1787345504227,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"When i click the sync button i get: Google Calendar sync failed\n\nGoogle Calendar API error 403: `{ \"error\": { \"errors\": [{ \"domain\": \"usageLimits\", \"reason\": \"rateLimitExceeded\", \"message\": \"Rate Limit Exceeded\" }], \"code\": 403, \"message\": \"Rate Limit Exceeded\" } }`","pastedContents":{},"timestamp":1787345779375,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}

@@ -11,12 +11,12 @@
     "prompt-queue": 9,
     "enter-to-steer-in-relatime": 1,
     "todo-list": 1,
-    "install-github-app": 1,
-    "install-slack-app": 1,
-    "drag-and-drop-images": 1,
-    "double-esc-code-restore": 1,
-    "continue": 1,
-    "ide-upsell-external-terminal": 2,
+    "install-github-app": 12,
+    "install-slack-app": 12,
+    "drag-and-drop-images": 12,
+    "double-esc-code-restore": 12,
+    "continue": 12,
+    "ide-upsell-external-terminal": 12,
     "shift-tab": 2,
     "image-paste": 2,
     "web-app": 2,
@@ -985,15 +985,21 @@
     "permissions": 1,
     "rename-conversation": 1,
     "custom-commands": 1,
-    "default-permission-mode-config": 1
+    "default-permission-mode-config": 1,
+    "install-github-app": 1,
+    "install-slack-app": 1,
+    "drag-and-drop-images": 1,
+    "double-esc-code-restore": 1,
+    "continue": 1,
+    "ide-upsell-external-terminal": 1
   },
   "feedbackSurveyState": {
     "lastShownTime": 1784058700367
   },
   "pluginUsage": {
     "claude-notifications-go@claude-notifications-go": {
-      "usageCount": 21,
-      "lastUsedAt": 1787337210249,
+      "usageCount": 34,
+      "lastUsedAt": 1787345870608,
       "lastUsedNumStartups": 12
     }
   },

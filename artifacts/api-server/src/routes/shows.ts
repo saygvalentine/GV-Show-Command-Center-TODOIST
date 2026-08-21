@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, showsTable, tasksTable, eblastsTable, linksTable, gcalOrphansTable } from "@workspace/db";
+import { db, showsTable, tasksTable, eblastsTable, linksTable, gcalOrphansTable, todoistOrphansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   CreateShowBody,
@@ -223,8 +223,8 @@ router.delete("/:showId", async (req, res): Promise<void> => {
   }
 
   const [childTasks, childEblasts] = await Promise.all([
-    db.select({ gcalEventId: tasksTable.gcalEventId }).from(tasksTable).where(eq(tasksTable.showId, params.data.showId)),
-    db.select({ gcalEventId: eblastsTable.gcalEventId }).from(eblastsTable).where(eq(eblastsTable.showId, params.data.showId)),
+    db.select({ gcalEventId: tasksTable.gcalEventId, todoistTaskId: tasksTable.todoistTaskId }).from(tasksTable).where(eq(tasksTable.showId, params.data.showId)),
+    db.select({ gcalEventId: eblastsTable.gcalEventId, todoistTaskId: eblastsTable.todoistTaskId }).from(eblastsTable).where(eq(eblastsTable.showId, params.data.showId)),
   ]);
 
   const taskOrphanIds = childTasks.map((t) => t.gcalEventId).filter((id): id is string => !!id);
@@ -236,6 +236,17 @@ router.delete("/:showId", async (req, res): Promise<void> => {
 
   if (allOrphans.length > 0) {
     await db.insert(gcalOrphansTable).values(allOrphans);
+  }
+
+  const taskTodoistOrphanIds = childTasks.map((t) => t.todoistTaskId).filter((id): id is string => !!id);
+  const eblastTodoistOrphanIds = childEblasts.map((e) => e.todoistTaskId).filter((id): id is string => !!id);
+  const allTodoistOrphans = [
+    ...taskTodoistOrphanIds.map((todoistTaskId) => ({ todoistTaskId, itemType: "task" as const })),
+    ...eblastTodoistOrphanIds.map((todoistTaskId) => ({ todoistTaskId, itemType: "eblast" as const })),
+  ];
+
+  if (allTodoistOrphans.length > 0) {
+    await db.insert(todoistOrphansTable).values(allTodoistOrphans);
   }
 
   await db.delete(showsTable).where(eq(showsTable.id, params.data.showId));

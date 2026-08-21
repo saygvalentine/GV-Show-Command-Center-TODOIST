@@ -660,6 +660,34 @@ export const SyncGoogleCalendarResponse = zod.object({
 });
 
 /**
+ * @summary List user's Todoist projects
+ */
+export const ListTodoistProjectsResponse = zod.object({
+  projects: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary Sync tasks and e-blasts to Todoist
+ */
+export const SyncTodoistQueryParams = zod.object({
+  showId: zod.coerce.number().optional(),
+  taskProjectId: zod.coerce.string().optional(),
+  eblastProjectId: zod.coerce.string().optional(),
+});
+
+export const SyncTodoistResponse = zod.object({
+  ok: zod.boolean(),
+  created: zod.number(),
+  updated: zod.number(),
+  deleted: zod.number(),
+});
+
+/**
  * @summary Get all overdue tasks and e-blasts across all shows
  */
 export const GetOverdueItemsResponseItem = zod.object({

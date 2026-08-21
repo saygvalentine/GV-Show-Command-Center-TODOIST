@@ -35,6 +35,7 @@ import { Plus, Edit2, Trash2, Check, X, Loader2, ChevronDown, ChevronRight, Star
 import { getCategoryColor } from "@/lib/date-utils";
 import { useToast } from "@/hooks/use-toast";
 import { GoogleCalendarSettings } from "@/components/google-calendar-settings";
+import { TodoistSettings } from "@/components/todoist-settings";
 import { isKeyTask } from "@/components/task-list";
 
 const PRESET_CATEGORIES = [
@@ -364,6 +365,8 @@ export default function Settings() {
         </div>
 
         <GoogleCalendarSettings />
+
+        <TodoistSettings />
 
         <div className="rounded-lg border">
           <button

@@ -280,6 +280,18 @@ export interface GcalSyncResult {
   deleted: number;
 }
 
+export interface TodoistProject {
+  id: string;
+  name: string;
+}
+
+export interface TodoistSyncResult {
+  ok: boolean;
+  created: number;
+  updated: number;
+  deleted: number;
+}
+
 export interface DashboardSummary {
   totalShows: number;
   activeShows: number;
@@ -329,5 +341,23 @@ export type SyncGoogleCalendarParams = {
 };
 
 export type SyncGoogleCalendar503 = {
+  error?: string;
+};
+
+export type ListTodoistProjects200 = {
+  projects: TodoistProject[];
+};
+
+export type ListTodoistProjects503 = {
+  error?: string;
+};
+
+export type SyncTodoistParams = {
+  showId?: number;
+  taskProjectId?: string;
+  eblastProjectId?: string;
+};
+
+export type SyncTodoist503 = {
   error?: string;
 };

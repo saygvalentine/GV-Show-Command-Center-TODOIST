@@ -765,6 +765,72 @@ paths:
                   error:
                     type: string
 
+  /export/todoist/projects:
+    get:
+      operationId: listTodoistProjects
+      tags: [export]
+      summary: List user's Todoist projects
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [projects]
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TodoistProject"
+        "503":
+          description: Todoist connector not configured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /export/todoist/sync:
+    post:
+      operationId: syncTodoist
+      tags: [export]
+      summary: Sync tasks and e-blasts to Todoist
+      parameters:
+        - name: showId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: taskProjectId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: eblastProjectId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoistSyncResult"
+        "503":
+          description: Todoist connector not configured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /dashboard/overdue:
     get:
       operationId: getOverdueItems
@@ -1387,6 +1453,28 @@ components:
           nullable: true
 
     GcalSyncResult:
+      type: object
+      required: [ok, created, updated, deleted]
+      properties:
+        ok:
+          type: boolean
+        created:
+          type: integer
+        updated:
+          type: integer
+        deleted:
+          type: integer
+
+    TodoistProject:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+
+    TodoistSyncResult:
       type: object
       required: [ok, created, updated, deleted]
       properties:

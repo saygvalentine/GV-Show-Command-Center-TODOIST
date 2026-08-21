@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, tasksTable, gcalOrphansTable } from "@workspace/db";
+import { db, tasksTable, gcalOrphansTable, todoistOrphansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   CreateTaskBody,
@@ -137,12 +137,15 @@ router.delete("/:taskId", async (req, res): Promise<void> => {
   }
 
   const [task] = await db
-    .select({ gcalEventId: tasksTable.gcalEventId })
+    .select({ gcalEventId: tasksTable.gcalEventId, todoistTaskId: tasksTable.todoistTaskId })
     .from(tasksTable)
     .where(and(eq(tasksTable.id, params.data.taskId), eq(tasksTable.showId, params.data.showId)));
 
   if (task?.gcalEventId) {
     await db.insert(gcalOrphansTable).values({ gcalEventId: task.gcalEventId, calendarType: "task" });
+  }
+  if (task?.todoistTaskId) {
+    await db.insert(todoistOrphansTable).values({ todoistTaskId: task.todoistTaskId, itemType: "task" });
   }
 
   await db

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, eblastsTable, gcalOrphansTable } from "@workspace/db";
+import { db, eblastsTable, gcalOrphansTable, todoistOrphansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   CreateEblastBody,
@@ -136,12 +136,15 @@ router.delete("/:eblastId", async (req, res): Promise<void> => {
   }
 
   const [eblast] = await db
-    .select({ gcalEventId: eblastsTable.gcalEventId })
+    .select({ gcalEventId: eblastsTable.gcalEventId, todoistTaskId: eblastsTable.todoistTaskId })
     .from(eblastsTable)
     .where(and(eq(eblastsTable.id, params.data.eblastId), eq(eblastsTable.showId, params.data.showId)));
 
   if (eblast?.gcalEventId) {
     await db.insert(gcalOrphansTable).values({ gcalEventId: eblast.gcalEventId, calendarType: "eblast" });
+  }
+  if (eblast?.todoistTaskId) {
+    await db.insert(todoistOrphansTable).values({ todoistTaskId: eblast.todoistTaskId, itemType: "eblast" });
   }
 
   await db

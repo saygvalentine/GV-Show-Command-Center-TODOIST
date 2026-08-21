@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, startOfDay } from "date-fns";
-import { ChevronLeft, ChevronRight, Loader2, Download, CheckCircle2, Circle, CalendarSync } from "lucide-react";
-import { useGetCalendarEvents, useGetCalendarShowDates, useListShows, useUpdateOfficeTask, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
+import { ChevronLeft, ChevronRight, Loader2, Download, CheckCircle2, Circle, CalendarSync, ListTodo } from "lucide-react";
+import { useGetCalendarEvents, useGetCalendarShowDates, useListShows, useUpdateOfficeTask, useSyncTodoist, getListOfficeTasksQueryKey } from "@workspace/api-client-react";
 import { useGcal } from "@/contexts/google-calendar-context";
+import { useTodoist } from "@/contexts/todoist-context";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -39,7 +40,36 @@ export default function Calendar() {
 
   const updateOfficeTask = useUpdateOfficeTask();
   const { taskCalendarId, eblastCalendarId } = useGcal();
+  const { taskProjectId, eblastProjectId } = useTodoist();
   const [syncing, setSyncing] = useState(false);
+  const syncTodoist = useSyncTodoist();
+
+  const handleTodoistSync = () => {
+    syncTodoist.mutate(
+      {
+        params: {
+          taskProjectId: taskProjectId || undefined,
+          eblastProjectId: eblastProjectId || undefined,
+          ...(selectedShowId !== "all" ? { showId: Number(selectedShowId) } : {}),
+        },
+      },
+      {
+        onSuccess: (data) => {
+          toast({
+            title: "Pushed to Todoist",
+            description: `${data.created} created, ${data.updated} updated, ${data.deleted} removed`,
+          });
+        },
+        onError: (err) => {
+          toast({
+            title: "Todoist sync failed",
+            description: (err as Error).message,
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
 
   const handleGcalSync = async () => {
     setSyncing(true);
@@ -226,6 +256,12 @@ export default function Calendar() {
                 ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 : <CalendarSync className="h-4 w-4 mr-2" />}
               Sync to Google Calendar
+            </Button>
+            <Button variant="outline" onClick={handleTodoistSync} disabled={syncTodoist.isPending} title="Push to Todoist">
+              {syncTodoist.isPending
+                ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                : <ListTodo className="h-4 w-4 mr-2" />}
+              Push to Todoist
             </Button>
           </div>
         </div>

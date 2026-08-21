@@ -11,6 +11,7 @@ import officeTasksRouter from "./officeTasks";
 import venuesRouter from "./venues";
 import presetTasksRouter from "./presetTasks";
 import googleCalendarRouter from "./google-calendar";
+import todoistRouter from "./todoist";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use("/office-tasks", officeTasksRouter);
 router.use("/venues", venuesRouter);
 router.use("/preset-tasks", presetTasksRouter);
 router.use("/export/google-calendar", googleCalendarRouter);
+router.use("/export/todoist", todoistRouter);
 
 export default router;

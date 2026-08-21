@@ -36,6 +36,8 @@ import type {
   ListGoogleCalendars200,
   ListGoogleCalendars401,
   ListOfficeTasksParams,
+  ListTodoistProjects200,
+  ListTodoistProjects503,
   OfficeTask,
   OverdueItem,
   PresetTask,
@@ -44,7 +46,10 @@ import type {
   ShowWithItems,
   SyncGoogleCalendar503,
   SyncGoogleCalendarParams,
+  SyncTodoist503,
+  SyncTodoistParams,
   Task,
+  TodoistSyncResult,
   UpdateEblastBody,
   UpdateLinkBody,
   UpdateOfficeTaskBody,
@@ -2795,6 +2800,177 @@ export const useSyncGoogleCalendar = <
   TContext
 > => {
   return useMutation(getSyncGoogleCalendarMutationOptions(options));
+};
+
+/**
+ * @summary List user's Todoist projects
+ */
+export const getListTodoistProjectsUrl = () => {
+  return `/api/export/todoist/projects`;
+};
+
+export const listTodoistProjects = async (
+  options?: RequestInit,
+): Promise<ListTodoistProjects200> => {
+  return customFetch<ListTodoistProjects200>(getListTodoistProjectsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTodoistProjectsQueryKey = () => {
+  return [`/api/export/todoist/projects`] as const;
+};
+
+export const getListTodoistProjectsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTodoistProjects>>,
+  TError = ErrorType<ListTodoistProjects503>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listTodoistProjects>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListTodoistProjectsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listTodoistProjects>>
+  > = ({ signal }) => listTodoistProjects({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTodoistProjects>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListTodoistProjectsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listTodoistProjects>>
+>;
+export type ListTodoistProjectsQueryError = ErrorType<ListTodoistProjects503>;
+
+/**
+ * @summary List user's Todoist projects
+ */
+
+export function useListTodoistProjects<
+  TData = Awaited<ReturnType<typeof listTodoistProjects>>,
+  TError = ErrorType<ListTodoistProjects503>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listTodoistProjects>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListTodoistProjectsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Sync tasks and e-blasts to Todoist
+ */
+export const getSyncTodoistUrl = (params?: SyncTodoistParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/export/todoist/sync?${stringifiedParams}`
+    : `/api/export/todoist/sync`;
+};
+
+export const syncTodoist = async (
+  params?: SyncTodoistParams,
+  options?: RequestInit,
+): Promise<TodoistSyncResult> => {
+  return customFetch<TodoistSyncResult>(getSyncTodoistUrl(params), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSyncTodoistMutationOptions = <
+  TError = ErrorType<SyncTodoist503>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncTodoist>>,
+    TError,
+    { params?: SyncTodoistParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof syncTodoist>>,
+  TError,
+  { params?: SyncTodoistParams },
+  TContext
+> => {
+  const mutationKey = ["syncTodoist"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof syncTodoist>>,
+    { params?: SyncTodoistParams }
+  > = (props) => {
+    const { params } = props ?? {};
+
+    return syncTodoist(params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SyncTodoistMutationResult = NonNullable<
+  Awaited<ReturnType<typeof syncTodoist>>
+>;
+
+export type SyncTodoistMutationError = ErrorType<SyncTodoist503>;
+
+/**
+ * @summary Sync tasks and e-blasts to Todoist
+ */
+export const useSyncTodoist = <
+  TError = ErrorType<SyncTodoist503>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncTodoist>>,
+    TError,
+    { params?: SyncTodoistParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof syncTodoist>>,
+  TError,
+  { params?: SyncTodoistParams },
+  TContext
+> => {
+  return useMutation(getSyncTodoistMutationOptions(options));
 };
 
 /**

@@ -6,3 +6,4 @@ export * from "./officeTasks";
 export * from "./venues";
 export * from "./presetTasks";
 export * from "./gcalOrphans";
+export * from "./todoistOrphans";

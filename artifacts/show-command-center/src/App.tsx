@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GcalProvider } from "@/contexts/google-calendar-context";
+import { TodoistProvider } from "@/contexts/todoist-context";
 
 import Dashboard from "@/pages/dashboard";
 import Calendar from "@/pages/calendar";
@@ -32,12 +33,14 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <QueryClientProvider client={queryClient}>
         <GcalProvider>
-          <TooltipProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
-            </WouterRouter>
-            <Toaster />
-          </TooltipProvider>
+          <TodoistProvider>
+            <TooltipProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <Router />
+              </WouterRouter>
+              <Toaster />
+            </TooltipProvider>
+          </TodoistProvider>
         </GcalProvider>
       </QueryClientProvider>
     </ThemeProvider>

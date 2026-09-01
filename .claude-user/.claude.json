@@ -32,7 +32,8 @@
     "artifact-publish-plan": 10,
     "permissions": 12,
     "rename-conversation": 12,
-    "custom-commands": 12
+    "custom-commands": 12,
+    "c4e-remote-sessions": 12
   },
   "promptQueueUseCount": 6,
   "cachedGrowthBookFeatures": {
@@ -994,7 +995,8 @@
     "ide-upsell-external-terminal": 1,
     "shift-tab": 1,
     "voice-mode": 1,
-    "guest-passes": 1
+    "guest-passes": 1,
+    "c4e-remote-sessions": 1
   },
   "feedbackSurveyState": {
     "lastShownTime": 1784058700367

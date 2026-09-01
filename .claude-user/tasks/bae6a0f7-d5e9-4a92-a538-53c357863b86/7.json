@@ -1,0 +1,8 @@
+{
+  "id": "7",
+  "subject": "Build TodoistProvider context + settings picker",
+  "description": "Create todoist-context.tsx (mirroring google-calendar-context.tsx but using generated useListTodoistProjects hook) and todoist-settings.tsx (mirroring google-calendar-settings.tsx).",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

@@ -21,12 +21,12 @@
     "image-paste": 2,
     "web-app": 2,
     "remote-control": 2,
-    "voice-mode": 2,
+    "voice-mode": 12,
     "color-when-multi-clauding": 3,
     "frontend-design-plugin": 3,
     "goal-command-nudge": 5,
     "custom-agents": 6,
-    "guest-passes": 6,
+    "guest-passes": 12,
     "feedback-command": 6,
     "no-flicker": 9,
     "artifact-publish-plan": 10,
@@ -35,6 +35,8 @@
     "custom-commands": 12
   },
   "promptQueueUseCount": 6,
+  "btwUseCount": 1,
+  "showExpandedTodos": true,
   "cachedGrowthBookFeatures": {
     "tengu_sage_compass": {},
     "tengu_log_datadog_events": true,
@@ -992,15 +994,17 @@
     "double-esc-code-restore": 1,
     "continue": 1,
     "ide-upsell-external-terminal": 1,
-    "shift-tab": 1
+    "shift-tab": 1,
+    "voice-mode": 1,
+    "guest-passes": 1
   },
   "feedbackSurveyState": {
     "lastShownTime": 1784058700367
   },
   "pluginUsage": {
     "claude-notifications-go@claude-notifications-go": {
-      "usageCount": 35,
-      "lastUsedAt": 1787346053014,
+      "usageCount": 51,
+      "lastUsedAt": 1787351208247,
       "lastUsedNumStartups": 12
     }
   },

@@ -1,0 +1,8 @@
+{
+  "id": "8",
+  "subject": "Wire Todoist into App.tsx, settings.tsx, sync buttons",
+  "description": "Nest TodoistProvider in App.tsx, render TodoistSettings in settings.tsx, add Push to Todoist buttons using useSyncTodoist to calendar.tsx and show-detail.tsx.",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

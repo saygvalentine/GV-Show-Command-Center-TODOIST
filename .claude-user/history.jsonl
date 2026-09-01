@@ -102,3 +102,13 @@
 {"display":"look into feasability","pastedContents":{},"timestamp":1787347197086,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
 {"display":"I was thinking about a big change to possibly injecting TodoIst in the project so that tasks here are actually real tasks in ToDoIt. But i know that may be a huge change. Would it be more feasable to just push these to Todoist as a connector?","pastedContents":{},"timestamp":1787347485350,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
 {"display":"Check first","pastedContents":{},"timestamp":1787347815126,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"It should not be connected, verify?","pastedContents":{},"timestamp":1787348373508,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"It should now be connected","pastedContents":{},"timestamp":1787348390405,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"Is a two-way sync feasable?","pastedContents":{},"timestamp":1787348432522,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"Okay, lets table the 2 way sync. Lets do the Push to Todoist","pastedContents":{},"timestamp":1787348573815,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"commit","pastedContents":{},"timestamp":1787351179558,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"On each show details page lets make the completed task list not hidden toggled by default","pastedContents":{},"timestamp":1788299683790,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}
+{"display":"yes","pastedContents":{},"timestamp":1788299711977,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}
+{"display":"push","pastedContents":{},"timestamp":1788299749344,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}
+{"display":"Did we work on a todoist implementation?","pastedContents":{},"timestamp":1788299882739,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}
+{"display":"what is the workflow?","pastedContents":{},"timestamp":1788299907567,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}

@@ -68,7 +68,7 @@ export function EblastList({ show }: { show: Show }) {
   const updateEblast = useUpdateEblast();
   const deleteEblast = useDeleteEblast();
 
-  const [sentOpen, setSentOpen] = useState(false);
+  const [sentOpen, setSentOpen] = useState(true);
 
   const grouped = useMemo(() => {
     if (!eblasts) return { overdue: [], dueToday: [], upcoming: [], sent: [] };

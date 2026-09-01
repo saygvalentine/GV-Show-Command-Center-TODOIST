@@ -108,7 +108,7 @@ export function TaskList({ show }: { show: Show }) {
   const [sortMode, setSortMode] = useState<SortMode>("dueAsc");
   const [groupMode, setGroupMode] = useState<"status" | "category">("status");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [completedOpen, setCompletedOpen] = useState(false);
+  const [completedOpen, setCompletedOpen] = useState(true);
   const [catSectionOpen, setCatSectionOpen] = useState<Record<string, boolean>>({});
 
   const filteredTasks = useMemo(() => {

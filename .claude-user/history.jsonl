@@ -112,3 +112,5 @@
 {"display":"push","pastedContents":{},"timestamp":1788299749344,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}
 {"display":"Did we work on a todoist implementation?","pastedContents":{},"timestamp":1788299882739,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}
 {"display":"what is the workflow?","pastedContents":{},"timestamp":1788299907567,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}
+{"display":"There was a point where we fixed an issue editing the date of a completed task and eblast. it seems this may have been fixed locally but it hasn't carried over to the published version, either that or we also need to aply the fix to edited eblast tasks","pastedContents":{},"timestamp":1788300803668,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}
+{"display":"yes","pastedContents":{},"timestamp":1788300874363,"project":"/home/runner/workspace","sessionId":"265ffc88-ab69-4ad2-b967-b36b8eae0044"}

@@ -3,7 +3,7 @@
   "installMethod": "global",
   "tipsHistory": {
     "new-user-warmup": 9,
-    "plan-mode-for-complex-tasks": 8,
+    "plan-mode-for-complex-tasks": 13,
     "memory-command": 1,
     "theme-command": 1,
     "default-permission-mode-config": 12,
@@ -32,7 +32,10 @@
     "artifact-publish-plan": 10,
     "permissions": 12,
     "rename-conversation": 12,
-    "custom-commands": 12
+    "custom-commands": 12,
+    "ultrareview-awareness": 13,
+    "ultrareview-post-commit": 13,
+    "push-notif": 13
   },
   "promptQueueUseCount": 6,
   "btwUseCount": 1,
@@ -1063,16 +1066,20 @@
     "ide-upsell-external-terminal": 1,
     "shift-tab": 1,
     "voice-mode": 1,
-    "guest-passes": 1
+    "guest-passes": 1,
+    "ultrareview-awareness": 1,
+    "ultrareview-post-commit": 1,
+    "push-notif": 1,
+    "plan-mode-for-complex-tasks": 1
   },
   "feedbackSurveyState": {
     "lastShownTime": 1784058700367
   },
   "pluginUsage": {
     "claude-notifications-go@claude-notifications-go": {
-      "usageCount": 51,
-      "lastUsedAt": 1787351208247,
-      "lastUsedNumStartups": 12
+      "usageCount": 62,
+      "lastUsedAt": 1788300113694,
+      "lastUsedNumStartups": 13
     }
   },
   "cachedExperimentData": {

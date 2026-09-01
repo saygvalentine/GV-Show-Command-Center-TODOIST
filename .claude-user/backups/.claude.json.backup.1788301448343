@@ -3,7 +3,7 @@
   "installMethod": "global",
   "tipsHistory": {
     "new-user-warmup": 9,
-    "plan-mode-for-complex-tasks": 8,
+    "plan-mode-for-complex-tasks": 13,
     "memory-command": 1,
     "theme-command": 1,
     "default-permission-mode-config": 12,
@@ -1069,15 +1069,16 @@
     "guest-passes": 1,
     "ultrareview-awareness": 1,
     "ultrareview-post-commit": 1,
-    "push-notif": 1
+    "push-notif": 1,
+    "plan-mode-for-complex-tasks": 1
   },
   "feedbackSurveyState": {
-    "lastShownTime": 1784058700367
+    "lastShownTime": 1788300829462
   },
   "pluginUsage": {
     "claude-notifications-go@claude-notifications-go": {
-      "usageCount": 55,
-      "lastUsedAt": 1788299732794,
+      "usageCount": 66,
+      "lastUsedAt": 1788300894579,
       "lastUsedNumStartups": 13
     }
   },

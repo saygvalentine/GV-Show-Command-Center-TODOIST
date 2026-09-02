@@ -1,0 +1,29 @@
+CREATE TABLE "preset_tasks" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"category" text NOT NULL,
+	"due_date_offset" integer,
+	"due_date_unit" text,
+	"due_date_direction" text,
+	"due_date_anchor" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "gcal_orphans" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"gcal_event_id" text NOT NULL,
+	"calendar_type" text DEFAULT 'task' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "todoist_orphans" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"todoist_task_id" text NOT NULL,
+	"item_type" text DEFAULT 'task' NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+ALTER TABLE "tasks" ADD COLUMN "gcal_event_id" text;--> statement-breakpoint
+ALTER TABLE "tasks" ADD COLUMN "todoist_task_id" text;--> statement-breakpoint
+ALTER TABLE "eblasts" ADD COLUMN "gcal_event_id" text;--> statement-breakpoint
+ALTER TABLE "eblasts" ADD COLUMN "todoist_task_id" text;

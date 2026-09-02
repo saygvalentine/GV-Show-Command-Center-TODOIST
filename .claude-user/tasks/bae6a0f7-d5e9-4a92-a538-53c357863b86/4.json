@@ -1,0 +1,8 @@
+{
+  "id": "4",
+  "subject": "Build routes/todoist.ts sync route",
+  "description": "Create artifacts/api-server/src/routes/todoist.ts mirroring routes/google-calendar.ts: GET /projects, POST /sync with syncTask/syncEblast/drainOrphans, using close/reopen for completion state. Wire into routes/index.ts.",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

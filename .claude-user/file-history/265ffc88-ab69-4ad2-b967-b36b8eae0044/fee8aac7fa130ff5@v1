@@ -68,7 +68,7 @@ export function EblastList({ show }: { show: Show }) {
   const updateEblast = useUpdateEblast();
   const deleteEblast = useDeleteEblast();
 
-  const [sentOpen, setSentOpen] = useState(true);
+  const [sentOpen, setSentOpen] = useState(false);
 
   const grouped = useMemo(() => {
     if (!eblasts) return { overdue: [], dueToday: [], upcoming: [], sent: [] };
@@ -248,7 +248,7 @@ function EblastRow({ item, showId, onToggle, onDelete }: { item: any, showId: nu
   const onUpdateSentAt = (dateStr: string) => {
     if (!dateStr) return;
     updateEblast.mutate(
-      { showId, eblastId: item.id, data: { sentAt: parseDateStr(dateStr).toISOString() } as any },
+      { showId, eblastId: item.id, data: { sentAt: new Date(dateStr).toISOString() } as any },
       {
         onSuccess: () => {
           toast({ title: "Sent date updated" });

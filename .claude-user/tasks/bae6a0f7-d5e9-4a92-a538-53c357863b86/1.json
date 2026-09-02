@@ -1,0 +1,8 @@
+{
+  "id": "1",
+  "subject": "Add todoistTaskId columns + todoist_orphans table",
+  "description": "Add todoistTaskId text column to tasksTable and eblastsTable in lib/db/src/schema/tasks.ts and eblasts.ts. Create lib/db/src/schema/todoistOrphans.ts mirroring gcalOrphans.ts. Export from schema/index.ts.",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

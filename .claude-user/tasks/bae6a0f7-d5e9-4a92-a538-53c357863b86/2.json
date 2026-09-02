@@ -1,0 +1,8 @@
+{
+  "id": "2",
+  "subject": "Generate and run DB migration",
+  "description": "Run pnpm --filter @workspace/db run generate then run migrate to apply the new schema changes.",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

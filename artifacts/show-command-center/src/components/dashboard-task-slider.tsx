@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import {
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
-  Check, Timer, Play, Pause, RotateCcw, ArrowLeft, AlertTriangle, Edit2, Loader2,
+  Check, Timer, Play, Pause, RotateCcw, ArrowLeft, ArrowUpRight, AlertTriangle, Edit2, Loader2, Trash2,
   Flame, Signpost, Briefcase, Warehouse, Globe, DollarSign,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,8 +10,13 @@ import {
   useGetOverdueItems,
   useUpdateTask,
   useUpdateEblast,
+  useDeleteTask,
+  useDeleteEblast,
   getGetOverdueItemsQueryKey,
   getGetDashboardSummaryQueryKey,
+  getListTasksQueryKey,
+  getListEblastsQueryKey,
+  getGetShowQueryKey,
 } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,12 +27,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, parseDateStr, getUrgencyInfo } from "@/lib/date-utils";
 import { differenceInDays, startOfDay, format } from "date-fns";
+import { isKeyTask } from "@/components/task-list";
 
 const PRESET_CATEGORIES = [
   "Fire Marshal", "ID Sign", "Warehouse Manifest",
@@ -49,8 +59,11 @@ function EditItemDialog({ item, open, onOpenChange, onSuccess }: {
   onSuccess: () => void;
 }) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const updateTask = useUpdateTask();
   const updateEblast = useUpdateEblast();
+  const deleteTask = useDeleteTask();
+  const deleteEblast = useDeleteEblast();
 
   const form = useForm<z.infer<typeof editItemSchema>>({
     resolver: zodResolver(editItemSchema),
@@ -91,6 +104,25 @@ function EditItemDialog({ item, open, onOpenChange, onSuccess }: {
 
   const isPending = updateTask.isPending || updateEblast.isPending;
   const isTask = item.type === "task";
+  const isProtected = isTask && isKeyTask(item);
+
+  const onDelete = () => {
+    const onDeleteSuccess = () => {
+      toast({ title: isTask ? "Task deleted" : "eBlast deleted" });
+      queryClient.invalidateQueries({ queryKey: getGetShowQueryKey(item.showId) });
+      queryClient.invalidateQueries({
+        queryKey: isTask ? getListTasksQueryKey(item.showId) : getListEblastsQueryKey(item.showId),
+      });
+      onOpenChange(false);
+      onSuccess();
+    };
+    const onDeleteError = () => toast({ title: `Failed to delete ${isTask ? "task" : "eBlast"}`, variant: "destructive" });
+    if (isTask) {
+      deleteTask.mutate({ showId: item.showId, taskId: item.id }, { onSuccess: onDeleteSuccess, onError: onDeleteError });
+    } else {
+      deleteEblast.mutate({ showId: item.showId, eblastId: item.id }, { onSuccess: onDeleteSuccess, onError: onDeleteError });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,12 +173,37 @@ function EditItemDialog({ item, open, onOpenChange, onSuccess }: {
                 <FormControl><Textarea className="resize-none" rows={3} {...field} /></FormControl>
               </FormItem>
             )} />
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save
-              </Button>
+            <div className="flex items-center justify-between gap-2 pt-2">
+              {!isProtected ? (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" type="button" className="h-9 w-9 text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete {isTask ? "Task" : "eBlast"}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{item.name}"? This cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={onDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              ) : <div />}
+              <div className="flex gap-2">
+                <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>Cancel</Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
@@ -179,8 +236,73 @@ function formatTime(secs: number) {
   return `${m}:${s}`;
 }
 
+// ── Rich body for the "just completed" toast ────────────────────────────────
+function CompletedToastBody({
+  itemId, itemType, showId, showName, initialDate, onDismiss,
+}: {
+  itemId: number;
+  itemType: "task" | "eblast";
+  showId: number;
+  showName: string;
+  initialDate: string;
+  onDismiss: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const updateTask = useUpdateTask();
+  const updateEblast = useUpdateEblast();
+  const isTask = itemType === "task";
+  const [saved, setSaved] = useState(false);
+
+  // Note: this toast has TOAST_LIMIT: 1 — calling toast() again here would
+  // replace this rich body with a plain confirmation, so success feedback is
+  // an inline flash instead.
+  const onDateChange = (dateStr: string) => {
+    if (!dateStr) return;
+    const iso = parseDateStr(dateStr).toISOString();
+    const onSuccess = () => {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+      queryClient.invalidateQueries({ queryKey: getGetOverdueItemsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+    };
+    const onError = () => toast({ title: "Error updating date", variant: "destructive" });
+    if (isTask) {
+      updateTask.mutate({ showId, taskId: itemId, data: { completedAt: iso } as any }, { onSuccess, onError });
+    } else {
+      updateEblast.mutate({ showId, eblastId: itemId, data: { sentAt: iso } as any }, { onSuccess, onError });
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2 mt-2">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          {isTask ? "Completed" : "Sent"}:
+        </span>
+        <input
+          type="date"
+          defaultValue={initialDate}
+          className="flex h-7 rounded-md border border-input bg-transparent px-2 text-xs shadow-sm"
+          onChange={(e) => onDateChange(e.target.value)}
+        />
+        {saved && <span className="text-xs text-green-500">Saved</span>}
+      </div>
+      <Link
+        href={`/shows/${showId}?tab=${isTask ? "tasks" : "eblasts"}`}
+        onClick={onDismiss}
+        className="inline-flex w-fit items-center gap-1 text-xs font-medium text-primary hover:underline underline-offset-2"
+      >
+        View in {showName}
+        <ArrowUpRight className="h-3 w-3" />
+      </Link>
+    </div>
+  );
+}
+
 export function DashboardTaskSlider() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { data: rawItems, isLoading } = useGetOverdueItems();
   const updateTask = useUpdateTask();
   const updateEblast = useUpdateEblast();
@@ -192,6 +314,7 @@ export function DashboardTaskSlider() {
   const [noteOpen, setNoteOpen] = useState<Record<string, boolean>>({});
   const [editOpen, setEditOpen] = useState(false);
   const [overdueOpen, setOverdueOpen] = useState(false);
+  const dismissRef = useRef<(() => void) | null>(null);
 
   // Pomodoro state
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -316,6 +439,7 @@ export function DashboardTaskSlider() {
   const markComplete = () => {
     setCompleting(p => ({ ...p, [key]: true }));
     const now = new Date().toISOString();
+    const { id: itemId, type: itemType, showId, showName } = item;
     if (item.type === "task") {
       updateTask.mutate(
         { showId: item.showId, taskId: item.id, data: { completed: true, completedAt: now } },
@@ -324,6 +448,20 @@ export function DashboardTaskSlider() {
             invalidate();
             setIndex(i => Math.max(0, Math.min(i, total - 2)));
             setCompleting(p => ({ ...p, [key]: false }));
+            const { dismiss } = toast({
+              title: "Task completed",
+              description: (
+                <CompletedToastBody
+                  itemId={itemId}
+                  itemType={itemType}
+                  showId={showId}
+                  showName={showName}
+                  initialDate={format(new Date(now), "yyyy-MM-dd")}
+                  onDismiss={() => dismissRef.current?.()}
+                />
+              ),
+            });
+            dismissRef.current = dismiss;
           },
           onError: () => setCompleting(p => ({ ...p, [key]: false })),
         }
@@ -336,6 +474,20 @@ export function DashboardTaskSlider() {
             invalidate();
             setIndex(i => Math.max(0, Math.min(i, total - 2)));
             setCompleting(p => ({ ...p, [key]: false }));
+            const { dismiss } = toast({
+              title: "eBlast marked sent",
+              description: (
+                <CompletedToastBody
+                  itemId={itemId}
+                  itemType={itemType}
+                  showId={showId}
+                  showName={showName}
+                  initialDate={format(new Date(now), "yyyy-MM-dd")}
+                  onDismiss={() => dismissRef.current?.()}
+                />
+              ),
+            });
+            dismissRef.current = dismiss;
           },
           onError: () => setCompleting(p => ({ ...p, [key]: false })),
         }

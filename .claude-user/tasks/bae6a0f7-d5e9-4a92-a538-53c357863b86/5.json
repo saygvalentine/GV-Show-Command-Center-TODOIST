@@ -1,0 +1,8 @@
+{
+  "id": "5",
+  "subject": "Add todoist orphan-tracking on delete",
+  "description": "Add todoistOrphansTable inserts parallel to existing gcalOrphansTable inserts in routes/tasks.ts DELETE, routes/eblasts.ts DELETE, and routes/shows.ts cascade delete.",
+  "status": "completed",
+  "blocks": [],
+  "blockedBy": []
+}

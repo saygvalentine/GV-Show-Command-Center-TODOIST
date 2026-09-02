@@ -102,3 +102,7 @@
 {"display":"look into feasability","pastedContents":{},"timestamp":1787347197086,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
 {"display":"I was thinking about a big change to possibly injecting TodoIst in the project so that tasks here are actually real tasks in ToDoIt. But i know that may be a huge change. Would it be more feasable to just push these to Todoist as a connector?","pastedContents":{},"timestamp":1787347485350,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
 {"display":"Check first","pastedContents":{},"timestamp":1787347815126,"project":"/home/runner/workspace","sessionId":"bae6a0f7-d5e9-4a92-a538-53c357863b86"}
+{"display":"when exporting tasks to todoist, whta are the default times?","pastedContents":{},"timestamp":1788369587343,"project":"/home/runner/workspace","sessionId":"9572c260-2263-4dc6-a0dd-959baef13798"}
+{"display":"/login","pastedContents":{},"timestamp":1788369725462,"project":"/home/runner/workspace","sessionId":"9572c260-2263-4dc6-a0dd-959baef13798"}
+{"display":"can we set a deafult? currently the tasks are being set to 11:59 pm","pastedContents":{},"timestamp":1788371468028,"project":"/home/runner/workspace","sessionId":"9572c260-2263-4dc6-a0dd-959baef13798"}
+{"display":"yes","pastedContents":{},"timestamp":1788380768885,"project":"/home/runner/workspace","sessionId":"9572c260-2263-4dc6-a0dd-959baef13798"}

@@ -36,9 +36,7 @@
     "c4e-remote-sessions": 12,
     "subagent-fanout-nudge": 13,
     "ultrareview-awareness": 13,
-    "push-notif": 13,
-    "ultrareview-post-commit": 13,
-    "dynamic-workflows": 13
+    "push-notif": 13
   },
   "promptQueueUseCount": 6,
   "cachedGrowthBookFeatures": {
@@ -1090,17 +1088,15 @@
     "c4e-remote-sessions": 1,
     "subagent-fanout-nudge": 1,
     "ultrareview-awareness": 1,
-    "push-notif": 1,
-    "ultrareview-post-commit": 1,
-    "dynamic-workflows": 1
+    "push-notif": 1
   },
   "feedbackSurveyState": {
     "lastShownTime": 1784058700367
   },
   "pluginUsage": {
     "claude-notifications-go@claude-notifications-go": {
-      "usageCount": 48,
-      "lastUsedAt": 1788380783674,
+      "usageCount": 45,
+      "lastUsedAt": 1788371524968,
       "lastUsedNumStartups": 13
     }
   },
@@ -1206,9 +1202,5 @@
   "modelAccessCache": [],
   "orgModelDefaultCache": null,
   "autoCompactWindowsCache": null,
-  "pushNotifUpsellSeenCount": 1,
-  "metricsStatusCache": {
-    "enabled": true,
-    "timestamp": 1788374667684
-  }
+  "pushNotifUpsellSeenCount": 1
 }

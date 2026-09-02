@@ -44,14 +44,10 @@ async function syncTask(
 
   if (!todoistTaskId) {
     const created = await todoistRequest("POST", `/api/v1/tasks`, body) as TodoistTask | null;
-    if (!created?.id) {
-      throw new Error(
-        `Failed to create Todoist task "${content}" — Todoist returned 404. ` +
-        `Check that the connected Todoist account has access to the selected project.`,
-      );
+    if (created?.id) {
+      todoistTaskId = created.id;
+      await db.update(tasksTable).set({ todoistTaskId }).where(eq(tasksTable.id, task.id));
     }
-    todoistTaskId = created.id;
-    await db.update(tasksTable).set({ todoistTaskId }).where(eq(tasksTable.id, task.id));
     counters.created++;
   }
 
@@ -92,14 +88,10 @@ async function syncEblast(
 
   if (!todoistTaskId) {
     const created = await todoistRequest("POST", `/api/v1/tasks`, body) as TodoistTask | null;
-    if (!created?.id) {
-      throw new Error(
-        `Failed to create Todoist task "${content}" — Todoist returned 404. ` +
-        `Check that the connected Todoist account has access to the selected project.`,
-      );
+    if (created?.id) {
+      todoistTaskId = created.id;
+      await db.update(eblastsTable).set({ todoistTaskId }).where(eq(eblastsTable.id, eblast.id));
     }
-    todoistTaskId = created.id;
-    await db.update(eblastsTable).set({ todoistTaskId }).where(eq(eblastsTable.id, eblast.id));
     counters.created++;
   }
 

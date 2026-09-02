@@ -3,7 +3,7 @@
   "installMethod": "global",
   "tipsHistory": {
     "new-user-warmup": 9,
-    "plan-mode-for-complex-tasks": 8,
+    "plan-mode-for-complex-tasks": 13,
     "memory-command": 1,
     "theme-command": 1,
     "default-permission-mode-config": 12,
@@ -38,7 +38,8 @@
     "ultrareview-awareness": 13,
     "push-notif": 13,
     "ultrareview-post-commit": 13,
-    "dynamic-workflows": 13
+    "dynamic-workflows": 13,
+    "workflow-size-prompting-ambient": 13
   },
   "promptQueueUseCount": 6,
   "cachedGrowthBookFeatures": {
@@ -1092,15 +1093,17 @@
     "ultrareview-awareness": 1,
     "push-notif": 1,
     "ultrareview-post-commit": 1,
-    "dynamic-workflows": 1
+    "dynamic-workflows": 1,
+    "workflow-size-prompting-ambient": 1,
+    "plan-mode-for-complex-tasks": 1
   },
   "feedbackSurveyState": {
     "lastShownTime": 1784058700367
   },
   "pluginUsage": {
     "claude-notifications-go@claude-notifications-go": {
-      "usageCount": 47,
-      "lastUsedAt": 1788374520296,
+      "usageCount": 56,
+      "lastUsedAt": 1788385620703,
       "lastUsedNumStartups": 13
     }
   },

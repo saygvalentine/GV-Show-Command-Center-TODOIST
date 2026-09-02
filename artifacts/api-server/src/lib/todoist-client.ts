@@ -41,6 +41,10 @@ export async function todoistListProjects(): Promise<{ id: string; name: string 
   return data?.results ?? [];
 }
 
+// Default time of day applied to every synced task/e-blast so Todoist doesn't
+// fall back to displaying them as due at 11:59 PM.
+const DEFAULT_TASK_TIME = "09:00";
+
 export function makeTodoistTask(
   content: string,
   description: string,
@@ -50,7 +54,8 @@ export function makeTodoistTask(
   return {
     content,
     description,
-    due_date: dueDate,
+    due_string: `${dueDate} ${DEFAULT_TASK_TIME}`,
+    due_lang: "en",
     ...(projectId ? { project_id: projectId } : {}),
   };
 }

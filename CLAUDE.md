@@ -86,6 +86,53 @@ The `/export` route returns ICS (iCalendar) format for importing shows into cale
 
 The API server runs DB migrations automatically on startup (via `drizzle-orm/node-postgres/migrator`), but only if the `shows` table does not yet exist — otherwise it skips to avoid re-applying already-applied migrations.
 
+## Todoist sync status and guardrails
+
+### Current implementation status
+
+- Phase 1 foundation is in place:
+  - `todoist_settings` stores the Task and E-Blast Todoist project IDs server-side.
+  - `todoist_sync_events` is the durable outbound outbox schema.
+  - `todoist_webhook_events` is the future inbound webhook audit/deduplication schema.
+- The application currently still uses the legacy manual one-way Todoist flow:
+  - Existing `POST /api/export/todoist/sync` remains active.
+  - Existing "Push to Todoist" UI remains active.
+  - `tasks.ts` and `eblasts.ts` do not yet enqueue or deliver automatic Todoist events.
+  - No Todoist webhook receiver exists yet.
+- Do not describe the Phase 1 tables as active automatic synchronization until later phases are implemented.
+
+### Settings
+
+- Todoist project configuration must be read from and written to server-side `todoist_settings`.
+- Do not add or restore `localStorage["todoist_prefs"]` as a Todoist sync configuration source.
+- This app currently has no user/auth/workspace model, so `todoist_settings` is a singleton keyed by `id = "default"`.
+
+### Outbound sync design
+
+- `todoist_sync_events` is the future durable outbox for task and e-blast changes.
+- Use a coalesced current-state model: one active event per item, not a replay of every intermediate edit.
+- Delivery shapes are `upsert` and `delete`; `reason` records why the event was created.
+- Active means `pending` or `in_progress`. Historical `delivered`, `failed`, and `abandoned` rows must not block future events.
+- Never introduce a resident `setInterval` retry loop. This project uses Replit autoscale deployment and can scale to zero between requests.
+- Future retries must be triggered by active requests, webhook requests, explicit repair actions, or a deliberately low-frequency scheduled HTTP trigger.
+
+### Deletion and remote identity
+
+- Use `tasks.todoistTaskId` and `eblasts.todoistTaskId` as the only local-to-Todoist identity mappings.
+- Never match Todoist tasks by title/content.
+- Local deletion will eventually enqueue a retryable remote delete.
+- A future Todoist-side deletion must preserve the local task/e-blast record, clear `todoistTaskId`, and log the event as an explicit unlink — never delete the local record and never silently recreate the Todoist task on the next ordinary local edit. Relinking must be an explicit future Sync Health/Repair action, not an implicit side effect of normal outbox delivery.
+
+### Production migration requirement
+
+- Migrations do **not** auto-apply to an already-running deployment: startup only calls the migrator when the `shows` table does not yet exist, so any migration added after initial launch (including `todoist_settings`/`todoist_sync_events`/`todoist_webhook_events`) must be applied manually against the production `DATABASE_URL` via `pnpm --filter @workspace/db run migrate`, then followed by a redeploy/restart to pick up any dependent route changes.
+
+### Key-task name-coupling risk (pre-existing, unrelated to Todoist sync)
+
+- `routes/dashboard.ts`, `routes/shows.ts`, and `task-list.tsx`'s `KEY_TASKS`/`isKeyTask()` identify business-critical tasks (e.g. "Submit To FM/EC", "Submit ID Sign Order", "Bucket Due Date") by exact `{name, category}` string equality, not by a stable id — there is no `presetTaskId` linking a task back to its preset.
+- This has already broken production once: `index.ts` contains one-off `UPDATE` statements backfilling renamed task/preset names because key-task detection silently desynced after a label was renamed.
+- Any Todoist sync work must resolve local↔remote items only through `todoistTaskId`/local `id`, never through Todoist's `content` string, to avoid reintroducing this same failure mode from the other direction.
+
 ## Environment Variables
 
 | Variable | Required by |

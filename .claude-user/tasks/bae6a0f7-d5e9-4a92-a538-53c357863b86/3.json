@@ -1,8 +1,0 @@
-{
-  "id": "3",
-  "subject": "Build todoist-client.ts",
-  "description": "Create artifacts/api-server/src/lib/todoist-client.ts mirroring google-calendar-client.ts: todoistRequest with 429 retry/backoff, todoistListProjects, makeTodoistTask.",
-  "status": "completed",
-  "blocks": [],
-  "blockedBy": []
-}

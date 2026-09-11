@@ -1,8 +1,0 @@
-{
-  "id": "6",
-  "subject": "Add Todoist endpoints to OpenAPI spec + codegen",
-  "description": "Add TodoistProject/TodoistSyncResult schemas and /export/todoist/projects, /export/todoist/sync paths to lib/api-spec/openapi.yaml. Run pnpm --filter @workspace/api-spec run codegen.",
-  "status": "completed",
-  "blocks": [],
-  "blockedBy": []
-}

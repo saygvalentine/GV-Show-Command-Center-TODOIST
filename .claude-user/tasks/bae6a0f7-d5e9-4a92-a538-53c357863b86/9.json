@@ -1,8 +1,0 @@
-{
-  "id": "9",
-  "subject": "Verify end-to-end",
-  "description": "Typecheck, run migration, live-test close/reopen idempotency, and walk through the 7-step verification checklist from the plan.",
-  "status": "completed",
-  "blocks": [],
-  "blockedBy": []
-}

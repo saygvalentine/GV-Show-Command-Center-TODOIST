@@ -688,6 +688,27 @@ export const SyncTodoistResponse = zod.object({
 });
 
 /**
+ * @summary Get server-side Todoist sync settings
+ */
+export const GetTodoistSettingsResponse = zod.object({
+  taskProjectId: zod.string().nullable(),
+  eblastProjectId: zod.string().nullable(),
+});
+
+/**
+ * @summary Update server-side Todoist sync settings
+ */
+export const UpdateTodoistSettingsBody = zod.object({
+  taskProjectId: zod.string().nullish(),
+  eblastProjectId: zod.string().nullish(),
+});
+
+export const UpdateTodoistSettingsResponse = zod.object({
+  taskProjectId: zod.string().nullable(),
+  eblastProjectId: zod.string().nullable(),
+});
+
+/**
  * @summary Get all overdue tasks and e-blasts across all shows
  */
 export const GetOverdueItemsResponseItem = zod.object({

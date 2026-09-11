@@ -831,6 +831,45 @@ paths:
                   error:
                     type: string
 
+  /export/todoist/settings:
+    get:
+      operationId: getTodoistSettings
+      tags: [export]
+      summary: Get server-side Todoist sync settings
+      responses:
+        "200":
+          description: Current Todoist settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoistSettings"
+    put:
+      operationId: updateTodoistSettings
+      tags: [export]
+      summary: Update server-side Todoist sync settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTodoistSettingsBody"
+      responses:
+        "200":
+          description: Updated Todoist settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoistSettings"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
   /dashboard/overdue:
     get:
       operationId: getOverdueItems
@@ -1486,6 +1525,27 @@ components:
           type: integer
         deleted:
           type: integer
+
+    TodoistSettings:
+      type: object
+      required: [taskProjectId, eblastProjectId]
+      properties:
+        taskProjectId:
+          type: string
+          nullable: true
+        eblastProjectId:
+          type: string
+          nullable: true
+
+    UpdateTodoistSettingsBody:
+      type: object
+      properties:
+        taskProjectId:
+          type: string
+          nullable: true
+        eblastProjectId:
+          type: string
+          nullable: true
 
     DashboardSummary:
       type: object

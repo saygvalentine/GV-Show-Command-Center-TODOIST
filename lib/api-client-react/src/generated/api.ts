@@ -49,12 +49,15 @@ import type {
   SyncTodoist503,
   SyncTodoistParams,
   Task,
+  TodoistSettings,
   TodoistSyncResult,
   UpdateEblastBody,
   UpdateLinkBody,
   UpdateOfficeTaskBody,
   UpdatePresetTaskBody,
   UpdateTaskBody,
+  UpdateTodoistSettings400,
+  UpdateTodoistSettingsBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -2971,6 +2974,169 @@ export const useSyncTodoist = <
   TContext
 > => {
   return useMutation(getSyncTodoistMutationOptions(options));
+};
+
+/**
+ * @summary Get server-side Todoist sync settings
+ */
+export const getGetTodoistSettingsUrl = () => {
+  return `/api/export/todoist/settings`;
+};
+
+export const getTodoistSettings = async (
+  options?: RequestInit,
+): Promise<TodoistSettings> => {
+  return customFetch<TodoistSettings>(getGetTodoistSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTodoistSettingsQueryKey = () => {
+  return [`/api/export/todoist/settings`] as const;
+};
+
+export const getGetTodoistSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTodoistSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTodoistSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTodoistSettingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getTodoistSettings>>
+  > = ({ signal }) => getTodoistSettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTodoistSettings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTodoistSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTodoistSettings>>
+>;
+export type GetTodoistSettingsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get server-side Todoist sync settings
+ */
+
+export function useGetTodoistSettings<
+  TData = Awaited<ReturnType<typeof getTodoistSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getTodoistSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTodoistSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update server-side Todoist sync settings
+ */
+export const getUpdateTodoistSettingsUrl = () => {
+  return `/api/export/todoist/settings`;
+};
+
+export const updateTodoistSettings = async (
+  updateTodoistSettingsBody: UpdateTodoistSettingsBody,
+  options?: RequestInit,
+): Promise<TodoistSettings> => {
+  return customFetch<TodoistSettings>(getUpdateTodoistSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateTodoistSettingsBody),
+  });
+};
+
+export const getUpdateTodoistSettingsMutationOptions = <
+  TError = ErrorType<UpdateTodoistSettings400>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTodoistSettings>>,
+    TError,
+    { data: BodyType<UpdateTodoistSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateTodoistSettings>>,
+  TError,
+  { data: BodyType<UpdateTodoistSettingsBody> },
+  TContext
+> => {
+  const mutationKey = ["updateTodoistSettings"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateTodoistSettings>>,
+    { data: BodyType<UpdateTodoistSettingsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateTodoistSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateTodoistSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateTodoistSettings>>
+>;
+export type UpdateTodoistSettingsMutationBody =
+  BodyType<UpdateTodoistSettingsBody>;
+export type UpdateTodoistSettingsMutationError =
+  ErrorType<UpdateTodoistSettings400>;
+
+/**
+ * @summary Update server-side Todoist sync settings
+ */
+export const useUpdateTodoistSettings = <
+  TError = ErrorType<UpdateTodoistSettings400>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTodoistSettings>>,
+    TError,
+    { data: BodyType<UpdateTodoistSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateTodoistSettings>>,
+  TError,
+  { data: BodyType<UpdateTodoistSettingsBody> },
+  TContext
+> => {
+  return useMutation(getUpdateTodoistSettingsMutationOptions(options));
 };
 
 /**

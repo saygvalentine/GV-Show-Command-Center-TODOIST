@@ -7,3 +7,6 @@ export * from "./venues";
 export * from "./presetTasks";
 export * from "./gcalOrphans";
 export * from "./todoistOrphans";
+export * from "./todoistSettings";
+export * from "./todoistSyncEvents";
+export * from "./todoistWebhookEvents";

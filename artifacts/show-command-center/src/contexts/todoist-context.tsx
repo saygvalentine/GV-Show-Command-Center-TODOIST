@@ -1,13 +1,13 @@
 // @refresh reset
-import { createContext, useCallback, useContext, useState } from "react";
-import { useListTodoistProjects } from "@workspace/api-client-react";
-
-const STORAGE_KEY = "todoist_prefs";
-
-interface StoredPrefs {
-  taskProjectId: string;
-  eblastProjectId: string;
-}
+import { createContext, useCallback, useContext } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useListTodoistProjects,
+  useGetTodoistSettings,
+  useUpdateTodoistSettings,
+  getGetTodoistSettingsQueryKey,
+  type UpdateTodoistSettingsBody,
+} from "@workspace/api-client-react";
 
 export interface TodoistProject {
   id: string;
@@ -25,52 +25,47 @@ interface TodoistContextValue {
 
 const TodoistContext = createContext<TodoistContextValue | null>(null);
 
-function loadPrefs(): StoredPrefs {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { taskProjectId: "", eblastProjectId: "" };
-    const parsed = JSON.parse(raw) as Partial<StoredPrefs>;
-    return {
-      taskProjectId: parsed.taskProjectId ?? "",
-      eblastProjectId: parsed.eblastProjectId ?? "",
-    };
-  } catch {
-    return { taskProjectId: "", eblastProjectId: "" };
-  }
-}
-
-function savePrefs(prefs: StoredPrefs) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
-}
-
 export function TodoistProvider({ children }: { children: React.ReactNode }) {
-  const [prefs, setPrefs] = useState<StoredPrefs>(loadPrefs);
-  const { data, isLoading: loadingProjects } = useListTodoistProjects();
-  const projects = data?.projects ?? [];
+  const queryClient = useQueryClient();
+  const { data: projectData, isLoading: loadingProjects } = useListTodoistProjects();
+  const { data: settings, isLoading: loadingSettings } = useGetTodoistSettings();
+  const updateSettings = useUpdateTodoistSettings();
 
-  const setTaskProjectId = useCallback((taskProjectId: string) => {
-    setPrefs((prev) => {
-      const updated = { ...prev, taskProjectId };
-      savePrefs(updated);
-      return updated;
-    });
-  }, []);
+  const projects = projectData?.projects ?? [];
 
-  const setEblastProjectId = useCallback((eblastProjectId: string) => {
-    setPrefs((prev) => {
-      const updated = { ...prev, eblastProjectId };
-      savePrefs(updated);
-      return updated;
-    });
-  }, []);
+  // Project preferences live in the database rather than this browser's localStorage, so
+  // the server can read them without a browser session — a prerequisite for automatic sync.
+  const saveSettings = useCallback(
+    (patch: UpdateTodoistSettingsBody) => {
+      updateSettings.mutate(
+        { data: patch },
+        {
+          onSuccess: (updated) => {
+            queryClient.setQueryData(getGetTodoistSettingsQueryKey(), updated);
+          },
+        },
+      );
+    },
+    [updateSettings, queryClient],
+  );
+
+  const setTaskProjectId = useCallback(
+    (taskProjectId: string) => saveSettings({ taskProjectId }),
+    [saveSettings],
+  );
+
+  const setEblastProjectId = useCallback(
+    (eblastProjectId: string) => saveSettings({ eblastProjectId }),
+    [saveSettings],
+  );
 
   return (
     <TodoistContext.Provider
       value={{
-        taskProjectId: prefs.taskProjectId,
-        eblastProjectId: prefs.eblastProjectId,
+        taskProjectId: settings?.taskProjectId ?? "",
+        eblastProjectId: settings?.eblastProjectId ?? "",
         projects,
-        loadingProjects,
+        loadingProjects: loadingProjects || loadingSettings,
         setTaskProjectId,
         setEblastProjectId,
       }}

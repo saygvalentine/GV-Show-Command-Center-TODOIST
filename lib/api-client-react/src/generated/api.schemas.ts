@@ -292,6 +292,16 @@ export interface TodoistSyncResult {
   deleted: number;
 }
 
+export interface TodoistSettings {
+  taskProjectId: string | null;
+  eblastProjectId: string | null;
+}
+
+export interface UpdateTodoistSettingsBody {
+  taskProjectId?: string | null;
+  eblastProjectId?: string | null;
+}
+
 export interface DashboardSummary {
   totalShows: number;
   activeShows: number;
@@ -359,5 +369,9 @@ export type SyncTodoistParams = {
 };
 
 export type SyncTodoist503 = {
+  error?: string;
+};
+
+export type UpdateTodoistSettings400 = {
   error?: string;
 };

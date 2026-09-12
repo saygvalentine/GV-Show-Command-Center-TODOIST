@@ -698,10 +698,14 @@ export const GetTodoistSettingsResponse = zod.object({
 /**
  * @summary Update server-side Todoist sync settings
  */
-export const UpdateTodoistSettingsBody = zod.object({
-  taskProjectId: zod.string().nullish(),
-  eblastProjectId: zod.string().nullish(),
-});
+export const UpdateTodoistSettingsBody = zod
+  .object({
+    taskProjectId: zod.string().nullable(),
+    eblastProjectId: zod.string().nullable(),
+  })
+  .describe(
+    "Full-document replacement, not a partial patch — both fields are always required so the server never has to read-merge-write, which is what caused a lost-update race on concurrent saves.",
+  );
 
 export const UpdateTodoistSettingsResponse = zod.object({
   taskProjectId: zod.string().nullable(),

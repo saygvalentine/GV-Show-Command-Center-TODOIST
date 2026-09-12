@@ -6,7 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+/**
+ * Full-document replacement, not a partial patch — both fields are always required so the server never has to read-merge-write, which is what caused a lost-update race on concurrent saves.
+ */
 export interface UpdateTodoistSettingsBody {
-  taskProjectId?: string | null;
-  eblastProjectId?: string | null;
+  taskProjectId: string | null;
+  eblastProjectId: string | null;
 }

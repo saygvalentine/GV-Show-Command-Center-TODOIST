@@ -48,17 +48,15 @@ router.put("/", async (req, res): Promise<void> => {
     return;
   }
 
-  // Partial update: an omitted field keeps its stored value, an explicit null clears it.
-  const current = await readSettings();
+  // Full-document replacement, not a partial patch: both fields are always present
+  // in a validated body (required by the schema), so this writes exactly what the
+  // caller sent with no server-side read-merge step. That read-merge is what caused
+  // a lost-update race when two saves landed close together — each request read the
+  // same stale row and could overwrite the other's just-written field. The caller
+  // (TodoistProvider) is responsible for including the other field's current value.
   const next = {
-    taskProjectId:
-      parsed.data.taskProjectId !== undefined
-        ? parsed.data.taskProjectId ?? null
-        : current.taskProjectId,
-    eblastProjectId:
-      parsed.data.eblastProjectId !== undefined
-        ? parsed.data.eblastProjectId ?? null
-        : current.eblastProjectId,
+    taskProjectId: parsed.data.taskProjectId,
+    eblastProjectId: parsed.data.eblastProjectId,
   };
 
   const [row] = await db

@@ -243,3 +243,110 @@ describe("non-429 failure", () => {
     expect(deps.persistTodoistTaskId).not.toHaveBeenCalled();
   });
 });
+
+describe("404 on completion (close/reopen)", () => {
+  it("A. existing linked task: update succeeds, close returns null -> unlinked, no create", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "TDST-1" }) // update body succeeds
+      .mockResolvedValueOnce(null); // close 404s
+    const deps = makeDeps({ todoistRequest: request });
+
+    const result = await deliverTask(
+      makeTask({ todoistTaskId: "TDST-1", completed: true }),
+      "Test Show",
+      "PROJ1",
+      deps,
+    );
+
+    expect(result.outcome).toBe("unlinked_remote_missing");
+    expect(result.todoistTaskId).toBeNull();
+    expect(result.completionAction).toBe("none");
+    expect(deps.persistTodoistTaskId).toHaveBeenCalledWith("task", 1, null);
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(request).not.toHaveBeenCalledWith("POST", "/api/v1/tasks", expect.anything());
+  });
+
+  it("B. existing linked e-blast: update succeeds, reopen returns null -> unlinked, no create", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "TDST-2" }) // update body succeeds
+      .mockResolvedValueOnce(null); // reopen 404s
+    const deps = makeDeps({ todoistRequest: request });
+
+    const result = await deliverEblast(
+      makeEblast({ todoistTaskId: "TDST-2", sent: false }),
+      "Test Show",
+      "PROJ2",
+      deps,
+    );
+
+    expect(result.outcome).toBe("unlinked_remote_missing");
+    expect(result.todoistTaskId).toBeNull();
+    expect(result.completionAction).toBe("none");
+    expect(deps.persistTodoistTaskId).toHaveBeenCalledWith("eblast", 2, null);
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(request).not.toHaveBeenCalledWith("POST", "/api/v1/tasks", expect.anything());
+  });
+
+  it("C. newly created completed task: create succeeds, close returns null -> mapping persisted then cleared, no second create", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "TDST-3" }) // create succeeds
+      .mockResolvedValueOnce(null); // close 404s
+    const deps = makeDeps({ todoistRequest: request });
+
+    const result = await deliverTask(makeTask({ completed: true }), "Test Show", "PROJ1", deps);
+
+    expect(result.outcome).toBe("unlinked_remote_missing");
+    expect(result.todoistTaskId).toBeNull();
+    expect(result.completionAction).toBe("none");
+    // Persisted twice: once with the new id after create, once with null after the 404.
+    expect(deps.persistTodoistTaskId).toHaveBeenNthCalledWith(1, "task", 1, "TDST-3");
+    expect(deps.persistTodoistTaskId).toHaveBeenNthCalledWith(2, "task", 1, null);
+    expect(request).toHaveBeenCalledTimes(2);
+    // Only one create call was ever made.
+    expect(request).toHaveBeenCalledWith("POST", "/api/v1/tasks", expect.anything());
+    expect(
+      request.mock.calls.filter(([, path]) => path === "/api/v1/tasks").length,
+    ).toBe(1);
+  });
+
+  it("D. completion throws a non-404 error: outcome failed, prior mapping preserved, completionAction none", async () => {
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce({ id: "TDST-1" }) // update body succeeds
+      .mockRejectedValueOnce(new Error("Todoist API error 500: boom")); // close throws
+    const deps = makeDeps({ todoistRequest: request });
+
+    const result = await deliverTask(
+      makeTask({ todoistTaskId: "TDST-1", completed: true }),
+      "Test Show",
+      "PROJ1",
+      deps,
+    );
+
+    expect(result.outcome).toBe("failed");
+    expect(result.completionAction).toBe("none");
+    expect(result.todoistTaskId).toBe("TDST-1");
+    expect(result.error).toContain("500");
+    // The mapping was never cleared or re-persisted for this failure.
+    expect(deps.persistTodoistTaskId).not.toHaveBeenCalled();
+  });
+
+  it("E. undated linked item: DELETE returns null is treated as idempotent success", async () => {
+    const request = vi.fn().mockResolvedValueOnce(null); // delete 404s — already gone
+    const deps = makeDeps({ todoistRequest: request });
+
+    const result = await deliverTask(
+      makeTask({ dueDate: null, todoistTaskId: "TDST-1" }),
+      "Test Show",
+      "PROJ1",
+      deps,
+    );
+
+    expect(result.outcome).toBe("deleted");
+    expect(result.todoistTaskId).toBeNull();
+    expect(deps.persistTodoistTaskId).toHaveBeenCalledWith("task", 1, null);
+  });
+});

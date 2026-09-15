@@ -42,12 +42,58 @@ interface DeliverableItem {
   isDone: boolean;
 }
 
+// `todoistRequest` returns `null` for a 404 rather than throwing — callers
+// must not discard that signal, since a 404 here means the remote task is
+// gone and no completion action actually happened.
 async function setCompletion(
   deps: DeliveryDeps,
   todoistTaskId: string,
   isDone: boolean,
-): Promise<void> {
-  await deps.todoistRequest("POST", `/api/v1/tasks/${todoistTaskId}/${isDone ? "close" : "reopen"}`);
+): Promise<"ok" | "not_found"> {
+  const result = await deps.todoistRequest("POST", `/api/v1/tasks/${todoistTaskId}/${isDone ? "close" : "reopen"}`);
+  return result === null ? "not_found" : "ok";
+}
+
+type CompletionAttempt =
+  | { ok: true; completionAction: CompletionAction }
+  | { ok: false; result: DeliveryResult };
+
+// Shared by the update and create paths: attempts the close/reopen call and
+// turns its outcome into either a completionAction to fold into the
+// caller's own result, or a terminal DeliveryResult the caller should return
+// immediately (404 -> unlink, non-404 -> failed, mapping never recreated).
+async function attemptCompletion(
+  deps: DeliveryDeps,
+  base: { itemType: TodoistItemType; itemId: number },
+  todoistTaskId: string,
+  isDone: boolean,
+  mappingOnFailure: string | null,
+): Promise<CompletionAttempt> {
+  let completionResult: "ok" | "not_found";
+  try {
+    completionResult = await setCompletion(deps, todoistTaskId, isDone);
+  } catch (err) {
+    return {
+      ok: false,
+      result: {
+        ...base,
+        outcome: "failed",
+        todoistTaskId: mappingOnFailure,
+        completionAction: "none",
+        error: (err as Error).message,
+      },
+    };
+  }
+
+  if (completionResult === "not_found") {
+    await deps.persistTodoistTaskId(base.itemType, base.itemId, null);
+    return {
+      ok: false,
+      result: { ...base, outcome: "unlinked_remote_missing", todoistTaskId: null, completionAction: "none" },
+    };
+  }
+
+  return { ok: true, completionAction: isDone ? "closed" : "reopened" };
 }
 
 async function deliverCore(
@@ -64,6 +110,10 @@ async function deliverCore(
       return { ...base, outcome: "skipped_no_due_date", todoistTaskId: null, completionAction: "none" };
     }
     try {
+      // A null return here means Todoist 404'd the delete — the remote task
+      // is already gone. That is treated as idempotent success: the local
+      // goal ("no linked remote task") is already achieved, so the mapping
+      // is still cleared and the outcome is still `deleted`.
       await deps.todoistRequest("DELETE", `/api/v1/tasks/${item.todoistTaskId}`);
     } catch (err) {
       return {
@@ -102,21 +152,10 @@ async function deliverCore(
       return { ...base, outcome: "unlinked_remote_missing", todoistTaskId: null, completionAction: "none" };
     }
 
-    let completionAction: CompletionAction = "none";
-    try {
-      await setCompletion(deps, item.todoistTaskId, item.isDone);
-      completionAction = item.isDone ? "closed" : "reopened";
-    } catch (err) {
-      return {
-        ...base,
-        outcome: "failed",
-        todoistTaskId: item.todoistTaskId,
-        completionAction: "none",
-        error: (err as Error).message,
-      };
-    }
+    const completion = await attemptCompletion(deps, base, item.todoistTaskId, item.isDone, item.todoistTaskId);
+    if (!completion.ok) return completion.result;
 
-    return { ...base, outcome: "updated", todoistTaskId: item.todoistTaskId, completionAction };
+    return { ...base, outcome: "updated", todoistTaskId: item.todoistTaskId, completionAction: completion.completionAction };
   }
 
   // Create path: no existing remote mapping.
@@ -148,25 +187,10 @@ async function deliverCore(
   const newTodoistTaskId = created.id;
   await deps.persistTodoistTaskId(item.itemType, item.id, newTodoistTaskId);
 
-  let completionAction: CompletionAction = "none";
-  try {
-    await setCompletion(deps, newTodoistTaskId, item.isDone);
-    completionAction = item.isDone ? "closed" : "reopened";
-  } catch (err) {
-    // The task was created and the mapping is already persisted — creation
-    // itself succeeded. A failed close/reopen call is reported via
-    // completionAction staying "none"; the outcome remains "created" since
-    // that part of the work genuinely succeeded.
-    return {
-      ...base,
-      outcome: "created",
-      todoistTaskId: newTodoistTaskId,
-      completionAction: "none",
-      error: (err as Error).message,
-    };
-  }
+  const completion = await attemptCompletion(deps, base, newTodoistTaskId, item.isDone, newTodoistTaskId);
+  if (!completion.ok) return completion.result;
 
-  return { ...base, outcome: "created", todoistTaskId: newTodoistTaskId, completionAction };
+  return { ...base, outcome: "created", todoistTaskId: newTodoistTaskId, completionAction: completion.completionAction };
 }
 
 export async function deliverTask(

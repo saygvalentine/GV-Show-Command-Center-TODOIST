@@ -1,0 +1,48 @@
+Retry the previously authorized GitHub push now that HTTPS authentication has been repaired.
+
+Push target:
+origin/expand-completed-tasks-default
+
+Required local HEAD:
+da3cfa14d90a81e2d66ed01b9b5cd18e3fe0c847
+
+Expected remote fast-forward:
+718be21..da3cfa1  expand-completed-tasks-default -> expand-completed-tasks-default
+
+Strict requirements:
+- Push only the existing local commit history ending exactly at:
+  da3cfa14d90a81e2d66ed01b9b5cd18e3fe0c847
+- The only newly pushed commit must be:
+  da3cfa1 fix(todoist): log manual sync delivery failures
+- Do not create, amend, rebase, squash, reset, cherry-pick, or force-push.
+- Do not stage, commit, or push `.claude-user/**` session/cache churn.
+- Do not include any unrelated changes, generated files, Playwright artifacts, frontend files, schemas, migrations, package files, lockfiles, settings, webhooks, outbox code, or deployment files.
+- Do not open a pull request.
+- Do not deploy.
+- Do not run migrations.
+- Do not call Todoist.
+- Do not start automatic-sync or Phase 3 work.
+
+Immediately before pushing, verify:
+1. `git rev-parse HEAD` equals exactly:
+   da3cfa14d90a81e2d66ed01b9b5cd18e3fe0c847
+2. `git status --short` contains no source changes outside unrelated `.claude-user/**` churn.
+3. `git log --oneline -3` shows, in order:
+   - da3cfa1 fix(todoist): log manual sync delivery failures
+   - 718be21 fix(todoist): handle missing completion targets
+   - 529a05e refactor(todoist): extract shared delivery service
+4. The remote target is:
+   origin/expand-completed-tasks-default
+   https://github.com/saygvalentine/GV-Show-Command-Center-TODOIST
+
+Push with a normal fast-forward:
+git push origin expand-completed-tasks-default
+
+After pushing, return:
+1. The exact push output.
+2. `git rev-parse HEAD`.
+3. `git log --oneline -3`.
+4. `git status --short`.
+5. Confirmation that no deploy, migration, Todoist call, PR, or additional commit occurred.
+
+Then stop and wait for review.

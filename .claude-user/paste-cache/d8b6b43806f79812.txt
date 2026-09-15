@@ -1,0 +1,50 @@
+Approved. Commit the narrow Todoist manual-sync failure-observability patch exactly as reviewed.
+
+Allowed files only:
+- artifacts/api-server/src/lib/todoist-sync/types.ts
+- artifacts/api-server/src/lib/todoist-sync/types.test.ts
+- artifacts/api-server/src/routes/todoist.ts
+
+Required implementation:
+- Keep `buildDeliveryFailureLog(result)` pure.
+- It must return `null` for every non-`failed` outcome.
+- For a failed result, it must return exactly:
+  - `event: "todoist_delivery_failed"`
+  - `itemType`
+  - `itemId`
+  - `todoistTaskId`
+  - `error`
+- Keep the existing structured call:
+  `logger.error(failureLog, failureLog.event)`.
+- Ensure both task and e-blast manual-sync paths call the shared recorder.
+- Preserve the existing response shape exactly:
+  `{ ok, created, updated, deleted, skipped, unlinked, failed }`.
+- Do not expose provider error text in the HTTP response or frontend toast.
+- Do not modify `delivery.ts` or `delivery.test.ts`.
+- Do not change Todoist API request behavior, completion 404 behavior, delete idempotency, counters, concurrency, or the outer unexpected-error/503 behavior.
+
+Before committing:
+1. Run `git status --short`.
+2. Run `git diff --check`.
+3. Run the API-server test suite.
+4. Run the API-server build.
+5. Confirm only the three approved files are staged.
+6. Confirm no `.claude-user/**`, Playwright artifacts, generated files, lockfiles, schemas, frontend files, migrations, settings, webhooks, outbox files, or deployment files are staged.
+7. Confirm no Todoist API call, migration, deployment, or production-data change occurred.
+
+Use this exact commit message:
+
+fix(todoist): log manual sync delivery failures
+
+After committing:
+1. Return the full commit SHA.
+2. Return `git show --stat --oneline HEAD`.
+3. Return the full focused diff for the commit.
+4. Return the API-server test output summary.
+5. Return the API-server build output summary.
+6. Return `git status --short`.
+7. Do not push.
+8. Do not deploy.
+9. Do not run migrations.
+10. Do not call Todoist.
+11. Stop and wait for review.

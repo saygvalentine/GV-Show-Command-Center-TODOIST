@@ -1,0 +1,47 @@
+Do not commit or push yet.
+
+Show the exact focused diff for only:
+
+- artifacts/api-server/src/lib/todoist-sync/types.ts
+- artifacts/api-server/src/lib/todoist-sync/types.test.ts
+- artifacts/api-server/src/routes/todoist.ts
+
+Then answer precisely:
+
+1. Show the complete implementation and exported type signature of:
+   - buildDeliveryFailureLog(result)
+
+2. Show the exact logger call in routes/todoist.ts.
+   Confirm:
+   - it is a structured logger call, not string interpolation;
+   - it receives event = "todoist_delivery_failed";
+   - it includes only itemType, itemId, todoistTaskId, and a normalized error string;
+   - it does not include Todoist bearer tokens, request headers, raw request bodies,
+     payload snapshots, user notes, or other sensitive data.
+
+3. Show both task and e-blast manual-sync call paths proving:
+   - tallyOutcome still executes for every item;
+   - a failed outcome is logged;
+   - processing continues for the rest of the batch;
+   - the HTTP response remains:
+     { ok, created, updated, deleted, skipped, unlinked, failed }.
+
+4. Show all three new buildDeliveryFailureLog tests and state their expected outputs.
+
+5. Confirm no production behavior changed:
+   - no change to HTTP response schema;
+   - no frontend change;
+   - no change to delivery.ts;
+   - no change to Todoist request behavior;
+   - no change to 404/delete/idempotency policy.
+
+6. Show:
+   - git diff --check;
+   - API-server test result;
+   - API-server build result;
+   - git diff --stat;
+   - git status --short.
+
+Do not edit files.
+Do not stage, commit, push, deploy, migrate, or call Todoist.
+Stop after the report.

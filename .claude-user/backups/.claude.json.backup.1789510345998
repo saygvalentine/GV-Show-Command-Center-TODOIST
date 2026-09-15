@@ -40,7 +40,7 @@
     "agents-view-multiclauding": 15,
     "artifact-duplicate": 15
   },
-  "promptQueueUseCount": 8,
+  "promptQueueUseCount": 7,
   "btwUseCount": 1,
   "showExpandedTodos": true,
   "cachedGrowthBookFeatures": {
@@ -1189,8 +1189,8 @@
   },
   "pluginUsage": {
     "claude-notifications-go@claude-notifications-go": {
-      "usageCount": 157,
-      "lastUsedAt": 1789514004453,
+      "usageCount": 149,
+      "lastUsedAt": 1789510089639,
       "lastUsedNumStartups": 16
     }
   },
@@ -1352,10 +1352,5 @@
       "tipId": "memory-command",
       "numStartups": 16
     }
-  },
-  "githubWebConnectionStatusCache": {
-    "accountUuid": "2f1c2066-a9d4-4365-ad77-58dd6cb6cd34",
-    "orgUuid": "f4546027-1e77-48bb-b36e-3d461d61926f",
-    "status": "connected"
   }
 }

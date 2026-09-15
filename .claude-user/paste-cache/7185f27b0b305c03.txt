@@ -1,0 +1,37 @@
+Push the existing Todoist completion-target correction commit to GitHub.
+
+Commit:
+718be211b3381dc044cdeb0d96e8139279397942
+
+Branch:
+expand-completed-tasks-default
+
+Strict requirements:
+- Push only the existing commit history ending at 718be211b3381dc044cdeb0d96e8139279397942.
+- This should push both already-local Phase 2 commits if 529a05e is not already on origin:
+  - 529a05e refactor(todoist): extract shared delivery service
+  - 718be21 fix(todoist): handle missing completion targets
+- Do not amend, rebase, squash, force-push, or create a new commit.
+- Do not stage or include `.claude-user/**` session-state churn.
+- Do not include Playwright artifacts, test results, generated session files, or unrelated changes.
+- Do not open a pull request.
+- Do not deploy.
+- Do not run migrations.
+- Do not call Todoist.
+- Do not start automatic outbox enqueueing or Phase 3 work.
+- Do not change tasks.ts, eblasts.ts, schemas, migrations, settings, webhooks, retry behavior, or deployment configuration.
+
+Before pushing:
+1. Show `git status --short`.
+2. Show `git log --oneline -5`.
+3. Confirm `git rev-parse HEAD` equals exactly:
+   718be211b3381dc044cdeb0d96e8139279397942
+4. Confirm the remote target is:
+   origin/expand-completed-tasks-default
+   https://github.com/saygvalentine/GV-Show-Command-Center-TODOIST
+
+After pushing:
+1. Return the exact push output.
+2. Return `git rev-parse HEAD`.
+3. Return `git status --short`.
+4. Stop and wait for review.

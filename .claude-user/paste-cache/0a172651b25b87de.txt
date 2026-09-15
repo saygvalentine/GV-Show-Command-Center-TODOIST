@@ -1,0 +1,64 @@
+Do not commit yet. Show me the final review output for the Phase 2 shared Todoist delivery extraction.
+
+Do not edit any files.
+Do not stage, commit, push, deploy, migrate, call Todoist, or begin automatic outbox sync.
+
+Show the complete diff for these non-lockfile files:
+
+- artifacts/api-server/src/lib/todoist-sync/types.ts
+- artifacts/api-server/src/lib/todoist-sync/delivery.ts
+- artifacts/api-server/src/lib/todoist-sync/delivery.test.ts
+- artifacts/api-server/vitest.config.ts
+- artifacts/api-server/src/routes/todoist.ts
+- artifacts/api-server/package.json
+
+Then answer precisely:
+
+1. What TypeScript types/interfaces are exported from:
+   - types.ts
+   - delivery.ts
+
+2. For each delivery outcome, show how routes/todoist.ts counts and returns it:
+   - created
+   - updated
+   - completed/reopened
+   - deleted
+   - skipped_no_due_date
+   - unlinked_remote_missing
+   - failed
+
+3. Show the exact JSON response from manual POST /api/export/todoist/sync for a mixed batch containing:
+   - one successful create,
+   - one successful update,
+   - one undated skip,
+   - one Todoist 404/unlink,
+   - one normal Todoist failure.
+
+4. Show the current frontend’s Push-to-Todoist toast/message behavior and explain exactly what it displays for:
+   - created/updated,
+   - deleted,
+   - skipped,
+   - unlinked remote mapping,
+   - failed delivery.
+
+5. Show the test for a 404 during update and confirm:
+   - the local todoistTaskId clear is attempted;
+   - no Todoist create request occurs afterward;
+   - the explicit result is unlinked_remote_missing.
+
+6. Show the test for a Todoist create response with no valid ID and confirm:
+   - no invalid or empty local mapping is persisted;
+   - created is not incremented;
+   - the result is explicitly failed/invalid-response.
+
+7. Show:
+   - the Vitest version added,
+   - the test script,
+   - test command output,
+   - API-server build output.
+
+8. Show:
+   - git diff --stat
+   - git status --short
+
+Stop after the report. Do not change anything.

@@ -1,0 +1,35 @@
+Approved. Commit the focused Todoist completion-target 404 correction.
+
+Only stage and commit these two files:
+
+- artifacts/api-server/src/lib/todoist-sync/delivery.ts
+- artifacts/api-server/src/lib/todoist-sync/delivery.test.ts
+
+Before committing:
+
+1. Run:
+   - `git status --short`
+   - `git diff --check`
+   - `pnpm --filter @workspace/api-server run test`
+   - `pnpm --filter @workspace/api-server run build`
+
+2. Confirm:
+   - Only the two approved delivery files are staged.
+   - No `.claude-user/**` files are staged.
+   - No migrations, schemas, task routes, eblast routes, settings files, frontend files, lockfiles, generated files, outbox files, webhook files, or deployment configuration files are staged.
+   - No Todoist API call, database migration, deployment, or production data change is being performed.
+
+Use this exact commit message:
+
+fix(todoist): handle missing completion targets
+
+After committing:
+1. Return the commit SHA.
+2. Return `git show --stat --oneline HEAD`.
+3. Return `git status --short`.
+4. Do not push.
+5. Do not deploy.
+6. Do not run migrations.
+7. Do not call Todoist.
+8. Do not begin outbox-enqueue implementation.
+9. Stop and wait for my review.

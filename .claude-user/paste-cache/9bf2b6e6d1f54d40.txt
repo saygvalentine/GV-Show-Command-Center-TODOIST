@@ -1,0 +1,64 @@
+Do not commit or push yet.
+
+Show the exact focused diff for only:
+
+- artifacts/api-server/src/lib/todoist-sync/delivery.ts
+- artifacts/api-server/src/lib/todoist-sync/delivery.test.ts
+
+Then answer these review questions precisely:
+
+1. Show the final return type and implementation of setCompletion().
+   - Confirm how it distinguishes:
+     - normal success;
+     - Todoist 404/null;
+     - non-404 thrown failure.
+
+2. Show the final implementation of the shared completion-attempt helper.
+   - Confirm it clears todoistTaskId only on Todoist 404/null.
+   - Confirm it preserves todoistTaskId on thrown non-404 errors.
+   - Confirm it returns:
+     - unlinked_remote_missing + completionAction none for 404/null;
+     - failed + completionAction none for thrown errors;
+     - normal created/updated + closed/reopened action for successful completion calls.
+
+3. Show the create-path order for a completed/sent item:
+   - Todoist create succeeds;
+   - local ID mapping is persisted;
+   - close/reopen occurs;
+   - if close/reopen returns 404, local mapping is cleared;
+   - no second create occurs.
+
+4. Show the update-path order for a completed/sent item:
+   - update succeeds;
+   - close/reopen occurs;
+   - if close/reopen returns 404, local mapping is cleared;
+   - no create occurs.
+
+5. Show the five new tests added for:
+   - update + close 404;
+   - update + reopen 404;
+   - create + close 404;
+   - non-404 completion/reopen failure;
+   - undated linked delete + DELETE 404/null.
+
+6. For each new test, state the exact expected:
+   - outcome;
+   - todoistTaskId;
+   - completionAction;
+   - persistTodoistTaskId calls;
+   - number of Todoist create calls.
+
+7. Confirm the 404/null DELETE behavior remains intentionally idempotent:
+   - delete endpoint may return null because the remote task is already gone;
+   - local mapping is cleared;
+   - result is deleted rather than failed.
+
+8. Show:
+   - `git diff --check`
+   - backend test output;
+   - backend build output;
+   - git status --short.
+
+Do not modify any files in response.
+Do not stage, commit, push, deploy, migrate, or call Todoist.
+Stop after the review output.

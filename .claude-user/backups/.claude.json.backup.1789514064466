@@ -1189,8 +1189,8 @@
   },
   "pluginUsage": {
     "claude-notifications-go@claude-notifications-go": {
-      "usageCount": 157,
-      "lastUsedAt": 1789514004453,
+      "usageCount": 156,
+      "lastUsedAt": 1789513822532,
       "lastUsedNumStartups": 16
     }
   },

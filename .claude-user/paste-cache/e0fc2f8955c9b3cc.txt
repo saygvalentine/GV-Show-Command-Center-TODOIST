@@ -1,0 +1,58 @@
+Investigate a production-observed legacy Todoist manual-sync issue. Do not edit files, run migrations, deploy, push, commit, call Todoist, or create/modify any tasks.
+
+Observed behavior:
+- In production, clicking “Push to Todoist” successfully pushed overdue tasks.
+- A newly created test task with a future/upcoming due date did not appear in Todoist after using the same manual push workflow.
+- Both taskProjectId and eblastProjectId are configured to the same shared Todoist project.
+- The Todoist connection and settings endpoint are confirmed working.
+
+Goal:
+Determine exactly why an upcoming task was excluded and whether this is:
+1. intentional legacy manual-sync scope,
+2. a frontend request-parameter issue,
+3. a backend query/filter bug,
+4. a Todoist API behavior issue,
+5. or a data eligibility rule such as missing/incorrect due date or show association.
+
+Read-only inspection requirements:
+
+1. Trace the full request path for “Push to Todoist” from:
+   - Show Detail page
+   - Calendar page
+   - API client hook
+   - OpenAPI endpoint definition
+   - backend route
+   - any shared Todoist sync function
+
+2. Identify:
+   - Exact task/e-blast database query used by POST /api/export/todoist/sync.
+   - Every WHERE clause, date predicate, show filter, completion filter, due-date requirement, and query parameter.
+   - Whether the query deliberately includes only overdue items, a selected calendar range, a show, or all eligible records.
+   - Whether future due dates are explicitly excluded.
+
+3. Inspect the Todoist payload builder:
+   - Confirm how a local dueDate is turned into Todoist due data.
+   - Confirm whether a future date can be accepted by the current Todoist client.
+   - Identify any local-date/time-zone conversion that could change eligibility.
+
+4. Compare the actual production test task’s local record shape without mutating it:
+   - ID
+   - show ID
+   - title
+   - due date
+   - completed state
+   - todoistTaskId
+   - category
+   - creation time
+   - whether it matches the manual sync query predicates
+   Redact unrelated business data if necessary.
+
+5. Return a short evidence-based report:
+   - Root cause.
+   - Exact source files/functions/lines.
+   - Whether this behavior is intentional.
+   - Smallest safe immediate fix, if appropriate.
+   - Whether the issue disappears by design in Phase 2 event-driven outbound sync.
+   - Any impact on existing overdue/manual sync behavior.
+
+Do not propose or make code changes until I approve the root-cause report.

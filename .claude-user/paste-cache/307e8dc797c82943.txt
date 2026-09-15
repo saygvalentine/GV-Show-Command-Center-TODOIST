@@ -1,0 +1,38 @@
+Push the already-existing local Todoist failure-observability commit to GitHub.
+
+Commit that must be pushed:
+da3cfa14d90a81e2d66ed01b9b5cd18e3fe0c847
+
+Target:
+origin/expand-completed-tasks-default
+https://github.com/saygvalentine/GV-Show-Command-Center-TODOIST
+
+Strict requirements:
+- Push only the current existing commit history ending exactly at:
+  da3cfa14d90a81e2d66ed01b9b5cd18e3fe0c847
+- The expected new commit is:
+  da3cfa1 fix(todoist): log manual sync delivery failures
+- Do not create, amend, rebase, squash, reset, cherry-pick, or force-push any commits.
+- Do not stage or include `.claude-user/**` session/cache churn.
+- Do not include Playwright artifacts, test results, generated files, frontend files, schemas, migrations, package files, lockfiles, settings, webhooks, outbox code, or deployment configuration.
+- Do not open a pull request.
+- Do not deploy.
+- Do not run migrations.
+- Do not call Todoist.
+- Do not start Phase 3 or automatic-sync work.
+
+Before pushing:
+1. Run `git status --short`.
+2. Run `git log --oneline -5`.
+3. Run `git rev-parse HEAD` and confirm it equals exactly:
+   da3cfa14d90a81e2d66ed01b9b5cd18e3fe0c847
+4. Confirm the remote is:
+   origin/expand-completed-tasks-default
+   https://github.com/saygvalentine/GV-Show-Command-Center-TODOIST
+
+After pushing:
+1. Return the exact push output.
+2. Return `git rev-parse HEAD`.
+3. Return `git log --oneline -5`.
+4. Return `git status --short`.
+5. Stop and wait for review.

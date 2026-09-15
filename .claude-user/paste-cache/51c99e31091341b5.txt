@@ -1,0 +1,33 @@
+Do not change code, commits, branch history, remotes, deployment configuration, database state, or Todoist state.
+
+The only task is to repair GitHub authentication for HTTPS Git push access in this environment.
+
+1. Inspect the current auth state:
+   - `gh auth status`
+   - `git remote -v`
+
+2. If GitHub CLI is not authenticated, run:
+   - `gh auth login`
+   - Choose: GitHub.com
+   - Choose: HTTPS
+   - Choose: Login with a web browser / device flow
+   - Complete the browser/device authorization interactively as the repository owner.
+
+3. After authentication succeeds, verify:
+   - `gh auth status`
+   - `git config --get credential.helper`
+   - `git ls-remote origin HEAD`
+
+4. Do not print, paste, save, or commit any personal access token, OAuth token, credential, `.netrc`, `.npmrc`, `.env`, or secret.
+5. Do not run `git push` yet.
+6. Do not modify the existing `origin` URL unless GitHub CLI authentication requires credential-helper setup; if any remote change would be needed, stop and report it instead.
+7. Do not amend, rebase, reset, squash, create, or delete commits.
+8. Do not deploy, run migrations, call Todoist, open a pull request, or begin Phase 3 work.
+
+Return:
+- `gh auth status` output with credentials redacted by the CLI.
+- The sanitized `git remote -v` output.
+- Whether `git ls-remote origin HEAD` succeeded.
+- `git rev-parse HEAD`.
+- `git status --short`.
+Then stop and wait for approval to retry the existing push.

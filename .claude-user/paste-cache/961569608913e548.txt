@@ -1,0 +1,46 @@
+Create the approved local commit for the Todoist manual-sync failure-observability patch.
+
+Allowed files only:
+- artifacts/api-server/src/lib/todoist-sync/types.ts
+- artifacts/api-server/src/lib/todoist-sync/types.test.ts
+- artifacts/api-server/src/routes/todoist.ts
+
+Commit message exactly:
+fix(todoist): log manual sync delivery failures
+
+Implementation requirements:
+- `buildDeliveryFailureLog(result)` returns `null` for every non-failed outcome.
+- For `outcome: "failed"`, return only:
+  - event: "todoist_delivery_failed"
+  - itemType
+  - itemId
+  - todoistTaskId
+  - error
+- The manual `/todoist/sync` task and e-blast work closures both use the shared recorder.
+- The recorder first tallies the outcome, then calls:
+  `logger.error(failureLog, failureLog.event)`
+  only when a failure log exists.
+- Preserve the response shape:
+  `{ ok, created, updated, deleted, skipped, unlinked, failed }`.
+- Do not return raw Todoist error messages to the frontend.
+- Do not modify delivery behavior, Todoist API calls, 404 handling, deletion behavior, concurrency, schemas, frontend files, package files, lockfile, migrations, settings, webhooks, outbox code, or deployment configuration.
+
+Before committing:
+1. Run `git status --short`.
+2. Run `git diff --check`.
+3. Run `pnpm --filter @workspace/api-server test`.
+4. Run `pnpm --filter @workspace/api-server build`.
+5. Confirm only the three approved files are staged.
+6. Confirm no Todoist API call, deployment, migration, or production-data change is performed.
+
+After committing:
+1. Return the full commit SHA.
+2. Return `git show --stat --oneline HEAD`.
+3. Return the complete focused diff for HEAD.
+4. Return test and build summaries.
+5. Return `git status --short`.
+6. Do not push.
+7. Do not deploy.
+8. Do not run migrations.
+9. Do not call Todoist.
+10. Stop and wait for review.

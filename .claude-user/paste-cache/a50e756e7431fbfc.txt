@@ -1,0 +1,34 @@
+Push the existing reviewed Phase 2 delivery-extraction commit to GitHub.
+
+Commit:
+529a05eff3cd3d5c2c9981e6a24f6e0c80f7a479
+
+Branch:
+expand-completed-tasks-default
+
+Strict requirements:
+- Push only the existing commit history ending at 529a05eff3cd3d5c2c9981e6a24f6e0c80f7a479.
+- Do not amend, rebase, squash, force-push, or create any new commit.
+- Do not stage or include .claude-user/** session-state churn.
+- Do not include Playwright output, test artifacts, generated session files, or unrelated changes.
+- Do not open a pull request.
+- Do not deploy.
+- Do not run migrations.
+- Do not call Todoist.
+- Do not begin the automatic outbox-enqueue Phase 2 PR.
+- Do not modify tasks.ts, eblasts.ts, schemas, migrations, or deployment settings.
+
+Before pushing:
+1. Show `git status --short`.
+2. Show `git log --oneline -4`.
+3. Confirm `git rev-parse HEAD` equals exactly:
+   529a05eff3cd3d5c2c9981e6a24f6e0c80f7a479
+4. Confirm the remote target is:
+   origin/expand-completed-tasks-default
+   https://github.com/saygvalentine/GV-Show-Command-Center-TODOIST
+
+After pushing:
+1. Return the exact push output.
+2. Return `git rev-parse HEAD`.
+3. Return `git status --short`.
+4. Stop and wait for review.

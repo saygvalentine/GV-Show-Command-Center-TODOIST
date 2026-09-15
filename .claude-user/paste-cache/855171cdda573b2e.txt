@@ -1,0 +1,163 @@
+Begin Phase 2 planning only: automatic outbound Todoist synchronization.
+
+Do not edit files, run migrations, deploy, push, commit, call Todoist, modify production data, or create/delete/update any Todoist task yet.
+
+## Current verified production state
+
+- Phase 1 is deployed and migration 0008 is applied.
+- Production Git revision:
+  3ffd2debb97cf176147ac33343eef516fa31c14d
+- Todoist project configuration is server-side and active.
+- Both taskProjectId and eblastProjectId point to one shared Todoist project:
+  Test proj
+  project ID: 6hGhp5FCqH3rrFP5
+- Manual legacy Push-to-Todoist works:
+  - a dated future task successfully appeared in Test proj;
+  - an undated task did not sync, which is intentional.
+- Legacy Push-to-Todoist remains active as a fallback during Phase 2.
+- No inbound Todoist webhook behavior exists yet.
+- No automatic outbound sync exists yet.
+
+## Phase 2 goal
+
+Implement automatic local-to-Todoist sync for show tasks and e-blasts through the existing durable `todoist_sync_events` outbox.
+
+Target flow:
+
+local create/update/complete/reopen/delete
+→ local DB mutation plus durable/coalesced outbox intent
+→ immediate bounded delivery attempt during the active request
+→ mark delivered or pending/failed
+→ never fail the local user action merely because Todoist is unavailable
+
+## Fixed product rules
+
+1. Scope:
+   - Sync show tasks and e-blasts only.
+   - Do not sync Office Tasks.
+
+2. Todoist project:
+   - Both tasks and e-blasts use the configured shared project.
+   - Always read project routing from server-side `todoist_settings`; never from frontend state/localStorage.
+
+3. Eligibility:
+   - A local task or e-blast with a due date is eligible for Todoist.
+   - Due dates may be past, today, or future.
+   - A local task/e-blast with no due date has no Todoist representation.
+   - If a due date is removed from a linked item, queue a remote Todoist delete/unlink.
+   - Do not create a Todoist item for an undated local record.
+
+4. Identity:
+   - Use `tasks.todoistTaskId` and `eblasts.todoistTaskId` as the only remote identity mapping.
+   - Never match Todoist tasks by title/content.
+   - Todoist content and description are presentation/context only.
+
+5. Operations:
+   - Local create with due date → create/upsert in Todoist.
+   - Local title/notes/due-date update → update/upsert Todoist task.
+   - Local completion/reopen → close/reopen Todoist task.
+   - Local sent/unsent e-blast state → close/reopen Todoist task.
+   - Local delete → durable remote delete request.
+   - Due date cleared → durable remote delete/unlink request.
+
+6. Failure/retry:
+   - Local save must succeed even if Todoist delivery fails.
+   - Use `todoist_sync_events`, not `todoist_orphans`, as the new durable outbox.
+   - Coalesce one active event per item using the existing partial unique indexes.
+   - No `setInterval`, polling loop, permanent worker, cron, or background process.
+   - Immediate delivery attempt can occur after local DB transaction commit.
+   - Future retry options are request-triggered, explicit repair-triggered, or separately approved low-frequency scheduled HTTP trigger.
+   - Do not silently create duplicate Todoist tasks on retries.
+
+7. Remote deletion policy:
+   - Phase 2 is local-to-Todoist only.
+   - Do not add webhook/inbound Todoist logic.
+   - Reserve future remote-deletion unlink handling for Phase 3.
+   - Do not introduce automatic recreation logic based on a remote 404 beyond an explicitly defined local delivery policy.
+
+8. Legacy/manual path:
+   - Keep manual Push-to-Todoist UI and POST /api/export/todoist/sync working during Phase 2.
+   - Extract shared per-item delivery logic so manual sync and automatic outbox delivery do not diverge.
+   - Correct the existing manual-sync counter bug only if it can be fixed within the shared delivery extraction without expanding scope.
+
+## Read-only investigation required
+
+Inspect and report on:
+
+- `artifacts/api-server/src/routes/tasks.ts`
+- `artifacts/api-server/src/routes/eblasts.ts`
+- `artifacts/api-server/src/routes/todoist.ts`
+- `artifacts/api-server/src/lib/todoist-client.ts`
+- `lib/db/src/schema/todoistSyncEvents.ts`
+- `lib/db/src/schema/todoistSettings.ts`
+- `lib/db/src/schema/todoistOrphans.ts`
+- `lib/db/src/schema/tasks.ts`
+- `lib/db/src/schema/eblasts.ts`
+- DB client/transaction conventions.
+- Existing API tests, route tests, scripts, and test framework.
+- API server startup/middleware and existing request error-handling conventions.
+
+## Required plan output
+
+Return a concrete Phase 2 implementation document with:
+
+1. Current-state findings
+   - Exact route behavior for task/e-blast POST, PUT, DELETE.
+   - Current manual Todoist sync behavior.
+   - Current orphan cleanup behavior.
+   - Existing DB transaction/error conventions.
+   - Existing test infrastructure.
+
+2. Exact target architecture
+   - Local mutation → outbox write → immediate delivery.
+   - Event payload shape and reasons.
+   - `upsert` versus `delete` delivery paths.
+   - How to load latest local item/show/settings at delivery time.
+   - How to persist a newly created `todoistTaskId`.
+   - How to map completion/reopen and sent/unsent.
+   - What to do if Todoist returns 404 or fails.
+   - No-due-date and due-date-cleared behavior.
+   - Delete behavior after a local row no longer exists.
+
+3. Outbox design details
+   - Exact enqueue/coalesce SQL or Drizzle pattern.
+   - How pending versus in-progress events behave.
+   - Safe claim/lease query and stale-claim recovery.
+   - Delivery success, retry, failure, and abandoned-state transitions.
+   - Backoff calculation and maximum attempts.
+   - Idempotency safeguards against duplicate creates.
+   - How to opportunistically process bounded due events during already-active requests without introducing polling.
+   - How to transition away from legacy todoist_orphans without dropping it yet.
+
+4. File-by-file change map
+   - New files.
+   - Existing files to modify.
+   - API contract changes, if any.
+   - Whether a schema migration is actually necessary.
+   - Test files to add or change.
+
+5. Sequence diagrams
+   - Create dated task.
+   - Update dated task.
+   - Complete/reopen task.
+   - Send/unsend e-blast.
+   - Clear due date.
+   - Delete local item.
+   - Todoist outage/retry.
+
+6. Test and rollout plan
+   - Unit and integration tests.
+   - Concurrency/coalescing tests.
+   - Retry/404/429 tests.
+   - Production rollout and rollback.
+   - How to preserve manual sync as a fallback.
+
+7. Risks requiring owner decisions
+   - Keep them limited to real design choices.
+   - Give a recommendation for each.
+
+8. Smallest safe first Phase 2 PR
+   - Do not implement it yet.
+   - Keep the first PR reviewable and avoid any new production migration unless truly required.
+
+Stop after the plan. Do not implement anything.

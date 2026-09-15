@@ -1,0 +1,88 @@
+Do not deploy the pushed commit 529a05e yet.
+
+A review found a correctness bug in artifacts/api-server/src/lib/todoist-sync/delivery.ts: todoistRequest() returns null for Todoist 404 responses, but setCompletion() returns void and ignores that null. Therefore a 404 from /close or /reopen can be falsely reported as a successful created/updated completion while leaving a stale local todoistTaskId mapping.
+
+Implement a minimal corrective follow-up. Do not modify anything outside the delivery layer/tests unless TypeScript strictly requires it.
+
+## Required behavior
+
+1. Change setCompletion() so its caller can distinguish:
+   - successful Todoist completion/reopen response;
+   - Todoist 404 represented by null;
+   - thrown non-404 error.
+
+2. For an existing linked task/e-blast:
+   - If POST /api/v1/tasks/:id/close or /reopen returns null:
+     - clear local todoistTaskId through persistTodoistTaskId;
+     - return:
+       outcome: "unlinked_remote_missing"
+       todoistTaskId: null
+       completionAction: "none"
+     - do not create a replacement task.
+
+3. For a newly created task/e-blast:
+   - If create succeeds and a subsequent close/reopen returns null:
+     - clear the newly persisted local todoistTaskId;
+     - return unlinked_remote_missing with todoistTaskId null and completionAction none.
+   - Do not issue another create.
+
+4. For completion/reopen non-404 exceptions:
+   - Return outcome: "failed".
+   - Preserve the existing local mapping.
+   - completionAction must be "none".
+
+5. For delete of an undated linked item:
+   - Treat a null/404 DELETE response as idempotent success:
+     - clear local todoistTaskId;
+     - return deleted.
+   - Add a test that documents this policy.
+
+6. Preserve all existing approved behavior:
+   - Update 404 already unlinks and does not recreate.
+   - Create with missing ID remains failed and does not persist an ID.
+   - No task/eblast CRUD route changes.
+   - No outbox, automatic sync, webhook, polling, migration, settings, API contract, frontend, deployment, or Todoist real call changes.
+   - No source changes outside:
+     - artifacts/api-server/src/lib/todoist-sync/delivery.ts
+     - artifacts/api-server/src/lib/todoist-sync/delivery.test.ts
+     unless required for types.
+
+## Required tests
+
+Add passing mocked tests for:
+
+A. Existing linked task: update succeeds, close returns null:
+- mapping is cleared;
+- outcome is unlinked_remote_missing;
+- completionAction is none;
+- no create request occurs.
+
+B. Existing linked e-blast: update succeeds, reopen returns null:
+- same result.
+
+C. Newly created completed task: create returns ID, close returns null:
+- mapping is first persisted then cleared;
+- final result is unlinked_remote_missing;
+- no second create request occurs.
+
+D. Completion/reopen throws a non-404 error:
+- outcome is failed;
+- prior mapping remains;
+- completionAction is none.
+
+E. Undated linked item: DELETE returns null:
+- mapping is cleared;
+- outcome is deleted;
+- documents idempotent-delete policy.
+
+Before editing:
+- show the exact files to modify;
+- explain the old false-success path and the new behavior.
+
+After editing:
+- show the focused diff;
+- run `pnpm --filter @workspace/api-server run test`;
+- run the backend build;
+- run a targeted secret scan;
+- show git status;
+- do not commit, push, deploy, migrate, or call Todoist.

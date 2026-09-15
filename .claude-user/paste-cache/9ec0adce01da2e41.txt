@@ -1,0 +1,107 @@
+Do not commit yet. The shared delivery extraction and tests are approved, but make one narrow correction before commit: manual Push-to-Todoist must surface every typed delivery outcome instead of silently reporting partial failures as success.
+
+## Problem
+
+The new delivery layer returns:
+- created
+- updated
+- deleted
+- skipped_no_due_date
+- unlinked_remote_missing
+- failed
+
+But routes/todoist.ts currently only exposes created, updated, and deleted. The frontend toast therefore shows a success message even when items were unlinked due to Todoist 404 or failed to deliver.
+
+## Required changes
+
+1. Extend the manual sync response/counter shape to include:
+
+```ts
+{
+  created: number;
+  updated: number;
+  deleted: number;
+  skipped: number;
+  unlinked: number;
+  failed: number;
+}
+```
+
+2. Update `tallyOutcome()` or the equivalent shared counter logic so:
+- created → created++
+- updated → updated++
+- deleted → deleted++
+- skipped_no_due_date → skipped++
+- unlinked_remote_missing → unlinked++
+- failed → failed++
+
+3. Update the existing OpenAPI contract and regenerate API client/Zod artifacts, because the manual sync API response shape changes.
+
+4. Update only the existing manual Push-to-Todoist success handling in:
+- artifacts/show-command-center/src/pages/show-detail.tsx
+- artifacts/show-command-center/src/pages/calendar.tsx
+
+The toast description must include all nonzero counts in a readable form.
+
+Examples:
+
+All clean:
+```text
+Pushed to Todoist
+2 created, 3 updated, 1 removed, 4 skipped
+```
+
+Partial problem:
+```text
+Todoist sync needs attention
+2 created, 3 updated, 1 unlinked, 1 failed
+```
+
+5. Toast severity:
+- If failed === 0 and unlinked === 0, keep the normal success toast.
+- If failed > 0 or unlinked > 0, use the project’s existing warning/destructive toast styling if available.
+- Do not treat skipped items as failures; undated items are intentionally skipped.
+
+6. Preserve all prior scope constraints:
+- Do not modify tasks.ts or eblasts.ts.
+- Do not add outbox enqueueing, webhooks, polling, retry workers, migrations, or Phase 2 automatic behavior.
+- Do not change Todoist settings behavior.
+- Do not change the 404 policy.
+- Do not call real Todoist, run migrations, deploy, push, or commit.
+- Do not touch `.claude-user/**`.
+
+## Tests
+
+Extend delivery/manual-result tests to prove a mixed batch produces:
+
+```json
+{
+  "ok": true,
+  "created": 1,
+  "updated": 1,
+  "deleted": 0,
+  "skipped": 1,
+  "unlinked": 1,
+  "failed": 1
+}
+```
+
+Add or update frontend-level tests only if this repo has a lightweight existing pattern. Do not introduce a new frontend test framework solely for toast formatting.
+
+## Required report
+
+Before editing:
+1. Show exact files to change.
+2. Confirm which OpenAPI/generated files codegen will update.
+
+After editing:
+1. Show diffs for every non-generated source file.
+2. Show the exact manual sync API response schema.
+3. Show the mixed-batch test and result.
+4. Show the exact toast strings for:
+   - all-success/skip case;
+   - partial-problem case.
+5. Run backend tests, relevant frontend typecheck, codegen, and targeted secret scan.
+6. Show git diff --stat and git status --short.
+7. Do not stage, commit, push, deploy, migrate, or call Todoist.
+8. Stop and wait for review.

@@ -1,0 +1,166 @@
+Approved: implement the smallest safe Phase 2 PR, limited to extracting and testing the shared Todoist delivery service.
+
+Do not implement automatic outbox enqueueing yet.
+Do not modify tasks.ts or eblasts.ts.
+Do not add webhooks, retry workers, polling, scheduled jobs, or Phase 3 work.
+Do not run migrations.
+Do not deploy.
+Do not push or commit until I explicitly approve after review.
+Do not call Todoist during automated tests.
+Do not modify production data.
+
+## Scope
+
+Create a reusable server-side Todoist delivery layer that is used only by the existing manual Push-to-Todoist route.
+
+Target shape:
+
+routes/todoist.ts
+  → shared delivery service
+  → existing lib/todoist-client.ts
+
+The existing manual route remains active and remains the sole caller in this PR.
+
+## Allowed files
+
+Expected new files:
+- artifacts/api-server/src/lib/todoist-sync/delivery.ts
+- artifacts/api-server/src/lib/todoist-sync/types.ts
+- artifacts/api-server/src/lib/todoist-sync/delivery.test.ts
+- artifacts/api-server/vitest.config.ts, if required by repository structure
+
+Expected modified files:
+- artifacts/api-server/src/routes/todoist.ts
+- artifacts/api-server/package.json, only to add the minimal Vitest test command/dependency
+- lockfile only if package installation updates it
+
+If any additional file is required, stop and explain why before changing it.
+
+## Explicitly out of scope
+
+Do not modify:
+- artifacts/api-server/src/routes/tasks.ts
+- artifacts/api-server/src/routes/eblasts.ts
+- lib/db/migrations/**
+- lib/db/src/schema/**
+- todoistSyncEvents/outbox schema or any outbox write/read logic
+- todoist-settings route/context/API
+- CLAUDE.md
+- OpenAPI or generated API clients
+- manual Push-to-Todoist UI buttons
+- Replit deployment configuration, secrets, or production database
+- `.claude-user/**`
+- Playwright tests or test-result artifacts
+
+## Delivery service requirements
+
+Extract the existing per-item behavior from routes/todoist.ts into shared reusable functions for tasks and e-blasts.
+
+The shared service must:
+
+1. Preserve existing eligible-item behavior:
+   - Dated task/e-blast → create or update a Todoist task.
+   - Undated task/e-blast → no Todoist representation.
+   - If an undated item has a linked Todoist ID, delete/unlink the remote task according to the existing manual workflow.
+   - Preserve Todoist content/description formatting unless a clearly necessary defect is found.
+
+2. Preserve completion behavior:
+   - Task `completed` maps to Todoist close/reopen.
+   - E-blast `sent` maps to Todoist close/reopen.
+
+3. Correct the manual result counter:
+   - Increment created only after a Todoist create response contains a valid remote task ID and the local mapping is persisted.
+   - Do not claim a successful create merely because a create request was attempted.
+
+4. Use the existing low-level Todoist client:
+   - Keep `todoist-client.ts` as the only outbound HTTP/proxy layer.
+   - Preserve its existing 429 retry behavior.
+
+5. Handle 404 safely:
+   - If an update of a previously linked Todoist task returns 404, clear the local todoistTaskId and preserve the local task/e-blast.
+   - Do not recreate the Todoist task in the same delivery attempt.
+   - Do not add any automatic-recreation-on-next-local-edit behavior in this PR.
+   - Return a clear delivery outcome such as `unlinked` / `remote_missing` so future outbox code can apply the approved repair-only policy.
+   - Do not invent a new database schema field or migration in this PR.
+
+6. Make outcomes explicit:
+   - Define typed delivery outcomes/counters for at least:
+     - created
+     - updated
+     - completed/reopened as applicable
+     - deleted
+     - skipped_no_due_date
+     - unlinked_remote_missing
+     - failed
+   - The manual route may continue displaying its existing result shape, but it must derive counts from real typed outcomes.
+
+7. Do not add outbox behavior:
+   - No todoist_sync_events insert/read/claim/retry code.
+   - No automatic sync from ordinary task/e-blast CRUD.
+   - No request-triggered retry sweep.
+   - No timer or polling code.
+
+## Testing requirements
+
+Add backend unit tests with mocked Todoist HTTP/client behavior. No real Todoist account, connector, production DB, or production API calls are allowed.
+
+Cover at minimum:
+
+1. Dated task without todoistTaskId:
+   - Todoist create succeeds with valid ID.
+   - Local mapping update is requested/persisted.
+   - Result is created.
+
+2. Dated e-blast without todoistTaskId:
+   - Same behavior as task.
+
+3. Dated item with existing todoistTaskId:
+   - Update is sent.
+   - Result is updated.
+
+4. Completed task / sent e-blast:
+   - Upsert occurs, then Todoist close is called.
+
+5. Reopened task / unsent e-blast:
+   - Upsert occurs, then Todoist reopen is called.
+
+6. Undated, unlinked item:
+   - No Todoist call.
+   - Result is skipped_no_due_date.
+
+7. Undated, linked item:
+   - Delete is called and local mapping is cleared.
+   - Result is deleted/unlinked as appropriate.
+
+8. Todoist 404 while updating a linked item:
+   - Local mapping is cleared.
+   - No create request is made afterward.
+   - Result is unlinked_remote_missing.
+
+9. Todoist create response without a valid ID:
+   - Do not increment created.
+   - Do not persist a false/empty local mapping.
+   - Return failed or explicit invalid-response outcome.
+
+10. Todoist non-429 failure:
+   - Error/outcome is surfaced to caller without corrupting local mapping.
+
+## Required workflow
+
+Before editing:
+1. Show `git status --short`.
+2. List every file you intend to create or modify.
+3. Show the proposed public interface for delivery.ts and types.ts.
+4. Explain exactly how 404 behavior differs from the current manual route.
+5. Confirm no automatic sync behavior will be added.
+
+After editing:
+1. Show `git diff --stat`.
+2. Show diffs for all non-generated source files.
+3. Run the new focused backend test suite.
+4. Run relevant typecheck/build commands, clearly distinguishing existing repository failures from new failures.
+5. Run a targeted secret scan on changed files.
+6. Demonstrate that the manual sync route still calls the shared delivery layer.
+7. Show `git status --short`.
+8. Do not stage, commit, push, deploy, run migrations, or call Todoist.
+9. Stop and wait for my review.

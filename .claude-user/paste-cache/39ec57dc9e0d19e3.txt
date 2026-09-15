@@ -1,0 +1,66 @@
+Approved. Commit the completed shared Todoist delivery extraction and truthful manual-sync reporting update.
+
+Before committing:
+
+1. Confirm the manual sync success response always returns the complete counter object:
+   - ok
+   - created
+   - updated
+   - deleted
+   - skipped
+   - unlinked
+   - failed
+
+2. Confirm there is no early successful return in routes/todoist.ts that omits the expanded counters.
+
+3. Confirm partial delivery results remain HTTP-success responses:
+   - The frontend uses a “Todoist sync needs attention” destructive toast when failed > 0 or unlinked > 0.
+   - It does not throw away successful create/update/delete results.
+
+4. Run:
+   - `git status --short`
+   - `git diff --cached --check` after staging
+   - `pnpm --filter @workspace/api-server run test`
+   - `pnpm --filter @workspace/show-command-center run typecheck`
+
+5. Stage only the reviewed Phase 2 extraction/reporting files:
+   - artifacts/api-server/package.json
+   - artifacts/api-server/vitest.config.ts
+   - artifacts/api-server/src/routes/todoist.ts
+   - artifacts/api-server/src/lib/todoist-sync/types.ts
+   - artifacts/api-server/src/lib/todoist-sync/types.test.ts
+   - artifacts/api-server/src/lib/todoist-sync/delivery.ts
+   - artifacts/api-server/src/lib/todoist-sync/delivery.test.ts
+   - artifacts/show-command-center/src/pages/calendar.tsx
+   - artifacts/show-command-center/src/pages/show-detail.tsx
+   - lib/api-spec/openapi.yaml
+   - lib/api-client-react/src/generated/api.schemas.ts
+   - lib/api-zod/src/generated/api.ts
+   - lib/api-zod/src/generated/types/todoistSyncResult.ts
+   - pnpm-lock.yaml
+
+6. Do not stage:
+   - `.claude-user/**`
+   - Playwright output or test artifacts
+   - migrations
+   - schemas
+   - tasks.ts
+   - eblasts.ts
+   - Todoist settings files
+   - any outbox/webhook/retry/polling code
+   - unrelated api-zod technical-debt fixes
+
+Use this exact commit message:
+
+refactor(todoist): extract shared delivery service
+
+After committing:
+1. Return the commit SHA.
+2. Return `git show --stat --oneline HEAD`.
+3. Return `git status --short`.
+4. Do not push.
+5. Do not deploy.
+6. Do not run migrations.
+7. Do not call Todoist.
+8. Do not begin the automatic outbox-enqueue PR.
+9. Stop and wait for my review.

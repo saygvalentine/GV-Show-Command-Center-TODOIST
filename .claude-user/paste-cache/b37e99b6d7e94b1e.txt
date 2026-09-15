@@ -1,0 +1,73 @@
+Do not deploy.
+
+Create one narrow corrective commit for the Todoist manual-sync route’s failure observability gap.
+
+Problem:
+- `deliverTask` and `deliverEblast` return typed `DeliveryResult` values with an optional `error`.
+- In `artifacts/api-server/src/routes/todoist.ts`, the manual `/sync` allWork closures currently tally only `result.outcome` and discard `result.error`.
+- This means the API can return `failed > 0` without retaining an actionable backend diagnostic for the failed item.
+
+Required behavior:
+1. Preserve the existing typed outcome and counter behavior exactly.
+2. For every `DeliveryResult` whose outcome is `failed`, emit a structured backend error log.
+3. The log must include:
+   - a stable event/context label such as `todoist_delivery_failed`
+   - `itemType`
+   - `itemId`
+   - `todoistTaskId`
+   - `error`
+4. Do not expose raw Todoist/provider error text in the HTTP response or frontend toast.
+5. Do not alter delivery create/update/delete/close/reopen semantics.
+6. Do not change the existing `404` behavior:
+   - update/close/reopen 404 -> clear mapping + `unlinked_remote_missing`
+   - delete 404 -> idempotent `deleted`
+   - non-404 failure -> preserve mapping + `failed`
+7. Keep the response schema unchanged:
+   `{ ok, created, updated, deleted, skipped, unlinked, failed }`.
+8. Add focused automated coverage proving a failed delivery retains the diagnostic payload for logging. Prefer a small pure helper if route-level testing is otherwise cumbersome.
+
+Permitted files only:
+- artifacts/api-server/src/routes/todoist.ts
+- artifacts/api-server/src/routes/todoist.test.ts, if added
+- artifacts/api-server/src/lib/todoist-sync/types.ts, only if a minimal pure helper is necessary
+- artifacts/api-server/src/lib/todoist-sync/types.test.ts, only if that helper is added
+
+Do not modify:
+- delivery.ts
+- delivery.test.ts
+- task routes
+- eblast routes
+- schemas
+- generated API clients
+- frontend files
+- migrations
+- package.json
+- pnpm-lock.yaml
+- settings
+- webhooks
+- outbox code
+- deployment configuration
+
+Before committing:
+1. Run `git status --short`.
+2. Run `git diff --check`.
+3. Run the API-server test suite.
+4. Run the API-server build.
+5. Confirm only the permitted files are changed.
+6. Confirm no Todoist API call, migration, deployment, or production data change occurred.
+
+Use this exact commit message:
+
+fix(todoist): log manual sync delivery failures
+
+After committing:
+1. Return the SHA.
+2. Return `git show --stat --oneline HEAD`.
+3. Return the focused diff.
+4. Return test and build output summaries.
+5. Return `git status --short`.
+6. Do not push.
+7. Do not deploy.
+8. Do not run migrations.
+9. Do not call Todoist.
+10. Stop and wait for review.

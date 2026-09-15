@@ -685,6 +685,9 @@ export const SyncTodoistResponse = zod.object({
   created: zod.number(),
   updated: zod.number(),
   deleted: zod.number(),
+  skipped: zod.number(),
+  unlinked: zod.number(),
+  failed: zod.number(),
 });
 
 /**

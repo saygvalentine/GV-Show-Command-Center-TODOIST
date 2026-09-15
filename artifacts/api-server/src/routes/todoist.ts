@@ -1,104 +1,11 @@
 import { Router } from "express";
 import { db, showsTable, tasksTable, eblastsTable, todoistOrphansTable } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
-import { todoistRequest, todoistListProjects, makeTodoistTask } from "../lib/todoist-client";
+import { todoistRequest, todoistListProjects } from "../lib/todoist-client";
+import { deliverTask, deliverEblast } from "../lib/todoist-sync/delivery";
+import { tallyOutcome, type SyncCounters } from "../lib/todoist-sync/types";
 
 const router = Router();
-
-type TodoistTask = { id: string };
-
-async function setTodoistCompletion(todoistTaskId: string, completed: boolean): Promise<void> {
-  await todoistRequest("POST", `/api/v1/tasks/${todoistTaskId}/${completed ? "close" : "reopen"}`);
-}
-
-async function syncTask(
-  task: typeof tasksTable.$inferSelect,
-  showName: string,
-  projectId: string,
-  counters: { created: number; updated: number; deleted: number },
-) {
-  if (!task.dueDate) {
-    if (task.todoistTaskId) {
-      await todoistRequest("DELETE", `/api/v1/tasks/${task.todoistTaskId}`);
-      await db.update(tasksTable).set({ todoistTaskId: null }).where(eq(tasksTable.id, task.id));
-      counters.deleted++;
-    }
-    return;
-  }
-
-  const content = `${task.name} [${showName}]`;
-  const descParts = [`Show: ${showName}`];
-  if (task.category) descParts.push(`Category: ${task.category}`);
-  if (task.notes) descParts.push(`Notes: ${task.notes}`);
-  const body = makeTodoistTask(content, descParts.join("\n"), task.dueDate, projectId);
-
-  let todoistTaskId = task.todoistTaskId;
-  if (todoistTaskId) {
-    const result = await todoistRequest("POST", `/api/v1/tasks/${todoistTaskId}`, body);
-    if (result === null) {
-      todoistTaskId = null;
-    } else {
-      counters.updated++;
-    }
-  }
-
-  if (!todoistTaskId) {
-    const created = await todoistRequest("POST", `/api/v1/tasks`, body) as TodoistTask | null;
-    if (created?.id) {
-      todoistTaskId = created.id;
-      await db.update(tasksTable).set({ todoistTaskId }).where(eq(tasksTable.id, task.id));
-    }
-    counters.created++;
-  }
-
-  if (todoistTaskId) {
-    await setTodoistCompletion(todoistTaskId, task.completed);
-  }
-}
-
-async function syncEblast(
-  eblast: typeof eblastsTable.$inferSelect,
-  showName: string,
-  projectId: string,
-  counters: { created: number; updated: number; deleted: number },
-) {
-  if (!eblast.dueDate) {
-    if (eblast.todoistTaskId) {
-      await todoistRequest("DELETE", `/api/v1/tasks/${eblast.todoistTaskId}`);
-      await db.update(eblastsTable).set({ todoistTaskId: null }).where(eq(eblastsTable.id, eblast.id));
-      counters.deleted++;
-    }
-    return;
-  }
-
-  const content = `✉ ${eblast.name} [${showName}]`;
-  const descParts = [`Show: ${showName}`, "Type: e-Blast"];
-  if (eblast.notes) descParts.push(`Notes: ${eblast.notes}`);
-  const body = makeTodoistTask(content, descParts.join("\n"), eblast.dueDate, projectId);
-
-  let todoistTaskId = eblast.todoistTaskId;
-  if (todoistTaskId) {
-    const result = await todoistRequest("POST", `/api/v1/tasks/${todoistTaskId}`, body);
-    if (result === null) {
-      todoistTaskId = null;
-    } else {
-      counters.updated++;
-    }
-  }
-
-  if (!todoistTaskId) {
-    const created = await todoistRequest("POST", `/api/v1/tasks`, body) as TodoistTask | null;
-    if (created?.id) {
-      todoistTaskId = created.id;
-      await db.update(eblastsTable).set({ todoistTaskId }).where(eq(eblastsTable.id, eblast.id));
-    }
-    counters.created++;
-  }
-
-  if (todoistTaskId) {
-    await setTodoistCompletion(todoistTaskId, eblast.sent);
-  }
-}
 
 async function drainOrphans(counters: { deleted: number }) {
   const orphans = await db.select().from(todoistOrphansTable);
@@ -157,11 +64,24 @@ router.post("/sync", async (req, res): Promise<void> => {
     showIds.length > 0 ? db.select().from(eblastsTable).where(inArray(eblastsTable.showId, showIds)) : [],
   ]);
 
-  const counters = { created: 0, updated: 0, deleted: 0 };
+  const counters: SyncCounters = {
+    created: 0,
+    updated: 0,
+    deleted: 0,
+    skipped: 0,
+    unlinked: 0,
+    failed: 0,
+  };
 
   const allWork = [
-    ...allTasks.map((t) => () => syncTask(t, showMap.get(t.showId) ?? "", taskProjectId, counters)),
-    ...allEblasts.map((e) => () => syncEblast(e, showMap.get(e.showId) ?? "", eblastProjectId, counters)),
+    ...allTasks.map((t) => async () => {
+      const result = await deliverTask(t, showMap.get(t.showId) ?? "", taskProjectId);
+      tallyOutcome(counters, result.outcome);
+    }),
+    ...allEblasts.map((e) => async () => {
+      const result = await deliverEblast(e, showMap.get(e.showId) ?? "", eblastProjectId);
+      tallyOutcome(counters, result.outcome);
+    }),
   ];
 
   const CONCURRENCY = 5;

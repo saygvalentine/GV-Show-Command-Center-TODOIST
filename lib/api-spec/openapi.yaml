@@ -1515,7 +1515,7 @@ components:
 
     TodoistSyncResult:
       type: object
-      required: [ok, created, updated, deleted]
+      required: [ok, created, updated, deleted, skipped, unlinked, failed]
       properties:
         ok:
           type: boolean
@@ -1524,6 +1524,12 @@ components:
         updated:
           type: integer
         deleted:
+          type: integer
+        skipped:
+          type: integer
+        unlinked:
+          type: integer
+        failed:
           type: integer
 
     TodoistSettings:

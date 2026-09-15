@@ -290,6 +290,9 @@ export interface TodoistSyncResult {
   created: number;
   updated: number;
   deleted: number;
+  skipped: number;
+  unlinked: number;
+  failed: number;
 }
 
 export interface TodoistSettings {

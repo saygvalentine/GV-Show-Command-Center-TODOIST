@@ -55,9 +55,18 @@ export default function Calendar() {
       },
       {
         onSuccess: (data) => {
+          const parts: string[] = [];
+          if (data.created > 0) parts.push(`${data.created} created`);
+          if (data.updated > 0) parts.push(`${data.updated} updated`);
+          if (data.deleted > 0) parts.push(`${data.deleted} removed`);
+          if (data.skipped > 0) parts.push(`${data.skipped} skipped`);
+          if (data.unlinked > 0) parts.push(`${data.unlinked} unlinked`);
+          if (data.failed > 0) parts.push(`${data.failed} failed`);
+          const needsAttention = data.failed > 0 || data.unlinked > 0;
           toast({
-            title: "Pushed to Todoist",
-            description: `${data.created} created, ${data.updated} updated, ${data.deleted} removed`,
+            title: needsAttention ? "Todoist sync needs attention" : "Pushed to Todoist",
+            description: parts.length > 0 ? parts.join(", ") : "Nothing to sync",
+            variant: needsAttention ? "destructive" : "default",
           });
         },
         onError: (err) => {

@@ -1,0 +1,111 @@
+I approve Gate A2 only: apply the reviewed Phase 1 migration to the production database, then perform read-only verification.
+
+This approval authorizes exactly:
+1. Running the normal Drizzle migration command against the confirmed production target.
+2. The database schema/data changes contained in migration 0008_public_thanos.sql only.
+3. Read-only verification queries after the migration.
+
+It does NOT authorize:
+- Any source-file modification.
+- Any new commit, amend, rebase, push, or pull request.
+- `pnpm --filter db push` or any Drizzle schema push.
+- Any migration other than the pending 0008 migration.
+- Any manual SQL outside the reviewed migration file.
+- Any delete, update, truncate, alter, drop, or rollback SQL.
+- Any Todoist API action or settings write.
+- Any Replit deployment/restart.
+- Any Phase 2 work.
+- Any constraint rename, including venues_name_key.
+
+## Immediate preflight
+
+Before running the migration:
+
+1. Confirm Git HEAD remains exactly:
+   3ffd2debb97cf176147ac33343eef516fa31c14d
+
+2. Print only the redacted DB target identity:
+   - host
+   - database
+   - username prefix
+   - password present/absent
+   - sslmode
+   Never print a full DATABASE_URL or credentials.
+
+3. Read the migration ledger and confirm:
+   - exactly 8 rows exist;
+   - hashes match the approved 0000–0007 historical list;
+   - the 0008 hash is absent.
+
+4. Capture pre-migration counts:
+   - shows
+   - tasks
+   - eblasts
+   - todoist_orphans
+   - todoist_settings, if it exists
+   - todoist_sync_events, if it exists
+   - todoist_webhook_events, if it exists
+
+5. Confirm before migration:
+   - all baseline tables are present;
+   - Phase 1 tables do not exist;
+   - `todoist_orphans` count is 0.
+
+6. If any preflight expectation differs, stop without running a migration and report the discrepancy.
+
+## Authorized migration command
+
+If and only if every preflight check passes, run exactly:
+
+pnpm --filter @workspace/db run migrate
+
+Do not substitute another command or add flags.
+
+## Required post-migration verification
+
+After the migration command completes:
+
+1. Report the full migration command exit status and concise output.
+2. Confirm `drizzle.__drizzle_migrations` now has exactly 9 rows.
+3. Confirm the ninth/new row has the exact 0008 hash and the expected `created_at` value:
+   - hash:
+     [obtain the exact SHA-256 from the current local
+      lib/db/migrations/0008_public_thanos.sql file and show it]
+   - created_at:
+     1789168125105
+
+4. Confirm the following tables now exist:
+   - todoist_settings
+   - todoist_sync_events
+   - todoist_webhook_events
+   - todoist_orphans
+
+5. Confirm the following indexes exist by exact name:
+   - todoist_sync_events_due_idx
+   - todoist_sync_events_item_active
+   - todoist_sync_events_delete_active
+   - todoist_webhook_events_fingerprint_key
+   - todoist_webhook_events_provider_event_id_key
+
+6. Confirm the baseline table counts are unchanged from this Gate A2 preflight:
+   - shows
+   - tasks
+   - eblasts
+   - todoist_orphans
+
+7. Confirm outbox copy behavior:
+   - `todoist_orphans` was 0 before migration.
+   - Count `todoist_sync_events` rows where:
+     item_id IS NULL
+     AND operation = 'delete'
+     AND reason = 'delete'
+     AND status = 'pending'
+   - Expected count: 0.
+
+8. Confirm no non-migration source file, deploy/restart, Todoist action, settings write, or Phase 2 work occurred.
+
+## Stop condition
+
+Stop after the post-migration report.
+
+Do not deploy the app yet. Do not write settings. Do not trigger a Todoist sync. Wait for separate explicit approval for Gate B.

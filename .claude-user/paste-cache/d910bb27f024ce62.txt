@@ -1,0 +1,31 @@
+Approved. Commit the Phase 1 Todoist sync foundation now.
+
+Commit only the verified 18-file Phase 1 change set:
+
+- New Todoist settings, sync-event outbox, and webhook-event schema modules.
+- Schema exports and generated migration metadata.
+- Migration 0008, including the additive table/index creation and idempotent todoist_orphans → todoist_sync_events delete-event copy.
+- Todoist settings GET/PUT backend route and route registration.
+- OpenAPI changes and the corresponding generated API client/Zod artifacts.
+- Todoist context change from localStorage-backed preferences to server-backed settings.
+
+Before committing:
+1. Run `git status --short`.
+2. Stage only the verified Phase 1 files.
+3. Run `git diff --cached --stat`.
+4. Run `git diff --cached --check`.
+5. Confirm .claude-user/**, Playwright output, test artifacts, unrelated files, and all pre-existing typecheck-fix work remain unstaged.
+6. Confirm no production migration is being run.
+
+Use this commit message exactly:
+
+feat(todoist): add sync outbox foundation and server settings
+
+After committing:
+1. Return the commit SHA and `git status --short`.
+2. Return the final staged/committed file list.
+3. Do not push.
+4. Do not open a pull request.
+5. Do not run the production migration.
+6. Do not begin Phase 2.
+7. Stop and wait for my review.

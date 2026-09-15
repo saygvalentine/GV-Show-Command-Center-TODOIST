@@ -1,0 +1,39 @@
+Approved. Commit the complete Todoist settings atomic-update fix now.
+
+This commit includes only the already-reviewed six-file change set:
+
+- artifacts/api-server/src/routes/todoist-settings.ts
+- artifacts/show-command-center/src/contexts/todoist-context.tsx
+- lib/api-spec/openapi.yaml
+- lib/api-client-react/src/generated/api.schemas.ts
+- lib/api-zod/src/generated/api.ts
+- lib/api-zod/src/generated/types/updateTodoistSettingsBody.ts
+
+The commit must include:
+- Full-document settings PUT semantics requiring both nullable fields.
+- Atomic singleton upsert with no server-side read/merge/write during PUT.
+- Empty-string-to-null normalization.
+- Optimistic full-document React Query cache updates.
+- Latest-mutation sequence protection for out-of-order success/failure responses.
+- Safe latest-mutation rollback or query invalidation when prior cache is unknown.
+
+Before committing:
+1. Run `git status --short`.
+2. Stage only the six intended files above.
+3. Run `git diff --cached --stat`.
+4. Run `git diff --cached --check`.
+5. Confirm no `.claude-user/**` files, test artifacts, migrations, schema files, manual sync files, task/eblast routes, or unrelated files are staged.
+6. Confirm no migration, deployment, push, pull request, webhook work, polling, or Phase 2 work is being performed.
+
+Use this exact commit message:
+
+fix(todoist): make server settings updates atomic
+
+After committing:
+1. Return the commit SHA.
+2. Return `git show --stat --oneline HEAD`.
+3. Return `git status --short`.
+4. Do not push.
+5. Do not run migrations or deploy.
+6. Do not start Phase 2.
+7. Stop and wait for my review.

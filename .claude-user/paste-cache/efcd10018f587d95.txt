@@ -1,0 +1,113 @@
+I approve Gate A1 only: reconcile the production Drizzle migration ledger for historical migrations 0000 through 0007.
+
+This approval authorizes exactly one production write transaction: inserting the eight verified historical migration ledger rows into drizzle.__drizzle_migrations.
+
+It does NOT authorize:
+- Running `pnpm --filter @workspace/db run migrate`
+- Applying migration 0008
+- Running `pnpm --filter db push`
+- Any schema create/alter/drop operation
+- Any Todoist action
+- Writing todoist_settings
+- Deploying/restarting Replit
+- Modifying source files
+- Creating, amending, or pushing commits
+- Renaming the `venues_name_key` constraint
+- Starting Phase 2
+
+## Required immediate preflight
+
+Before the transaction:
+
+1. Confirm the Git SHA is exactly:
+   3ffd2debb97cf176147ac33343eef516fa31c14d
+
+2. Print only a redacted target identity:
+   - host
+   - database
+   - username prefix
+   - password present/absent
+   - sslmode
+   Never print the full DATABASE_URL or credentials.
+
+3. Re-run read-only checks immediately against the target database:
+   - `SELECT count(*) FROM drizzle.__drizzle_migrations;`
+     Expected: 0
+   - Confirm all baseline tables remain present:
+     shows, tasks, eblasts, links, office_tasks, venues,
+     preset_tasks, gcal_orphans, todoist_orphans
+   - Confirm the Phase 1 tables do not yet exist:
+     todoist_settings, todoist_sync_events, todoist_webhook_events
+   - Confirm no unexpected migration ledger row exists.
+
+4. If any preflight value differs from expectation, stop without writing anything and report the difference.
+
+## Authorized transaction
+
+If and only if all preflight checks pass, execute exactly this as one transaction:
+
+BEGIN;
+
+INSERT INTO drizzle.__drizzle_migrations (hash, created_at) VALUES
+  ('4cb78a284e4301bd696fc557ed20f748c5f2847ecff170c560208c4ee6061eb8', 1777611509182),
+  ('7b5831f73c1b4aabd622fe7247e80950ccff46bc178b28b537729febaae48e7d', 1778600000000),
+  ('b7c968d8ccbc5aeabb51e9d6c473d7d83c74f823a189afd341560ad42d4ddf0c', 1778800000000),
+  ('dd81075eb45d2e396502da53a081acb6225d1a58e9ef909766f5e2561b633ea9', 1778900000000),
+  ('81fe63082d09a07763af4dc790c857c8f4ca26c4fd4f1fc63406b637366c1d01', 1778950000000),
+  ('dda9865c2063413cf34890fb203ce7c28b6a6b277df1da061e57dc67a499a5c3', 1748390400000),
+  ('35e706b513a86c5e086c3729740ce9539de02f62bbea0cabf78dac5204320f61', 1784050800000),
+  ('1c91e3ece92a6f58d575be30a78c9328b28a53625bef5c495d0051b08edf3689', 1787350219547);
+
+COMMIT;
+
+Do not add any other row. Do not insert the 0008 hash. Do not modify the sequence manually.
+
+## Required post-write verification
+
+After commit, run read-only verification:
+
+1. Confirm:
+   - `SELECT count(*) FROM drizzle.__drizzle_migrations;`
+     Expected: 8
+
+2. List the eight ledger rows ordered by `created_at`, showing:
+   - id
+   - hash
+   - created_at
+   Confirm each matches the approved values exactly.
+
+3. Confirm no Phase 1 table now exists:
+   - todoist_settings
+   - todoist_sync_events
+   - todoist_webhook_events
+
+4. Confirm the baseline table list and row counts for:
+   - shows
+   - tasks
+   - eblasts
+   - todoist_orphans
+   are unchanged from the preflight snapshot.
+
+5. Confirm no source files changed, no migration command ran, no deployment/restart happened, and no Todoist action occurred.
+
+## Recovery rule
+
+If the INSERT transaction fails before COMMIT, issue ROLLBACK and stop.
+
+If the insert unexpectedly commits but verification is wrong, do not run migrate. Stop and report immediately.
+
+If I later explicitly request reversal of this Gate A1 ledger step, use a hash-targeted delete only:
+
+DELETE FROM drizzle.__drizzle_migrations
+WHERE hash IN (
+  '4cb78a284e4301bd696fc557ed20f748c5f2847ecff170c560208c4ee6061eb8',
+  '7b5831f73c1b4aabd622fe7247e80950ccff46bc178b28b537729febaae48e7d',
+  'b7c968d8ccbc5aeabb51e9d6c473d7d83c74f823a189afd341560ad42d4ddf0c',
+  'dd81075eb45d2e396502da53a081acb6225d1a58e9ef909766f5e2561b633ea9',
+  '81fe63082d09a07763af4dc790c857c8f4ca26c4fd4f1fc63406b637366c1d01',
+  'dda9865c2063413cf34890fb203ce7c28b6a6b277df1da061e57dc67a499a5c3',
+  '35e706b513a86c5e086c3729740ce9539de02f62bbea0cabf78dac5204320f61',
+  '1c91e3ece92a6f58d575be30a78c9328b28a53625bef5c495d0051b08edf3689'
+);
+
+Stop after the post-write report and wait for separate explicit approval before running migration 0008.

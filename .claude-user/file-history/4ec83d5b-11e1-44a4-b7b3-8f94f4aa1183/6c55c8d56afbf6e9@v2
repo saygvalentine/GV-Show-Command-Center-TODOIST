@@ -1,0 +1,95 @@
+# Two-Way Todoist Sync for Tasks & E-Blasts
+
+## Context
+
+Show Command Center already has a **one-way, manual** Todoist integration (added in `e27fcde`, tuned in `c25ea84`): a "Push to Todoist" button on the Show Detail and Calendar pages that calls `POST /export/todoist/sync`, which pushes local tasks/e-blasts to Todoist and mirrors `completed`/`sent` via Todoist's close/reopen state. Nothing flows the other way — checking a task off in Todoist has no effect in the app, and the sync only happens when someone remembers to click the button.
+
+The goal is a true two-way link: toggling completion in either system reflects in the other, automatically, without a manual sync step. Per your answers:
+- **Mechanism:** Todoist webhooks (near-instant), not polling.
+- **Scope:** Tasks + E-Blasts only — Office Tasks stay app-only (no `todoistTaskId` plumbing exists for them today and none will be added).
+- **Manual syncing goes away entirely** — no more "Push to Todoist" button; sync becomes an automatic side effect of normal use on both ends.
+
+This plan replaces the existing batch/manual sync model with an event-driven one, reusing everything from the current implementation that still fits (the Replit-connector-based Todoist client, the `todoistTaskId` columns, the orphan-cleanup pattern) and removing what no longer makes sense once syncing is automatic.
+
+## What connects cleanly (reuse as-is)
+
+- `artifacts/api-server/src/lib/todoist-client.ts` — `todoistRequest`, `todoistListProjects`, `makeTodoistTask`. No changes needed; this stays the single choke point for all outbound Todoist API calls (including the 429 retry/backoff logic).
+- `tasks.todoistTaskId` / `eblasts.todoistTaskId` columns (`lib/db/src/schema/tasks.ts`, `eblasts.ts`) — the local↔remote ID mapping is exactly what a webhook handler needs to look up "which local row does this event belong to."
+- Completion mapped to Todoist's native open/closed state via `/close` and `/reopen` (not a text-prefix hack) — this was already the right call and is exactly what makes a two-way mapping clean: `is_completed` on the Todoist side maps 1:1 to `completed`/`sent` locally.
+- The "no due date → delete from Todoist" rule (`syncTask`/`syncEblast` in `routes/todoist.ts`) — keep this. A task without a due date has no sensible Todoist representation; it simply never participates in sync.
+- `todoist_orphans` table — repurpose (see below) rather than discard.
+
+## What gets eliminated
+
+1. **The manual "Push to Todoist" buttons** in `pages/show-detail.tsx` (~L268-271) and `pages/calendar.tsx` (~L260-265), and the `handleTodoistSync`/`useSyncTodoist` call sites behind them. Sync becomes invisible plumbing, not a user action.
+2. **`todoist_prefs` in `localStorage`** (`contexts/todoist-context.tsx`) as the source of truth for which Todoist project tasks/e-blasts sync into. A webhook-driven, server-side push can't read a browser's localStorage — the project choice has to live in the database. `todoist-context.tsx` and `todoist-settings.tsx` get rewired to read/write a small server-side settings record instead (UI stays the same: two project pickers on the Settings page).
+3. **The batch `POST /export/todoist/sync` endpoint as a user-facing action.** The route itself is worth keeping internally (see "One-time backfill" below) but it's no longer wired to any button — individual create/update/delete/complete actions push immediately instead of waiting for a batch run.
+4. **"Recreate on 404" as the default delete-reconciliation behavior.** Today, if a stored `todoistTaskId` 404s during an update, `syncTask`/`syncEblast` silently recreate it. In a two-way world that fights the user: deleting a task in Todoist would just resurrect it on the next sync. Default becomes **unlink only** — clear `todoistTaskId`, leave the local row untouched, do not recreate. (You weren't sure on this one — flagging it clearly so you can veto it; it's the safest default because nothing disappears or reappears on either side without a direct user action there.)
+
+## Architecture
+
+### Outbound: App → Todoist (event-driven, on every relevant mutation)
+
+Move the create/update/delete/complete logic that today only runs inside the batch `/export/todoist/sync` route into the task/e-blast route handlers themselves, so each mutation pushes immediately:
+
+- `artifacts/api-server/src/routes/tasks.ts`
+  - `POST /` (create) → after insert, if the new task has a `dueDate`, create the Todoist task and store the returned id.
+  - `PUT /:taskId` (update) → after update, push the changed fields (content/description/due_string) and, if `completed` changed, call close/reopen. If `dueDate` was cleared, delete the Todoist task (existing rule).
+  - `DELETE /:taskId` → delete the Todoist task directly instead of only queuing an orphan row.
+- `artifacts/api-server/src/routes/eblasts.ts` — same three hooks, mirroring `sent`/`sentAt`.
+- Extract the per-item push logic (`syncTask`/`syncEblast` bodies from `routes/todoist.ts`) into a shared module, e.g. `artifacts/api-server/src/lib/todoist-sync.ts`, exporting `pushTaskToTodoist(task, showName, projectId)` and `pushEblastToTodoist(eblast, showName, projectId)`, so both the route handlers and the (now-internal) batch endpoint call the same code.
+- **Failure handling:** a Todoist API call can fail (network blip, rate limit exhausted, Todoist down). Don't let that fail the user's local save. Push failures should be caught, logged, and queued for retry rather than surfaced as a request error — this is what `todoist_orphans` becomes: a generic **retry queue** (rename conceptually, e.g. add an `operation` field: `create`/`update`/`delete`/`complete`) drained by a small internal retry worker (a `setInterval` in the api-server, invisible to users — not the manual sync this plan removes, just reliability plumbing).
+
+### Inbound: Todoist → App (webhook)
+
+- New route `artifacts/api-server/src/routes/todoist-webhook.ts`, mounted at e.g. `POST /webhooks/todoist`.
+- Verifies the `X-Todoist-Hmac-SHA256` signature against a `TODOIST_CLIENT_SECRET` env var (new — see "External setup" below) before trusting the payload.
+- Handles `item:completed` / `item:uncompleted` (and `item:deleted` for the delete-reconciliation case): looks up the local task or e-blast by `todoistTaskId` (check both `tasksTable` and `eblastsTable`, since Todoist doesn't know which table a task belongs to) and updates `completed`/`completedAt` (or `sent`/`sentAt`) to match. `completedAt`/`sentAt` uses `event.event_data.completed_at` if present, else `new Date()`.
+- Applying an update that already matches is a no-op (idempotent), so there's no feedback loop to guard against: app pushes a completion change → Todoist emits a webhook for it → handler writes the same value again → nothing changes. No special "ignore my own echo" logic needed.
+- `item:deleted` → unlink only (clear `todoistTaskId`, per the elimination above).
+
+### Settings storage (replaces localStorage)
+
+- New table, e.g. `lib/db/src/schema/todoistSettings.ts` → `todoist_settings` — a single row (or keyed by a constant id) with `taskProjectId text`, `eblastProjectId text`. Simpler than a generic key-value table since there are exactly two settings.
+- New minimal routes (or fold into `routes/todoist.ts`): `GET /export/todoist/settings`, `PUT /export/todoist/settings`.
+- `contexts/todoist-context.tsx` swaps its `localStorage` read/write for these endpoints (React Query hooks generated the same way as everything else, once added to `openapi.yaml`); `todoist-settings.tsx`'s UI (two `<Select>` pickers) is otherwise unchanged.
+
+### One-time backfill
+
+Any task/e-blast created before this ships (or created while previously unpushed) has no `todoistTaskId` yet. Keep `POST /export/todoist/sync` working internally as a one-time/occasional backfill-and-reconcile pass — not exposed in the UI, but useful to run once at rollout (and as a manual recovery tool if the retry queue ever needs a hard reset). No route changes needed there beyond having it call the same shared `pushTaskToTodoist`/`pushEblastToTodoist` functions.
+
+## Data model changes
+
+- New table `todoist_settings` (see above) — migration via `pnpm --filter @workspace/db run generate`.
+- `todoist_orphans` gains an `operation` column (`text`, default `"delete"`) so the retry queue can represent create/update/delete/complete failures, not just deletes. Existing rows default cleanly to `"delete"`, preserving current behavior.
+- No new columns on `tasks`/`eblasts` are required — `todoistTaskId` already exists and is sufficient for the webhook lookup.
+
+## External setup (outside this codebase, needed before webhooks can work)
+
+Webhooks require a full Todoist **App** registration (Todoist's App Console), separate from the existing Replit-managed connector used for outbound calls:
+1. Register a Todoist app, get a client id/secret.
+2. Configure the webhook target URL as the api-server's public deployment URL + `/webhooks/todoist`.
+3. Subscribe to `item:completed`, `item:uncompleted`, `item:deleted`.
+4. Store the client secret as `TODOIST_CLIENT_SECRET` in the api-server's environment.
+
+Outbound calls keep using the existing Replit connector (`ReplitConnectors().proxy("todoist", ...)`) — this only affects the inbound direction. Worth a short spike early in implementation to confirm the Replit connector's underlying Todoist app can also receive webhooks, or whether a fully separate app + its own token is cleaner; either way the app-side code above doesn't change, only which app id gets registered for the webhook.
+
+## Frontend changes
+
+- `pages/show-detail.tsx`, `pages/calendar.tsx` — remove the "Push to Todoist" button and its mutation/toast wiring.
+- `contexts/todoist-context.tsx` — swap localStorage for the new settings endpoints.
+- `pages/settings.tsx` / `components/todoist-settings.tsx` — unchanged visually; project pickers now persist server-side.
+- Optional nice-to-have (not required by your ask, flagging only): a small "synced ✓" indicator per task/e-blast row once this ships, since there's no more explicit sync action to reassure the user something happened. Skip unless you want it — adds a `todoistTaskId`-presence check in `task-list.tsx`/`eblast-list.tsx`, no schema change needed.
+
+## Verification
+
+1. `pnpm --filter @workspace/db run generate && pnpm --filter @workspace/db run migrate` for the new table/column.
+2. `pnpm --filter @workspace/api-spec run codegen` after adding the settings endpoints to `openapi.yaml`.
+3. Manual end-to-end check against a real Todoist account/project:
+   - Create a task with a due date in the app → confirm it appears in the configured Todoist project.
+   - Check it off in the app → confirm it closes in Todoist.
+   - Re-open it in Todoist → confirm the webhook fires and the app flips back to incomplete.
+   - Delete it in Todoist → confirm the local row is untouched but `todoistTaskId` is cleared (per the unlink-only default).
+   - Repeat completion round-trip for an e-blast.
+4. Kill the api-server mid-mutation (simulate a Todoist API failure) and confirm the retry queue picks the push back up rather than losing it.
+5. `pnpm run typecheck` and `pnpm run build` across the monorepo.

@@ -1,0 +1,63 @@
+Choose Option 3: stop here. Do not run migrate, do not apply 0008 directly, and do not write to drizzle.__drizzle_migrations yet.
+
+Perform a read-only migration-ledger reconciliation investigation only.
+
+Goal:
+Determine the exact safe procedure for bringing production's empty Drizzle migration ledger into alignment with the already-existing 0000–0007 schema, before any production metadata or schema write is approved.
+
+Strict constraints:
+- No INSERT, UPDATE, DELETE, ALTER, CREATE, DROP, TRUNCATE, migration command, schema push, deployment, or Todoist action.
+- Do not modify source files.
+- Do not create commits or push anything.
+- Do not use `pnpm --filter db push`.
+- Do not run `pnpm --filter @workspace/db run migrate` against production.
+- All production DB queries must be read-only.
+- Redact all credentials and do not print the full DATABASE_URL.
+
+Required investigation:
+
+1. Inspect the production migration ledger exactly:
+   - Run the read-only equivalent of:
+     \d+ drizzle.__drizzle_migrations
+   - Report all columns, data types, defaults, primary/unique constraints, indexes, and table owner if available.
+   - Confirm the current row count is zero.
+
+2. Inspect the repository Drizzle migration metadata:
+   - Read `lib/db/migrations/meta/_journal.json`.
+   - For migrations 0000 through 0008, report:
+     - index
+     - tag/file name
+     - `when` value
+     - breakpoint value
+   - Inspect the DB package's exact Drizzle configuration and installed drizzle-orm/drizzle-kit versions.
+   - Identify, from local generated migration behavior or package source/docs available locally, exactly how drizzle-kit writes a migration ledger row:
+     - hash format/value
+     - created_at format/unit
+     - any additional required columns.
+
+3. Establish a disposable proof procedure:
+   - Use the already-isolated local PostgreSQL test environment only.
+   - Create a fresh test database that mirrors the production condition:
+     a) apply/create the baseline 0000–0007 schema using the same `drizzle-kit push`-style route or equivalent schema state;
+     b) ensure its drizzle.__drizzle_migrations ledger is empty;
+     c) verify the baseline tables exist;
+     d) test a proposed ledger-backfill script for 0000–0007;
+     e) run the normal `pnpm --filter @workspace/db run migrate`;
+     f) confirm only 0008 executes successfully;
+     g) inspect the resulting ledger rows and compare their exact values/format with the proposed backfilled values.
+   - Do not touch production during this proof.
+
+4. Verify historical schema equivalence before recommending ledger backfill:
+   - Compare the production schema for every table/column/index/constraint touched by migrations 0000–0007 with the current migration snapshot or a baseline local database created from those migrations.
+   - Report any differences, even seemingly harmless defaults, index names, nullability, constraint names, or column types.
+   - A recommendation to insert historical ledger rows is allowed only if no material differences exist, or if every difference is explicitly explained and approved.
+
+5. Return a decision memo:
+   - Recommended remediation option.
+   - Exact SQL, if any, that would later be used for production ledger backfill.
+   - Exact migration command to apply only 0008 afterward.
+   - Proof results from the disposable local database.
+   - A clear list of every production write that would require a separate explicit approval.
+   - A rollback/recovery plan if the ledger backfill were interrupted or found incorrect.
+
+Do not take any remediation action. Stop after the read-only report and local proof.

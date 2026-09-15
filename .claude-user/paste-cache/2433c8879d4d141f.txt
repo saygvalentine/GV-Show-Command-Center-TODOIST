@@ -1,0 +1,67 @@
+I approve Gate B only: deploy the already-pushed reviewed branch to the production Replit Autoscale environment.
+
+Approved Git revision:
+3ffd2debb97cf176147ac33343eef516fa31c14d
+
+This approval authorizes:
+- One manual Replit Autoscale deployment of the current approved revision.
+- Read-only deployment/health verification after it is live.
+- Read-only GET verification of the Todoist settings endpoint.
+
+It does NOT authorize:
+- Any source-file modification.
+- Any commit, amend, rebase, push, pull request, or branch change.
+- Any database migration or Drizzle push.
+- Any manual SQL.
+- Any Todoist API call.
+- Any write to todoist_settings.
+- Any manual Push-to-Todoist action.
+- Any task/e-blast creation, update, completion, reopening, or deletion.
+- Any webhook, outbox delivery, retry worker, polling, scheduled job, or Phase 2 work.
+- Any rollback unless the deployment fails and I explicitly approve recovery action.
+
+## Pre-deployment checks
+
+Before deploying:
+
+1. Confirm local Git HEAD is exactly:
+   3ffd2debb97cf176147ac33343eef516fa31c14d
+
+2. Confirm origin/expand-completed-tasks-default is also exactly that SHA.
+
+3. Confirm the production migration ledger has 9 rows and includes:
+   0736b767d99f36bb6bfb19cec32726430abd946b237d22cef9d8c90c701b4159
+
+4. Confirm all three Phase 1 tables exist:
+   - todoist_settings
+   - todoist_sync_events
+   - todoist_webhook_events
+
+5. Confirm no source files are modified or staged. Ignore pre-existing .claude-user/** session churn, but do not include it in any action.
+
+6. State the exact Replit deployment action/tool you will use and the target deployment/environment before triggering it.
+
+## Deployment
+
+Deploy only the approved revision through the manual Replit Autoscale deployment mechanism.
+
+Do not alter configuration, secrets, database target, or deployment settings.
+
+## Post-deployment read-only verification
+
+After the deployment reports healthy:
+
+1. Report deployment status and the deployed revision if Replit exposes it.
+2. Confirm the application/API health endpoint or normal API reachability responds successfully.
+3. Call only:
+   GET /api/export/todoist/settings
+4. Confirm it returns HTTP 200 and a valid full settings document:
+   - `{ "taskProjectId": null, "eblastProjectId": null }`
+   is expected because production settings have not been written yet.
+5. Confirm no Todoist API endpoint was called.
+6. Confirm no database mutation occurred after migration.
+7. Confirm no Phase 2 behavior was activated.
+
+Stop after the post-deployment report.
+
+Do not perform the Settings UI persistence test yet. That requires a separate approval because it writes the production todoist_settings record.

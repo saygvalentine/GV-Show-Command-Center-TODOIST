@@ -1,0 +1,116 @@
+// @refresh reset
+import { createContext, useCallback, useContext } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useListTodoistProjects,
+  useGetTodoistSettings,
+  useUpdateTodoistSettings,
+  getGetTodoistSettingsQueryKey,
+  type TodoistSettings,
+} from "@workspace/api-client-react";
+
+export interface TodoistProject {
+  id: string;
+  name: string;
+}
+
+interface TodoistContextValue {
+  taskProjectId: string;
+  eblastProjectId: string;
+  projects: TodoistProject[];
+  loadingProjects: boolean;
+  setTaskProjectId: (id: string) => void;
+  setEblastProjectId: (id: string) => void;
+}
+
+const TodoistContext = createContext<TodoistContextValue | null>(null);
+
+export function TodoistProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
+  const { data: projectData, isLoading: loadingProjects } = useListTodoistProjects();
+  const { data: settings, isLoading: loadingSettings } = useGetTodoistSettings();
+
+  // PUT is a full-document replacement, not a patch: the server never reads-then-merges
+  // (that read-merge is what caused a lost-update race between two near-simultaneous
+  // saves). The remaining race this closes is client-side: without writing the cache
+  // until onSuccess, a second setter fired before the first PUT's response lands would
+  // still read the *old* cached document and resend it, silently reverting the first
+  // change. onMutate writes the outgoing document into the cache immediately — before
+  // the request resolves — so a rapid second change reads the first change's value
+  // rather than stale data; onError rolls the cache back if the write actually fails.
+  const updateSettings = useUpdateTodoistSettings({
+    mutation: {
+      onMutate: async (variables) => {
+        const queryKey = getGetTodoistSettingsQueryKey();
+        await queryClient.cancelQueries({ queryKey, exact: true });
+        const previous = queryClient.getQueryData<TodoistSettings>(queryKey);
+        queryClient.setQueryData<TodoistSettings>(queryKey, variables.data);
+        return { previous };
+      },
+      onError: (_err, _variables, context) => {
+        const queryKey = getGetTodoistSettingsQueryKey();
+        if (context?.previous !== undefined) {
+          queryClient.setQueryData(queryKey, context.previous);
+        } else {
+          queryClient.removeQueries({ queryKey, exact: true });
+        }
+      },
+      onSuccess: (updated) => {
+        // Authoritative server response replaces the optimistic value.
+        queryClient.setQueryData(getGetTodoistSettingsQueryKey(), updated);
+      },
+    },
+  });
+
+  const projects = projectData?.projects ?? [];
+
+  // Project preferences live in the database rather than this browser's localStorage, so
+  // the server can read them without a browser session — a prerequisite for automatic sync.
+  // The unchanged field is read straight from the React Query cache at call time — not
+  // from a closure over `settings` — so back-to-back picker changes each see the other's
+  // just-written (now optimistically-cached) value rather than a value captured before
+  // the component re-rendered.
+  const saveSettings = useCallback(
+    (overrides: Partial<TodoistSettings>) => {
+      const queryKey = getGetTodoistSettingsQueryKey();
+      const current = queryClient.getQueryData<TodoistSettings>(queryKey) ?? {
+        taskProjectId: null,
+        eblastProjectId: null,
+      };
+      const next: TodoistSettings = { ...current, ...overrides };
+      updateSettings.mutate({ data: next });
+    },
+    [updateSettings, queryClient],
+  );
+
+  const setTaskProjectId = useCallback(
+    (taskProjectId: string) => saveSettings({ taskProjectId }),
+    [saveSettings],
+  );
+
+  const setEblastProjectId = useCallback(
+    (eblastProjectId: string) => saveSettings({ eblastProjectId }),
+    [saveSettings],
+  );
+
+  return (
+    <TodoistContext.Provider
+      value={{
+        taskProjectId: settings?.taskProjectId ?? "",
+        eblastProjectId: settings?.eblastProjectId ?? "",
+        projects,
+        loadingProjects: loadingProjects || loadingSettings,
+        setTaskProjectId,
+        setEblastProjectId,
+      }}
+    >
+      {children}
+    </TodoistContext.Provider>
+  );
+}
+
+export function useTodoist(): TodoistContextValue {
+  const ctx = useContext(TodoistContext);
+  if (!ctx) throw new Error("useTodoist must be used inside TodoistProvider");
+  return ctx;
+}

@@ -1,0 +1,96 @@
+// @refresh reset
+import { createContext, useCallback, useContext } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useListTodoistProjects,
+  useGetTodoistSettings,
+  useUpdateTodoistSettings,
+  getGetTodoistSettingsQueryKey,
+  type TodoistSettings,
+} from "@workspace/api-client-react";
+
+export interface TodoistProject {
+  id: string;
+  name: string;
+}
+
+interface TodoistContextValue {
+  taskProjectId: string;
+  eblastProjectId: string;
+  projects: TodoistProject[];
+  loadingProjects: boolean;
+  setTaskProjectId: (id: string) => void;
+  setEblastProjectId: (id: string) => void;
+}
+
+const TodoistContext = createContext<TodoistContextValue | null>(null);
+
+export function TodoistProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
+  const { data: projectData, isLoading: loadingProjects } = useListTodoistProjects();
+  const { data: settings, isLoading: loadingSettings } = useGetTodoistSettings();
+  const updateSettings = useUpdateTodoistSettings();
+
+  const projects = projectData?.projects ?? [];
+
+  // Project preferences live in the database rather than this browser's localStorage, so
+  // the server can read them without a browser session — a prerequisite for automatic sync.
+  //
+  // PUT is a full-document replacement, not a patch: the server never reads-then-merges
+  // (that read-merge is what caused a lost-update race between two near-simultaneous
+  // saves), so every write here must carry both fields. The unchanged field is read
+  // straight from the React Query cache at call time — not from a closure over `settings`
+  // — so back-to-back picker changes each see the other's just-written value rather than
+  // a value captured before the component re-rendered.
+  const saveSettings = useCallback(
+    (overrides: Partial<TodoistSettings>) => {
+      const queryKey = getGetTodoistSettingsQueryKey();
+      const current = queryClient.getQueryData<TodoistSettings>(queryKey) ?? {
+        taskProjectId: null,
+        eblastProjectId: null,
+      };
+      const next: TodoistSettings = { ...current, ...overrides };
+
+      updateSettings.mutate(
+        { data: next },
+        {
+          onSuccess: (updated) => {
+            queryClient.setQueryData(queryKey, updated);
+          },
+        },
+      );
+    },
+    [updateSettings, queryClient],
+  );
+
+  const setTaskProjectId = useCallback(
+    (taskProjectId: string) => saveSettings({ taskProjectId }),
+    [saveSettings],
+  );
+
+  const setEblastProjectId = useCallback(
+    (eblastProjectId: string) => saveSettings({ eblastProjectId }),
+    [saveSettings],
+  );
+
+  return (
+    <TodoistContext.Provider
+      value={{
+        taskProjectId: settings?.taskProjectId ?? "",
+        eblastProjectId: settings?.eblastProjectId ?? "",
+        projects,
+        loadingProjects: loadingProjects || loadingSettings,
+        setTaskProjectId,
+        setEblastProjectId,
+      }}
+    >
+      {children}
+    </TodoistContext.Provider>
+  );
+}
+
+export function useTodoist(): TodoistContextValue {
+  const ctx = useContext(TodoistContext);
+  if (!ctx) throw new Error("useTodoist must be used inside TodoistProvider");
+  return ctx;
+}

@@ -1,6 +1,4 @@
 {
-  "skipDangerousModePermissionPrompt": true,
-  "theme": "auto",
   "extraKnownMarketplaces": {
     "claude-notifications-go": {
       "source": {
@@ -8,5 +6,9 @@
         "repo": "777genius/claude-notifications-go"
       }
     }
-  }
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "auto",
+  "agentPushNotifEnabled": true,
+  "inputNeededNotifEnabled": true
 }

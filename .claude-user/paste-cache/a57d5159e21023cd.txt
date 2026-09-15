@@ -1,0 +1,31 @@
+Push the existing documentation-only commit to GitHub.
+
+Commit:
+b5785f263b09726000469f7b8422cf199178cbc0
+
+Branch:
+expand-completed-tasks-default
+
+Strict requirements:
+- Push only the existing commit history ending at b5785f263b09726000469f7b8422cf199178cbc0.
+- Do not amend, rebase, squash, create a new commit, or force-push.
+- Do not stage or include .claude-user/** files.
+- Do not push test artifacts, Playwright output, generated session files, or unrelated changes.
+- Do not open a pull request.
+- Do not deploy.
+- Do not run any migration.
+- Do not start the settings race-condition fix or Phase 2.
+
+Before push:
+1. Show `git status --short`.
+2. Show `git log --oneline -3`.
+3. Confirm `git rev-parse HEAD` is exactly b5785f263b09726000469f7b8422cf199178cbc0.
+4. Confirm the remote and target branch are:
+   origin/expand-completed-tasks-default
+   https://github.com/saygvalentine/GV-Show-Command-Center-TODOIST
+
+After push:
+1. Return the exact push output.
+2. Return `git rev-parse HEAD`.
+3. Return `git status --short`.
+4. Stop and wait for review.

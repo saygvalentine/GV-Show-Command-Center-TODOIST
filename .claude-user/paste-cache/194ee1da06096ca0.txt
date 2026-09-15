@@ -1,0 +1,64 @@
+I confirm that a current, recoverable production database backup/checkpoint exists, and I confirm that the DATABASE_URL available for this session is the intended production database target.
+
+Proceed with Gate A only: apply the reviewed Phase 1 migration and perform read-only verification. Do not deploy yet.
+
+Strict scope:
+- Do not modify source files.
+- Do not create, amend, or push commits.
+- Do not open a pull request.
+- Do not use `pnpm --filter db push`.
+- Do not use Drizzle schema push.
+- Do not trigger a Replit deployment.
+- Do not call Todoist.
+- Do not write Todoist settings.
+- Do not start Phase 2.
+- Do not run any destructive rollback SQL.
+
+Before migration:
+1. Print the Git SHA and confirm it is:
+   3ffd2debb97cf176147ac33343eef516fa31c14d
+2. Print a redacted production database identity only:
+   host, database, username prefix, and confirmation that a password is present.
+   Never print the full DATABASE_URL, password, or credentials.
+3. Confirm migration status/check output.
+4. Confirm the only unapplied migration is:
+   0008_public_thanos.sql
+5. Confirm again that this migration is additive and preserves todoist_orphans.
+
+Then run exactly:
+pnpm --filter @workspace/db run migrate
+
+After migration, run read-only verification and report results for:
+
+1. Tables:
+   - todoist_settings
+   - todoist_sync_events
+   - todoist_webhook_events
+   - todoist_orphans
+
+2. Required indexes:
+   - todoist_sync_events_due_idx
+   - todoist_sync_events_item_active
+   - todoist_sync_events_delete_active
+   - todoist_webhook_events_fingerprint_key
+   - todoist_webhook_events_provider_event_id_key
+
+3. Legacy orphan preservation:
+   - raw count from todoist_orphans
+   - count of distinct (item_type, todoist_task_id) pairs from todoist_orphans
+   - count of copied pending delete events in todoist_sync_events where:
+     item_id IS NULL
+     operation = 'delete'
+     reason = 'delete'
+     status = 'pending'
+
+4. Confirm no existing tables were dropped or altered.
+
+End with:
+- Exact command executed.
+- Migration output/result.
+- Read-only verification summary.
+- Any mismatch or concern.
+- Confirmation that no deploy, source change, Todoist action, settings write, or Phase 2 work occurred.
+
+Stop and wait for my explicit approval before Gate B deployment.

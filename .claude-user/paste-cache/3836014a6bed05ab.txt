@@ -1,0 +1,72 @@
+Do not commit yet. The outgoing-request race fix is approved, but the out-of-order response issue you identified must be fixed before this client-side settings change is committed.
+
+Why this is required:
+
+The Todoist context uses the React Query settings cache to construct complete replacement documents. If request 1 is sent first, request 2 is sent second, and request 1’s response arrives last, a blind onSuccess cache replacement from request 1 can overwrite newer optimistic/request-2 state. That can cause a later user interaction to resend stale configuration to the server.
+
+Implement a minimal latest-mutation guard inside TodoistProvider.
+
+## Required behavior
+
+Use a monotonic mutation sequence/version held locally in TodoistProvider, for example with `useRef`.
+
+For every settings mutation:
+
+1. Allocate a sequence number when the mutation begins.
+2. In `onMutate`:
+   - Record the previous cached settings document.
+   - Optimistically write the complete outgoing settings document to the settings query cache.
+   - Return mutation context containing:
+     - `previous`
+     - `sequence`
+     - any other minimal data needed.
+
+3. In `onSuccess`:
+   - Update the React Query settings cache with the server response only if this mutation’s sequence is still the latest started mutation.
+   - If the response belongs to an older mutation, do not let it overwrite newer cached state.
+
+4. In `onError`:
+   - Roll back only if this failed mutation is still the latest started mutation.
+   - Do not let an older failed mutation roll back a newer optimistic change.
+   - If a latest-mutation failure cannot safely restore a known current state, invalidate/refetch the settings query rather than overwriting newer data.
+
+5. Preserve all current requirements:
+   - Every request remains a full document with both nullable fields.
+   - The context public interface remains unchanged.
+   - No localStorage.
+   - No schema/migration/API contract/codegen changes.
+   - No changes outside the current client-side context file unless TypeScript strictly requires it.
+   - No task/eblast/manual sync/outbox/webhook/retry/polling/Phase 2 work.
+   - No toast/UI expansion is required.
+
+## Required verification
+
+Provide a focused test or precise executable trace for all three cases:
+
+A. Rapid sequential updates:
+- Initial cache { A, B }
+- Set task project to C
+- Before response, set e-blast project to D
+- Assert request 2 body is { C, D }
+
+B. Out-of-order successful responses:
+- Request 2 resolves successfully before request 1
+- Request 1 then resolves successfully late
+- Assert final cache remains { C, D }, not { C, B }
+
+C. Older failure after newer mutation starts:
+- Mutation 1 starts and applies optimistic { C, B }
+- Mutation 2 starts and applies optimistic { C, D }
+- Mutation 1 fails after mutation 2 started
+- Assert cache remains { C, D }; it must not roll back to { A, B }
+
+D. Latest mutation failure:
+- A single/latest optimistic mutation fails
+- Assert cache either restores the correct prior state or safely invalidates/refetches, with the behavior explained.
+
+After editing:
+1. Show the exact diff for `artifacts/show-command-center/src/contexts/todoist-context.tsx`.
+2. Run the frontend typecheck.
+3. Run the targeted secret scan.
+4. Show `git status --short`.
+5. Do not stage, commit, push, deploy, run migrations, or start Phase 2.

@@ -1,0 +1,32 @@
+Push the existing atomic Todoist settings-update fix to GitHub.
+
+Commit:
+3ffd2debb97cf176147ac33343eef516fa31c14d
+
+Branch:
+expand-completed-tasks-default
+
+Strict requirements:
+- Push only the existing commit history ending at 3ffd2debb97cf176147ac33343eef516fa31c14d.
+- Do not amend, rebase, squash, force-push, or create a new commit.
+- Do not stage or include .claude-user/** session-state churn.
+- Do not include Playwright output, test artifacts, generated session files, or unrelated files.
+- Do not open a pull request.
+- Do not deploy.
+- Do not run migrations.
+- Do not begin Phase 2 or touch the outbox, task/eblast routes, webhook work, or retry logic.
+
+Before pushing:
+1. Show `git status --short`.
+2. Show `git log --oneline -4`.
+3. Confirm `git rev-parse HEAD` equals exactly:
+   3ffd2debb97cf176147ac33343eef516fa31c14d
+4. Confirm the remote target is:
+   origin/expand-completed-tasks-default
+   https://github.com/saygvalentine/GV-Show-Command-Center-TODOIST
+
+After pushing:
+1. Return the exact push output.
+2. Return `git rev-parse HEAD`.
+3. Return `git status --short`.
+4. Stop and wait for review.

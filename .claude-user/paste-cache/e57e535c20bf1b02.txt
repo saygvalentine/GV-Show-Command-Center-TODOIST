@@ -1,0 +1,82 @@
+Perform Phase 1 Todoist foundation validation in a non-production environment only.
+
+Do not modify source files.
+Do not create a commit.
+Do not push.
+Do not deploy to production.
+Do not run migrations against production.
+Do not begin Phase 2.
+
+## Preconditions
+
+The branch includes:
+- 761e211: Phase 1 schema/settings/outbox/webhook foundation
+- b5785f2: Todoist guardrails documentation
+- 3ffd2de: atomic settings update fix
+
+## Required validation plan
+
+1. First identify the available safe environment:
+   - local database,
+   - staging database,
+   - verified production clone/backup,
+   - or another non-production DATABASE_URL.
+   Do not assume the current DATABASE_URL is safe.
+   Print only a redacted database target identity; never print credentials.
+
+2. Before any migration:
+   - Print the current Git SHA.
+   - Confirm it is 3ffd2debb97cf176147ac33343eef516fa31c14d or a descendant with no unrelated changes.
+   - Run the repository’s migration status/inspection command if one exists.
+   - Display the SQL operations from migration 0008_public_thanos.sql in plain English.
+   - Confirm the target database is not production.
+
+3. Apply only the existing migration:
+   pnpm --filter @workspace/db run migrate
+
+4. Verify schema after migration:
+   - Confirm tables exist:
+     - todoist_settings
+     - todoist_sync_events
+     - todoist_webhook_events
+   - Confirm no existing table was dropped or altered unexpectedly.
+   - Confirm todoist_orphans still exists.
+   - Confirm the expected indexes exist:
+     - todoist_sync_events_due_idx
+     - todoist_sync_events_item_active
+     - todoist_sync_events_delete_active
+     - todoist_webhook_events_fingerprint_key
+     - todoist_webhook_events_provider_event_id_key
+
+5. Verify orphan migration:
+   - Count distinct `(item_type, todoist_task_id)` pairs in todoist_orphans.
+   - Count pending delete events copied into todoist_sync_events with:
+     - item_id IS NULL
+     - operation = 'delete'
+     - reason = 'delete'
+     - status = 'pending'
+   - Explain any expected difference or mismatch.
+   - Do not modify/delete existing orphan rows.
+
+6. Validate settings API behavior in the safe environment:
+   - GET returns `{ taskProjectId: null, eblastProjectId: null }` if no row exists.
+   - PUT rejects missing fields.
+   - PUT accepts a complete document with two IDs.
+   - PUT accepts `{ taskProjectId: null, eblastProjectId: null }`.
+   - PUT normalizes empty strings to null.
+   - GET returns the saved full document afterward.
+   - Restore the original safe-environment settings values after testing.
+
+7. Validate application behavior:
+   - If a safe deployed environment exists, confirm project selections persist across reload and cleared browser storage.
+   - Confirm existing Push-to-Todoist buttons remain visible and no automatic task sync occurs.
+   - If a safe deploy is unavailable, report the exact remaining manual validation steps without making a deployment.
+
+8. End with:
+   - Exact commands run.
+   - Redacted database target identity.
+   - Migration result.
+   - Schema/index verification output summary.
+   - Settings API results.
+   - Any issue/blocker.
+   - Confirmation that no source files, production database, deployment, or Todoist tasks were modified.

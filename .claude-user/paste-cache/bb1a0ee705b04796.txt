@@ -1,0 +1,185 @@
+Implement the narrow Todoist settings update race-condition fix.
+
+Repository:
+saygvalentine/GV-Show-Command-Center-TODOIST
+
+Working branch:
+expand-completed-tasks-default
+
+Current reviewed commits:
+- 761e211a0c2b69114cf1bbeb02e696498542e104
+  feat(todoist): add sync outbox foundation and server settings
+- b5785f263b09726000469f7b8422cf199178cbc0
+  docs: document Todoist sync foundation and guardrails
+
+## Problem to fix
+
+The current `PUT /api/export/todoist/settings` route uses this pattern:
+
+1. Read the current settings row.
+2. Merge a partial request body in JavaScript.
+3. Upsert the merged object.
+
+That creates a lost-update race when two updates occur close together:
+
+```text
+Current:
+taskProjectId = A
+eblastProjectId = B
+
+Request 1 updates taskProjectId to C.
+Request 2 updates eblastProjectId to D.
+
+Both requests read { A, B }.
+Request 1 writes { C, B }.
+Request 2 writes { A, D }.
+
+Result:
+The update to C is lost.
+```
+
+## Required design
+
+Replace partial-update semantics with full-document replacement semantics.
+
+### API contract
+
+`PUT /api/export/todoist/settings` must require both properties:
+
+```ts
+{
+  taskProjectId: string | null;
+  eblastProjectId: string | null;
+}
+```
+
+Rules:
+
+- Both fields are required in the request body.
+- Each field may be `null`.
+- An empty string from the existing Select UI must still normalize to `null` before validation/upsert.
+- The route must not call `readSettings()` before a `PUT`.
+- The route must perform one atomic singleton upsert using `id = "default"`.
+- `GET` must remain unchanged:
+  - Return `{ taskProjectId: null, eblastProjectId: null }` when no row exists.
+- The response still returns the full saved settings document.
+
+### Frontend context
+
+Update `TodoistProvider` so each selector update always submits both current values:
+
+- `setTaskProjectId(taskProjectId)` sends:
+  ```ts
+  {
+    taskProjectId,
+    eblastProjectId: currentServerOrCachedEblastProjectId
+  }
+  ```
+
+- `setEblastProjectId(eblastProjectId)` sends:
+  ```ts
+  {
+    taskProjectId: currentServerOrCachedTaskProjectId,
+    eblastProjectId
+  }
+  ```
+
+Requirements:
+
+- Preserve the public context interface:
+  - `taskProjectId`
+  - `eblastProjectId`
+  - `projects`
+  - `loadingProjects`
+  - `setTaskProjectId`
+  - `setEblastProjectId`
+- Preserve safe loading behavior: no selector write before server settings have loaded.
+- Preserve `"" → null` behavior at the API boundary.
+- Do not add optimistic updates unless the existing app pattern clearly requires them.
+- After mutation success, keep updating the React Query settings cache with the complete server response.
+- Do not retain or restore browser `localStorage["todoist_prefs"]`.
+
+## Files expected to change
+
+Only modify files necessary for this fix. Expected candidates:
+
+- `artifacts/api-server/src/routes/todoist-settings.ts`
+- `artifacts/show-command-center/src/contexts/todoist-context.tsx`
+- `lib/api-spec/openapi.yaml`
+- Generated files under:
+  - `lib/api-client-react/src/generated/`
+  - `lib/api-zod/src/generated/`
+
+If another file is truly required, explain why before modifying it.
+
+## Explicitly out of scope
+
+Do not modify:
+
+- `CLAUDE.md`
+- Any database schema or migration.
+- `lib/db/migrations/**`
+- `lib/db/src/schema/**`
+- `artifacts/api-server/src/routes/tasks.ts`
+- `artifacts/api-server/src/routes/eblasts.ts`
+- `artifacts/api-server/src/routes/todoist.ts`
+- Manual sync behavior.
+- Existing Push-to-Todoist buttons.
+- Outbox processing.
+- Webhook routes, webhook verification, raw-body middleware, or Todoist Developer App setup.
+- Retry workers, scheduled deployments, cron, polling, or `setInterval`.
+- Replit configuration, deployment settings, or secrets.
+- Key-task identity cleanup.
+- Existing api-zod export-collision/typecheck debt.
+- `.claude-user/**`, Playwright output, test artifacts, or unrelated session files.
+
+Do not run a migration.
+Do not deploy.
+Do not push.
+Do not open a pull request.
+Do not commit until I explicitly approve.
+
+## Required workflow
+
+### Before editing
+
+1. Show `git status --short`.
+2. Show the exact list of files you intend to modify.
+3. Explain the old race condition and the new atomic write flow in a short before/after diagram.
+4. Confirm no schema or migration change is needed.
+5. Confirm that no existing manual Todoist sync behavior will change.
+
+### Implementation requirements
+
+1. Update OpenAPI so the request body requires both nullable project ID fields.
+2. Regenerate API client and Zod artifacts using the repository’s normal codegen command.
+3. Update the server route:
+   - Normalize empty strings to `null`.
+   - Validate the complete request body.
+   - Make one atomic upsert using `TODOIST_SETTINGS_ID`.
+   - Remove application-level `readSettings()` merge logic from `PUT`.
+4. Update the context so each setter submits a complete document based on the most recent loaded/cached server settings.
+5. Preserve GET defaults and loading protections.
+
+### Verification requirements
+
+After editing:
+
+1. Show `git diff --stat`.
+2. Show `git diff --` for every changed non-generated source file.
+3. Confirm the request schema rejects:
+   - `{}`.
+   - `{ taskProjectId: "123" }`.
+   - `{ eblastProjectId: "456" }`.
+4. Confirm it accepts:
+   - `{ taskProjectId: "123", eblastProjectId: "456" }`.
+   - `{ taskProjectId: null, eblastProjectId: null }`.
+5. Explain why two concurrent full-document writes no longer suffer from the prior **partial-field lost-update** bug.
+6. Run the narrowest relevant code generation and type/build checks that are available without touching unrelated known failures.
+7. Report any failures and clearly distinguish pre-existing failures from failures caused by this change.
+8. Run a targeted secret check on changed files.
+9. Show `git status --short`.
+
+Then stop and wait for my review.
+
+Do not stage, commit, push, deploy, run migrations, or begin Phase 2.

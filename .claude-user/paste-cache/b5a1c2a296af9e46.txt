@@ -1,0 +1,43 @@
+The Phase 1 implementation is directionally approved, but do not commit yet.
+
+First provide the exact contents of, or focused excerpts covering all fields/indexes/logic from:
+
+1. lib/db/src/schema/todoistSyncEvents.ts
+2. lib/db/migrations/0008_public_thanos.sql
+3. lib/db/src/schema/todoistSettings.ts
+4. lib/db/src/schema/todoistWebhookEvents.ts
+5. artifacts/api-server/src/routes/todoist-settings.ts
+6. artifacts/show-command-center/src/contexts/todoist-context.tsx
+
+Also answer these verification questions explicitly:
+
+A. Confirm the partial unique indexes constrain only active events:
+   - status IN ('pending', 'in_progress')
+   - They must not block a future event after an earlier event is delivered, failed, or abandoned.
+
+B. Confirm the schema supports this exact sequence:
+   - task 42 gets an upsert event and it becomes delivered
+   - task 42 is edited later
+   - a new active upsert event can be inserted successfully
+   - task 42 is edited again while that new event is pending
+   - the pending event is coalesced/updated rather than duplicated
+
+C. Confirm the orphan-copy INSERT satisfies every new table constraint and preserves:
+   - item type
+   - Todoist task ID
+   - delete operation
+   - pending status
+   - retry eligibility/default next-attempt time
+   - timestamp/audit defaults
+
+D. Confirm GET settings returns a safe default object when no todoist_settings row exists.
+
+E. Confirm PUT settings uses an id='default' upsert and validates only taskProjectId and eblastProjectId.
+
+F. Confirm the context cannot overwrite server settings with empty/stale local state before the initial settings query completes.
+
+G. Run a targeted secret scan or manually verify that the staged diff contains no credentials, tokens, DATABASE_URL values, or unrelated .claude-user/Playwright artifacts.
+
+Do not make unrelated fixes to the api-zod export collision or historical route typing errors. Record those as separate technical debt only.
+
+After the above review, stop and wait for my explicit commit authorization.

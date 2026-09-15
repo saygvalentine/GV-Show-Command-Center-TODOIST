@@ -1,0 +1,51 @@
+Do not commit yet. The server-side race fix is approved, but there is one remaining client-side rapid-update race to correct.
+
+Issue:
+The context now reads queryClient.getQueryData() at setter call time, but that cache is only updated in onSuccess. If a user changes the task picker and then immediately changes the e-blast picker before the first PUT returns, the second setter can still read the old cached document and send a full replacement body that restores the old first value.
+
+Required fix:
+Add an optimistic React Query cache update and rollback behavior to the Todoist settings mutation flow.
+
+Implementation requirements:
+
+1. In TodoistProvider, configure the Todoist settings mutation so that:
+   - `onMutate` receives the complete outgoing settings document.
+   - It first cancels any in-flight Todoist settings query if appropriate.
+   - It captures the previous settings cache value.
+   - It immediately writes the complete outgoing document to:
+     `getGetTodoistSettingsQueryKey()`
+   - It returns the previous cached value as mutation context.
+
+2. On mutation success:
+   - Replace/update the cache with the authoritative full server response.
+
+3. On mutation error:
+   - Restore the previous cache value from mutation context.
+   - If the app has an existing error/toast convention for failed settings writes, use it; otherwise do not add unrelated UI work.
+
+4. Update the setter implementation so every rapid second change reads the optimistically updated current cache and therefore includes the first pending change in its complete replacement request.
+
+5. Preserve:
+   - the existing public Todoist context interface;
+   - server-side empty-string-to-null normalization;
+   - full-document PUT semantics;
+   - no localStorage;
+   - no schema/migration change;
+   - no change to manual Todoist sync, task/eblast routes, outbox behavior, webhooks, retries, polling, or Phase 2.
+
+6. Do not modify any file outside the existing intended scope unless required by types.
+
+Before editing:
+- Show the exact files you will modify.
+- Explain the rapid two-picker sequence before and after optimistic cache behavior.
+
+After editing:
+- Show diffs for all non-generated changed files.
+- Demonstrate, using either a focused test or a precise code-level trace, this sequence:
+  1. cache starts as { taskProjectId: A, eblastProjectId: B }
+  2. user sets taskProjectId to C → cache immediately becomes { C, B }
+  3. before network response, user sets eblastProjectId to D
+  4. the second request body is { C, D }, not { A, D }
+- Confirm rollback behavior if the first mutation fails.
+- Re-run relevant codegen/type checks and the targeted secret scan.
+- Do not stage, commit, push, deploy, run migrations, or begin Phase 2.

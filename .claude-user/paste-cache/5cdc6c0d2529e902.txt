@@ -1,0 +1,33 @@
+Before committing, show me:
+
+1. `git diff -- CLAUDE.md`
+2. `git status --short`
+
+I am specifically verifying that the new documentation:
+- States Phase 1 is foundation/schema/settings only.
+- States the legacy manual Push-to-Todoist flow remains active.
+- Does not claim automatic outbound sync, webhook handling, reconciliation, or two-way sync is implemented.
+- States that Todoist mapping uses todoistTaskId, never task title/content.
+- States that a future Todoist deletion preserves the local record, clears/unlinks the Todoist ID, and requires an explicit repair/relink action rather than silently recreating the remote task.
+- States no resident setInterval/polling retry loop is allowed on the Replit autoscale deployment.
+- States migrations must be manually applied to existing production databases.
+- Notes the existing key-task title/category coupling as a future migration concern.
+
+If the displayed diff meets those requirements and CLAUDE.md is still the only intended source file changed, commit only CLAUDE.md.
+
+Use this exact commit message:
+
+docs: document Todoist sync foundation and guardrails
+
+Before the commit:
+- Stage only CLAUDE.md.
+- Confirm no .claude-user/** files, test artifacts, generated files, migrations, or source code are staged.
+- Do not amend the existing Phase 1 commit.
+- Do not run migrations, deploy, push, or begin Phase 2.
+
+After the commit:
+1. Return the commit SHA.
+2. Return `git status --short`.
+3. Return `git show --stat --oneline HEAD`.
+4. Do not push.
+5. Stop and wait for my review.

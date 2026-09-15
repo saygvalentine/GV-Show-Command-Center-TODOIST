@@ -1,0 +1,94 @@
+Update CLAUDE.md only to document the current Todoist sync foundation and guardrails.
+
+Repository:
+saygvalentine/GV-Show-Command-Center-TODOIST
+
+Current branch:
+expand-completed-tasks-default
+
+Current committed foundation:
+761e211a0c2b69114cf1bbeb02e696498542e104
+feat(todoist): add sync outbox foundation and server settings
+
+## Strict scope
+
+Modify only:
+
+- CLAUDE.md
+
+Do not modify, generate, stage, or delete any other file.
+
+In particular, do not modify:
+
+- Any migration or schema file.
+- Todoist settings API routes.
+- Todoist frontend context or UI.
+- `tasks.ts`, `eblasts.ts`, or `todoist.ts`.
+- OpenAPI, generated API client, or generated Zod files.
+- `.claude-user/**`.
+- Playwright output or test artifacts.
+- Replit configuration or secrets.
+
+Do not run migrations.
+Do not deploy.
+Do not push.
+Do not open a pull request.
+Do not begin Phase 2.
+Do not fix the separate settings update race condition in this documentation change.
+Do not commit until I explicitly authorize it.
+
+## Purpose
+
+Add a concise, accurate section to CLAUDE.md so future Claude Code sessions understand:
+
+- What has been implemented in Phase 1.
+- What remains legacy/manual behavior.
+- The Todoist synchronization guardrails.
+- The Replit autoscale/no-polling constraint.
+- The manual production migration requirement.
+- The key-task name-coupling risk.
+
+Do not claim that automatic outbound sync, webhooks, reconciliation, or two-way sync already work. They do not exist yet.
+
+## Add this content
+
+Add a new clearly named section near the architecture/development guidance, preferably:
+
+## Todoist sync status and guardrails
+
+Use the following content, adapting only formatting to match the existing CLAUDE.md style. Preserve all technical meaning.
+
+### Current implementation status
+
+- Phase 1 foundation is in place:
+  - `todoist_settings` stores the Task and E-Blast Todoist project IDs server-side.
+  - `todoist_sync_events` is the durable outbound outbox schema.
+  - `todoist_webhook_events` is the future inbound webhook audit/deduplication schema.
+- The application currently still uses the legacy manual one-way Todoist flow:
+  - Existing `POST /api/export/todoist/sync` remains active.
+  - Existing “Push to Todoist” UI remains active.
+  - `tasks.ts` and `eblasts.ts` do not yet enqueue or deliver automatic Todoist events.
+  - No Todoist webhook receiver exists yet.
+- Do not describe the Phase 1 tables as active automatic synchronization until later phases are implemented.
+
+### Settings
+
+- Todoist project configuration must be read from and written to server-side `todoist_settings`.
+- Do not add or restore `localStorage["todoist_prefs"]` as a Todoist sync configuration source.
+- This app currently has no user/auth/workspace model, so `todoist_settings` is a singleton keyed by `id = "default"`.
+
+### Outbound sync design
+
+- `todoist_sync_events` is the future durable outbox for task and e-blast changes.
+- Use a coalesced current-state model: one active event per item, not a replay of every intermediate edit.
+- Delivery shapes are `upsert` and `delete`; `reason` records why the event was created.
+- Active means `pending` or `in_progress`. Historical `delivered`, `failed`, and `abandoned` rows must not block future events.
+- Never introduce a resident `setInterval` retry loop. This project uses Replit autoscale deployment and can scale to zero between requests.
+- Future retries must be triggered by active requests, webhook requests, explicit repair actions, or a deliberately low-frequency scheduled HTTP trigger.
+
+### Deletion and remote identity
+
+- Use `tasks.todoistTaskId` and `eblasts.todoistTaskId` as the only local-to-Todoist identity mappings.
+- Never match Todoist tasks by title/content.
+- Local deletion will eventually enqueue a retryable remote delete.
+- A future Todoist-side deletion must preserve the

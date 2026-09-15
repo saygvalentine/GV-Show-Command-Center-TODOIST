@@ -1,0 +1,228 @@
+I want to revise the Todoist two-way sync plan for this repository before implementation.
+
+Repository:
+saygvalentine/GV-Show-Command-Center-TODOIST
+
+Working branch:
+expand-completed-tasks-default
+
+Important constraint:
+Do not edit files, generate migrations, run migrations, create a branch, commit, or change configuration yet. This is a read-only discovery and planning pass. First inspect the current implementation and return a concrete, repo-specific implementation plan.
+
+## Goal
+
+Renovate the existing manual one-way Todoist integration into an automatic, low-cost, two-way sync between Show Command Center and Todoist.
+
+Normal desired behavior:
+
+- Create/update/check off/reopen/delete a Show Command Center task or e-blast → synchronize the linked Todoist task automatically.
+- Check off/reopen/delete the linked Todoist task → reflect the appropriate state in Show Command Center automatically.
+- Do not rely on manual “Push to Todoist” buttons.
+- Do not use frequent polling, since this runs on Replit and we want to avoid keeping the production database/process active unnecessarily.
+- Use Todoist webhooks for normal inbound changes.
+- Use immediate, targeted outbound calls after local changes.
+- Keep only a low-frequency/on-demand repair/reconciliation capability as a safety net.
+
+## Confirmed scope and rules
+
+1. Sync scope:
+   - Include show tasks and e-blasts only.
+   - Keep office tasks app-only.
+   - Do not add Todoist wiring to office tasks in this phase.
+
+2. System ownership:
+   - Show Command Center remains the source of truth for shows, venues, preset tasks, business workflow rules, show status, reporting, and e-blast metadata.
+   - Todoist is a linked task-execution surface.
+   - Reuse existing `todoistTaskId` mappings on tasks and e-blasts wherever they already exist.
+
+3. Sync fields for Phase 1:
+   - Local → Todoist: create, complete, reopen, delete/unlink, title/content, description, and due date where supported by current implementation.
+   - Todoist → local: completion, reopen, and deletion/unlink only.
+   - Do not add bidirectional title, description, due-date, labels, priority, section, or project moves from Todoist into the app in Phase 1.
+   - We can consider inbound title/due-date editing only after the completion lifecycle is proven reliable.
+
+4. No-due-date rule:
+   - Preserve the existing behavior: tasks/e-blasts without a due date should not have a Todoist representation.
+   - Clearing a local due date should remove or unlink the remote Todoist task according to the existing intended behavior. Identify the exact existing behavior and recommend the safest final rule.
+
+5. Remote deletion:
+   - If a linked Todoist task is deleted in Todoist, do not silently recreate it.
+   - Preserve the local task/e-blast record.
+   - Clear/unlink `todoistTaskId`, record the reason/audit event, and expose it to a future Sync Health/Repair UI.
+   - Do not automatically delete the local business record.
+
+6. Local deletion:
+   - Deleting a local task/e-blast should enqueue a remote Todoist delete when a linked remote ID exists.
+   - Remote deletion must be retryable and idempotent.
+
+7. Settings:
+   - Current Todoist project preferences must move from browser `localStorage` to server-side database storage.
+   - Preserve the existing Settings UI concept of separate task-project and e-blast-project selectors unless the repo structure clearly requires another design.
+   - Design settings to be account/workspace/connection-aware if the project already has users, auth, or a natural ownership scope. Do not assume a singleton row without checking the existing architecture.
+
+8. Key-task safety:
+   - Identify any workflow/dashboard logic that relies on exact editable task names, including preset task names.
+   - Recommend a stable identifier approach, such as `presetTaskId`, `taskType`, or another existing durable relationship.
+   - Do not let editable Todoist content become the identifier for business workflow rules.
+
+## Critical architecture amendment
+
+The prior plan suggested a retry queue drained by a persistent `setInterval` inside the API server.
+
+Do NOT use a continuously running or frequent in-process retry loop as the primary queue processor.
+
+Instead, design a durable event/outbox model that:
+
+- Records each outbound Todoist intent in the database atomically with the local mutation whenever possible.
+- Supports operations including:
+  `create`, `update`, `complete`, `reopen`, `delete`, and `unlink`.
+- Has status, attempt count, next attempt time, idempotency key, payload snapshot, timestamps, and error details.
+- Attempts delivery immediately as part of an already-active user request when safe.
+- Retries only through cost-conscious triggers:
+  - subsequent application requests,
+  - webhook requests,
+  - an explicit “Sync now”/repair action,
+  - and, only if truly necessary, a low-frequency scheduled recovery job.
+- Uses a safe claim/lock mechanism so duplicate workers or retries cannot process an event twice.
+- Does not create regular activity merely to ask whether work exists.
+
+Assess whether the existing `todoist_orphans` table should:
+A) remain temporarily only for delete cleanup and later migrate,
+B) be migrated into a clearly named generalized `todoist_sync_events` outbox,
+or
+C) be replaced outright.
+
+Recommend one option and explain the migration path.
+
+## Webhook requirements
+
+Plan a Todoist webhook endpoint, for example:
+
+POST /webhooks/todoist
+
+It must include:
+
+- Verification of Todoist’s webhook HMAC signature using server environment secrets.
+- Fast success acknowledgment after verification and durable event capture.
+- Explicit inbound delivery deduplication, not merely “the resulting local state is already correct.”
+- A persistent webhook-event/audit model with:
+  - provider event ID if available, otherwise deterministic payload fingerprint,
+  - event type,
+  - Todoist task ID,
+  - payload hash or payload,
+  - received timestamp,
+  - processing status/result,
+  - processed timestamp,
+  - error details.
+- Safe handling of repeated delivery.
+- Lookup of both local `tasks` and local `eblasts` by Todoist task ID.
+- Phase 1 handling of:
+  - item completed,
+  - item uncompleted,
+  - item deleted.
+- A way to prevent unnecessary outbound “echo” events after an inbound Todoist webhook updates the same local record.
+- Clear handling for a webhook that references an unknown or already-unlinked Todoist task.
+
+Also verify whether the existing Replit Todoist connector can be used alongside the required Todoist Developer App/webhook configuration. If that cannot be proven from repository code alone, identify it as an external setup spike rather than making an assumption.
+
+## Reconciliation and observability
+
+Even with webhooks, retain a controlled recovery path:
+
+- Keep the existing batch endpoint or refactor it into an internal backfill/reconciliation service.
+- It must not remain a normal user-facing “Push to Todoist” workflow.
+- Propose an eventual Sync Health/Repair area that can show:
+  - last successful sync,
+  - pending events,
+  - failed events,
+  - retry action,
+  - unlinked tasks,
+  - unmatched Todoist events,
+  - recent inbound/outbound activity,
+  - optional manual “Sync now” repair action.
+- Recommend whether and how a Todoist incremental cursor/reconciliation method should be stored, but do not introduce broad recurring full scans.
+
+## Read-only inspection tasks
+
+Inspect these areas and report the actual current behavior, paths, functions, data fields, and dependencies:
+
+1. Database:
+   - `lib/db/src/schema/tasks.ts`
+   - `lib/db/src/schema/eblasts.ts`
+   - `lib/db/src/schema/todoistOrphans.ts`
+   - `lib/db/src/schema/presetTasks.ts`
+   - schema exports and migration conventions
+   - any existing show/user/workspace/settings models relevant to ownership
+
+2. Todoist backend:
+   - `artifacts/api-server/src/lib/todoist-client.ts`
+   - `artifacts/api-server/src/routes/todoist.ts`
+   - task and e-blast route handlers
+   - API server bootstrap/route-registration location
+   - existing error/retry behavior, especially 404 and 429 behavior
+   - existing Replit connector behavior
+
+3. Frontend:
+   - Todoist context and Settings components/pages
+   - Show Detail and Calendar “Push to Todoist” UI and mutation hooks
+   - generated API client/spec workflow
+   - any existing app-wide toasts, status patterns, or mutation invalidation conventions
+
+4. Workflow logic:
+   - Search for task-title string matching and named key tasks.
+   - Identify every place title changes could break business logic.
+   - Identify the existing relationship between tasks and preset tasks, if one exists.
+
+## Required response format
+
+Return a planning document with these sections:
+
+1. Current-state findings
+   - Exact files, functions, current data columns, and observed data flow.
+   - Call out any mismatch between prior assumptions and actual repo code.
+
+2. Decisions confirmed
+   - List each confirmed behavior/rule and the exact implementation implication.
+
+3. Recommended target architecture
+   - Local mutation flow.
+   - Durable outbound outbox flow.
+   - Todoist webhook inbound flow.
+   - Deduplication and idempotency.
+   - Failure/retry strategy.
+   - Reconciliation and repair flow.
+   - Replit cost implications.
+
+4. Schema proposal
+   - Exact proposed tables/columns/indexes/foreign keys/unique constraints.
+   - Include `todoist_settings`, outbound sync event/outbox, and inbound webhook event log.
+   - State whether existing `todoist_orphans` is retained, migrated, or replaced.
+   - Identify whether task/e-blast schema changes are actually required beyond existing Todoist IDs.
+   - Identify how stable key-task identity should be implemented.
+
+5. File-by-file implementation map
+   - Existing files to modify.
+   - New files to add.
+   - Files/UI paths to remove or deprecate.
+   - The recommended order of work.
+
+6. External setup checklist
+   - Todoist Developer App requirements.
+   - Required environment variables/secrets.
+   - Webhook registration and verification.
+   - Any uncertainty related to the Replit Todoist connector.
+
+7. Phased delivery plan
+   - Phase 0: design/schema review only.
+   - Phase 1: schema and server settings.
+   - Phase 2: outbound automatic sync.
+   - Phase 3: webhook inbound completion lifecycle.
+   - Phase 4: backfill/reconciliation/Sync Health.
+   - Phase 5: remove manual sync UI and legacy behavior.
+   - For each phase, define acceptance criteria and rollback considerations.
+
+8. Risks and decisions requiring owner approval
+   - Include only real choices that need a product/owner decision.
+   - Make a recommendation for each.
+
+Do not implement anything yet. End with a concise “first implementation PR” definition containing only the smallest safe, reviewable schema/settings foundation.

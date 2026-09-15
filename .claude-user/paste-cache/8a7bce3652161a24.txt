@@ -1,0 +1,38 @@
+Prepare a Phase 1 production rollout checklist for the reviewed Todoist foundation.
+
+Current required branch tip:
+3ffd2debb97cf176147ac33343eef516fa31c14d
+
+Do not run a production migration, deploy, push, modify source files, alter Todoist, or make any database change yet.
+
+Read-only tasks only:
+
+1. Confirm the current Git branch, HEAD SHA, and whether origin/expand-completed-tasks-default contains:
+   - 761e211
+   - b5785f2
+   - 3ffd2de
+
+2. Inspect the repository’s deployment and migration documentation/configuration.
+   Identify:
+   - the exact command that applies migrations;
+   - whether a production deploy is automatic on push or requires a manual Replit action;
+   - any known production database backup/snapshot method documented in the repo;
+   - the exact migration file(s) that will apply.
+
+3. Build a production rollout checklist containing:
+   - backup/snapshot confirmation;
+   - migration command;
+   - read-only SQL verification commands;
+   - deployment step;
+   - Settings persistence smoke test;
+   - confirmation that legacy Push-to-Todoist remains visible;
+   - confirmation that automatic task sync is still absent;
+   - rollback steps for app code and the additive database tables.
+
+4. Clearly label every step as one of:
+   - Read-only
+   - Requires my explicit approval
+   - Production write/change
+
+5. Do not execute any production write/change.
+6. Stop after returning the checklist and wait for my approval.

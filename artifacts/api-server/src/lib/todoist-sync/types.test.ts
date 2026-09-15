@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tallyOutcome, type DeliveryOutcome, type SyncCounters } from "./types";
+import { tallyOutcome, buildDeliveryFailureLog, type DeliveryOutcome, type SyncCounters, type DeliveryResult } from "./types";
 
 describe("tallyOutcome", () => {
   it("folds a mixed batch of every outcome into the manual sync response shape", () => {
@@ -61,5 +61,68 @@ describe("tallyOutcome", () => {
       const total = Object.values(counters).reduce((sum, n) => sum + n, 0);
       expect(total).toBe(1);
     }
+  });
+});
+
+describe("buildDeliveryFailureLog", () => {
+  it("returns a structured payload retaining the diagnostic error for a failed delivery", () => {
+    const result: DeliveryResult = {
+      itemType: "task",
+      itemId: 42,
+      outcome: "failed",
+      todoistTaskId: "TDST-9",
+      completionAction: "none",
+      error: "Todoist API error 500: boom",
+    };
+
+    const log = buildDeliveryFailureLog(result);
+
+    expect(log).toEqual({
+      event: "todoist_delivery_failed",
+      itemType: "task",
+      itemId: 42,
+      todoistTaskId: "TDST-9",
+      error: "Todoist API error 500: boom",
+    });
+  });
+
+  it("returns null for every non-failed outcome", () => {
+    const nonFailedOutcomes: DeliveryOutcome[] = [
+      "created",
+      "updated",
+      "deleted",
+      "skipped_no_due_date",
+      "unlinked_remote_missing",
+    ];
+
+    for (const outcome of nonFailedOutcomes) {
+      const result: DeliveryResult = {
+        itemType: "eblast",
+        itemId: 7,
+        outcome,
+        todoistTaskId: null,
+        completionAction: "none",
+      };
+      expect(buildDeliveryFailureLog(result)).toBeNull();
+    }
+  });
+
+  it("preserves an undefined error rather than substituting a fallback", () => {
+    const result: DeliveryResult = {
+      itemType: "task",
+      itemId: 1,
+      outcome: "failed",
+      todoistTaskId: null,
+      completionAction: "none",
+      // error deliberately omitted
+    };
+
+    expect(buildDeliveryFailureLog(result)).toEqual({
+      event: "todoist_delivery_failed",
+      itemType: "task",
+      itemId: 1,
+      todoistTaskId: null,
+      error: undefined,
+    });
   });
 });

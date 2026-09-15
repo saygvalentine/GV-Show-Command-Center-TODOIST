@@ -3,9 +3,22 @@ import { db, showsTable, tasksTable, eblastsTable, todoistOrphansTable } from "@
 import { eq, inArray } from "drizzle-orm";
 import { todoistRequest, todoistListProjects } from "../lib/todoist-client";
 import { deliverTask, deliverEblast } from "../lib/todoist-sync/delivery";
-import { tallyOutcome, type SyncCounters } from "../lib/todoist-sync/types";
+import { tallyOutcome, buildDeliveryFailureLog, type SyncCounters, type DeliveryResult } from "../lib/todoist-sync/types";
+import { logger } from "../lib/logger";
 
 const router = Router();
+
+// Tallies the result into the response counters and, for a failed delivery,
+// emits a structured backend log carrying the raw provider error — that text
+// never reaches the HTTP response or the frontend toast, only server logs.
+function recordDeliveryOutcome(counters: SyncCounters, result: DeliveryResult): void {
+  tallyOutcome(counters, result.outcome);
+
+  const failureLog = buildDeliveryFailureLog(result);
+  if (failureLog) {
+    logger.error(failureLog, failureLog.event);
+  }
+}
 
 async function drainOrphans(counters: { deleted: number }) {
   const orphans = await db.select().from(todoistOrphansTable);
@@ -76,11 +89,11 @@ router.post("/sync", async (req, res): Promise<void> => {
   const allWork = [
     ...allTasks.map((t) => async () => {
       const result = await deliverTask(t, showMap.get(t.showId) ?? "", taskProjectId);
-      tallyOutcome(counters, result.outcome);
+      recordDeliveryOutcome(counters, result);
     }),
     ...allEblasts.map((e) => async () => {
       const result = await deliverEblast(e, showMap.get(e.showId) ?? "", eblastProjectId);
-      tallyOutcome(counters, result.outcome);
+      recordDeliveryOutcome(counters, result);
     }),
   ];
 

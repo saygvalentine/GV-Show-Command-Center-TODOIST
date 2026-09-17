@@ -309,6 +309,7 @@ describe("enqueueDelete", () => {
         attemptCount: 2,
         lastError: "Todoist API error 500: boom",
         nextAttemptAt: staleNextAttemptAt,
+        generation: 3,
       })
       .where(
         and(
@@ -342,7 +343,9 @@ describe("enqueueDelete", () => {
     expect(row.attemptCount).toBe(0);
     expect(row.lastError).toBeNull();
     expect(row.reason).toBe("unlink");
-    expect(row.generation).toBe(1);
+    // Generation is preserved from whatever the existing row already carried — not
+    // reset to 1 and not incremented.
+    expect(row.generation).toBe(3);
     expect(row.nextAttemptAt.getTime()).toBeGreaterThanOrEqual(before);
   });
 
@@ -363,6 +366,7 @@ describe("enqueueDelete", () => {
         attemptCount: 2,
         nextAttemptAt: seededNextAttemptAt,
         lastError: "Todoist API error 500: boom",
+        generation: 5,
       })
       .where(
         and(
@@ -398,7 +402,68 @@ describe("enqueueDelete", () => {
     expect(row.reason).toBe("unlink");
     // A worker may have an external Todoist DELETE in flight for this row — repeated
     // delete intent must not look like newer work requiring re-finalization.
-    expect(row.generation).toBe(1);
+    expect(row.generation).toBe(5);
+  });
+
+  it("regression: coalescing into an in_progress delete event with generation already above 1 leaves every claim/retry/error field and the seeded generation untouched, updating only reason and updatedAt", async () => {
+    await db.transaction(async (tx) => {
+      await enqueueDelete(tx, { itemType: "task", todoistTaskId: TEST_TODOIST_ID, reason: "delete" });
+    });
+
+    const seededGeneration = 7;
+    const claimToken = "44444444-4444-4444-4444-444444444444";
+    const claimedAt = new Date(Date.now() - 120_000);
+    const seededNextAttemptAt = new Date(Date.now() + 10 * 60_000);
+    const seededLastError = "Todoist API error 503: service unavailable";
+    await db
+      .update(todoistSyncEventsTable)
+      .set({
+        status: "in_progress",
+        claimToken,
+        claimedAt,
+        attemptCount: 4,
+        nextAttemptAt: seededNextAttemptAt,
+        lastError: seededLastError,
+        generation: seededGeneration,
+      })
+      .where(
+        and(
+          eq(todoistSyncEventsTable.itemType, "task"),
+          eq(todoistSyncEventsTable.todoistTaskId, TEST_TODOIST_ID),
+          isNull(todoistSyncEventsTable.itemId),
+        ),
+      );
+
+    const before = Date.now();
+    await db.transaction(async (tx) => {
+      await enqueueDelete(tx, { itemType: "task", todoistTaskId: TEST_TODOIST_ID, reason: "unlink" });
+    });
+
+    const rows = await db
+      .select()
+      .from(todoistSyncEventsTable)
+      .where(
+        and(
+          eq(todoistSyncEventsTable.itemType, "task"),
+          eq(todoistSyncEventsTable.todoistTaskId, TEST_TODOIST_ID),
+          isNull(todoistSyncEventsTable.itemId),
+        ),
+      );
+
+    expect(rows).toHaveLength(1);
+    const row = rows[0];
+    // Every retained field is byte-for-byte the seeded value — nothing here is
+    // coincidentally equal to a default.
+    expect(row.status).toBe("in_progress");
+    expect(row.claimToken).toBe(claimToken);
+    expect(row.claimedAt?.getTime()).toBe(claimedAt.getTime());
+    expect(row.attemptCount).toBe(4);
+    expect(row.nextAttemptAt.getTime()).toBe(seededNextAttemptAt.getTime());
+    expect(row.lastError).toBe(seededLastError);
+    expect(row.generation).toBe(seededGeneration);
+    // Only these two are allowed to change.
+    expect(row.reason).toBe("unlink");
+    expect(row.updatedAt.getTime()).toBeGreaterThanOrEqual(before);
   });
 
   it("a rolled-back delete enqueue leaves no event", async () => {

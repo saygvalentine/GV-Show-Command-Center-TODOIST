@@ -1,0 +1,1 @@
+ALTER TABLE "todoist_sync_events" ADD COLUMN "generation" integer DEFAULT 1 NOT NULL;

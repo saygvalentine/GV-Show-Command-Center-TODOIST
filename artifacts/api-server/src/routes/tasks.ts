@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, tasksTable, gcalOrphansTable, todoistOrphansTable } from "@workspace/db";
+import { db, tasksTable, gcalOrphansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   CreateTaskBody,
@@ -11,6 +11,7 @@ import {
   BulkCreateTasksBody,
   BulkCreateTasksParams,
 } from "@workspace/api-zod";
+import { enqueueSync, enqueueDelete, supersedeSync } from "../lib/todoist-sync/outbox";
 
 const router = Router({ mergeParams: true });
 
@@ -43,10 +44,16 @@ router.post("/", async (req, res): Promise<void> => {
     return;
   }
 
-  const [task] = await db
-    .insert(tasksTable)
-    .values({ ...parsed.data, showId: params.data.showId })
-    .returning();
+  const task = await db.transaction(async (tx) => {
+    const [inserted] = await tx
+      .insert(tasksTable)
+      .values({ ...parsed.data, showId: params.data.showId })
+      .returning();
+
+    await enqueueSync(tx, { itemType: "task", itemId: inserted.id, reason: "create" });
+
+    return inserted;
+  });
 
   res.status(201).json(task);
 });
@@ -69,10 +76,18 @@ router.post("/bulk", async (req, res): Promise<void> => {
     return;
   }
 
-  const tasks = await db
-    .insert(tasksTable)
-    .values(parsed.data.tasks.map((t) => ({ ...t, showId: params.data.showId })))
-    .returning();
+  const tasks = await db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(tasksTable)
+      .values(parsed.data.tasks.map((t) => ({ ...t, showId: params.data.showId })))
+      .returning();
+
+    for (const task of inserted) {
+      await enqueueSync(tx, { itemType: "task", itemId: task.id, reason: "create" });
+    }
+
+    return inserted;
+  });
 
   res.status(201).json(tasks);
 });
@@ -107,16 +122,26 @@ router.put("/:taskId", async (req, res): Promise<void> => {
     updates.completedAt = parsed.data.completedAt ? new Date(parsed.data.completedAt) : null;
   }
 
-  const [task] = await db
-    .update(tasksTable)
-    .set(updates)
-    .where(
-      and(
-        eq(tasksTable.id, params.data.taskId),
-        eq(tasksTable.showId, params.data.showId)
+  const reason = parsed.data.completed === true ? "complete" : parsed.data.completed === false ? "reopen" : "update";
+
+  const task = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(tasksTable)
+      .set(updates)
+      .where(
+        and(
+          eq(tasksTable.id, params.data.taskId),
+          eq(tasksTable.showId, params.data.showId)
+        )
       )
-    )
-    .returning();
+      .returning();
+
+    if (!updated) return null;
+
+    await enqueueSync(tx, { itemType: "task", itemId: updated.id, reason });
+
+    return updated;
+  });
 
   if (!task) {
     res.status(404).json({ error: "Task not found" });
@@ -136,26 +161,29 @@ router.delete("/:taskId", async (req, res): Promise<void> => {
     return;
   }
 
-  const [task] = await db
-    .select({ gcalEventId: tasksTable.gcalEventId, todoistTaskId: tasksTable.todoistTaskId })
-    .from(tasksTable)
-    .where(and(eq(tasksTable.id, params.data.taskId), eq(tasksTable.showId, params.data.showId)));
+  await db.transaction(async (tx) => {
+    const [task] = await tx
+      .select({ gcalEventId: tasksTable.gcalEventId, todoistTaskId: tasksTable.todoistTaskId })
+      .from(tasksTable)
+      .where(and(eq(tasksTable.id, params.data.taskId), eq(tasksTable.showId, params.data.showId)));
 
-  if (task?.gcalEventId) {
-    await db.insert(gcalOrphansTable).values({ gcalEventId: task.gcalEventId, calendarType: "task" });
-  }
-  if (task?.todoistTaskId) {
-    await db.insert(todoistOrphansTable).values({ todoistTaskId: task.todoistTaskId, itemType: "task" });
-  }
+    if (task?.gcalEventId) {
+      await tx.insert(gcalOrphansTable).values({ gcalEventId: task.gcalEventId, calendarType: "task" });
+    }
+    if (task?.todoistTaskId) {
+      await supersedeSync(tx, { itemType: "task", itemId: params.data.taskId });
+      await enqueueDelete(tx, { itemType: "task", todoistTaskId: task.todoistTaskId, reason: "delete" });
+    }
 
-  await db
-    .delete(tasksTable)
-    .where(
-      and(
-        eq(tasksTable.id, params.data.taskId),
-        eq(tasksTable.showId, params.data.showId)
-      )
-    );
+    await tx
+      .delete(tasksTable)
+      .where(
+        and(
+          eq(tasksTable.id, params.data.taskId),
+          eq(tasksTable.showId, params.data.showId)
+        )
+      );
+  });
 
   res.status(204).send();
 });

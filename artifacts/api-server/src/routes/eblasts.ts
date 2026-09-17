@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, eblastsTable, gcalOrphansTable, todoistOrphansTable } from "@workspace/db";
+import { db, eblastsTable, gcalOrphansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   CreateEblastBody,
@@ -11,6 +11,7 @@ import {
   BulkCreateEblastsBody,
   BulkCreateEblastsParams,
 } from "@workspace/api-zod";
+import { enqueueSync, enqueueDelete, supersedeSync } from "../lib/todoist-sync/outbox";
 
 const router = Router({ mergeParams: true });
 
@@ -43,10 +44,16 @@ router.post("/", async (req, res): Promise<void> => {
     return;
   }
 
-  const [eblast] = await db
-    .insert(eblastsTable)
-    .values({ ...parsed.data, showId: params.data.showId })
-    .returning();
+  const eblast = await db.transaction(async (tx) => {
+    const [inserted] = await tx
+      .insert(eblastsTable)
+      .values({ ...parsed.data, showId: params.data.showId })
+      .returning();
+
+    await enqueueSync(tx, { itemType: "eblast", itemId: inserted.id, reason: "create" });
+
+    return inserted;
+  });
 
   res.status(201).json(eblast);
 });
@@ -69,10 +76,18 @@ router.post("/bulk", async (req, res): Promise<void> => {
     return;
   }
 
-  const eblasts = await db
-    .insert(eblastsTable)
-    .values(parsed.data.eblasts.map((e) => ({ ...e, showId: params.data.showId })))
-    .returning();
+  const eblasts = await db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(eblastsTable)
+      .values(parsed.data.eblasts.map((e) => ({ ...e, showId: params.data.showId })))
+      .returning();
+
+    for (const eblast of inserted) {
+      await enqueueSync(tx, { itemType: "eblast", itemId: eblast.id, reason: "create" });
+    }
+
+    return inserted;
+  });
 
   res.status(201).json(eblasts);
 });
@@ -106,16 +121,26 @@ router.put("/:eblastId", async (req, res): Promise<void> => {
     updates.sentAt = parsed.data.sentAt ? new Date(parsed.data.sentAt) : null;
   }
 
-  const [eblast] = await db
-    .update(eblastsTable)
-    .set(updates)
-    .where(
-      and(
-        eq(eblastsTable.id, params.data.eblastId),
-        eq(eblastsTable.showId, params.data.showId)
+  const reason = parsed.data.sent === true ? "complete" : parsed.data.sent === false ? "reopen" : "update";
+
+  const eblast = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(eblastsTable)
+      .set(updates)
+      .where(
+        and(
+          eq(eblastsTable.id, params.data.eblastId),
+          eq(eblastsTable.showId, params.data.showId)
+        )
       )
-    )
-    .returning();
+      .returning();
+
+    if (!updated) return null;
+
+    await enqueueSync(tx, { itemType: "eblast", itemId: updated.id, reason });
+
+    return updated;
+  });
 
   if (!eblast) {
     res.status(404).json({ error: "E-blast not found" });
@@ -135,26 +160,29 @@ router.delete("/:eblastId", async (req, res): Promise<void> => {
     return;
   }
 
-  const [eblast] = await db
-    .select({ gcalEventId: eblastsTable.gcalEventId, todoistTaskId: eblastsTable.todoistTaskId })
-    .from(eblastsTable)
-    .where(and(eq(eblastsTable.id, params.data.eblastId), eq(eblastsTable.showId, params.data.showId)));
+  await db.transaction(async (tx) => {
+    const [eblast] = await tx
+      .select({ gcalEventId: eblastsTable.gcalEventId, todoistTaskId: eblastsTable.todoistTaskId })
+      .from(eblastsTable)
+      .where(and(eq(eblastsTable.id, params.data.eblastId), eq(eblastsTable.showId, params.data.showId)));
 
-  if (eblast?.gcalEventId) {
-    await db.insert(gcalOrphansTable).values({ gcalEventId: eblast.gcalEventId, calendarType: "eblast" });
-  }
-  if (eblast?.todoistTaskId) {
-    await db.insert(todoistOrphansTable).values({ todoistTaskId: eblast.todoistTaskId, itemType: "eblast" });
-  }
+    if (eblast?.gcalEventId) {
+      await tx.insert(gcalOrphansTable).values({ gcalEventId: eblast.gcalEventId, calendarType: "eblast" });
+    }
+    if (eblast?.todoistTaskId) {
+      await supersedeSync(tx, { itemType: "eblast", itemId: params.data.eblastId });
+      await enqueueDelete(tx, { itemType: "eblast", todoistTaskId: eblast.todoistTaskId, reason: "delete" });
+    }
 
-  await db
-    .delete(eblastsTable)
-    .where(
-      and(
-        eq(eblastsTable.id, params.data.eblastId),
-        eq(eblastsTable.showId, params.data.showId)
-      )
-    );
+    await tx
+      .delete(eblastsTable)
+      .where(
+        and(
+          eq(eblastsTable.id, params.data.eblastId),
+          eq(eblastsTable.showId, params.data.showId)
+        )
+      );
+  });
 
   res.status(204).send();
 });

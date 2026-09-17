@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, showsTable, tasksTable, eblastsTable, linksTable, gcalOrphansTable, todoistOrphansTable } from "@workspace/db";
+import { db, showsTable, tasksTable, eblastsTable, linksTable, gcalOrphansTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import {
   CreateShowBody,
@@ -8,6 +8,7 @@ import {
   UpdateShowParams,
   DeleteShowParams,
 } from "@workspace/api-zod";
+import { enqueueDelete, supersedeSync } from "../lib/todoist-sync/outbox";
 
 const router = Router();
 
@@ -222,34 +223,37 @@ router.delete("/:showId", async (req, res): Promise<void> => {
     return;
   }
 
-  const [childTasks, childEblasts] = await Promise.all([
-    db.select({ gcalEventId: tasksTable.gcalEventId, todoistTaskId: tasksTable.todoistTaskId }).from(tasksTable).where(eq(tasksTable.showId, params.data.showId)),
-    db.select({ gcalEventId: eblastsTable.gcalEventId, todoistTaskId: eblastsTable.todoistTaskId }).from(eblastsTable).where(eq(eblastsTable.showId, params.data.showId)),
-  ]);
+  await db.transaction(async (tx) => {
+    const [childTasks, childEblasts] = await Promise.all([
+      tx.select({ id: tasksTable.id, gcalEventId: tasksTable.gcalEventId, todoistTaskId: tasksTable.todoistTaskId }).from(tasksTable).where(eq(tasksTable.showId, params.data.showId)),
+      tx.select({ id: eblastsTable.id, gcalEventId: eblastsTable.gcalEventId, todoistTaskId: eblastsTable.todoistTaskId }).from(eblastsTable).where(eq(eblastsTable.showId, params.data.showId)),
+    ]);
 
-  const taskOrphanIds = childTasks.map((t) => t.gcalEventId).filter((id): id is string => !!id);
-  const eblastOrphanIds = childEblasts.map((e) => e.gcalEventId).filter((id): id is string => !!id);
-  const allOrphans = [
-    ...taskOrphanIds.map((gcalEventId) => ({ gcalEventId, calendarType: "task" as const })),
-    ...eblastOrphanIds.map((gcalEventId) => ({ gcalEventId, calendarType: "eblast" as const })),
-  ];
+    const taskOrphanIds = childTasks.map((t) => t.gcalEventId).filter((id): id is string => !!id);
+    const eblastOrphanIds = childEblasts.map((e) => e.gcalEventId).filter((id): id is string => !!id);
+    const allOrphans = [
+      ...taskOrphanIds.map((gcalEventId) => ({ gcalEventId, calendarType: "task" as const })),
+      ...eblastOrphanIds.map((gcalEventId) => ({ gcalEventId, calendarType: "eblast" as const })),
+    ];
 
-  if (allOrphans.length > 0) {
-    await db.insert(gcalOrphansTable).values(allOrphans);
-  }
+    if (allOrphans.length > 0) {
+      await tx.insert(gcalOrphansTable).values(allOrphans);
+    }
 
-  const taskTodoistOrphanIds = childTasks.map((t) => t.todoistTaskId).filter((id): id is string => !!id);
-  const eblastTodoistOrphanIds = childEblasts.map((e) => e.todoistTaskId).filter((id): id is string => !!id);
-  const allTodoistOrphans = [
-    ...taskTodoistOrphanIds.map((todoistTaskId) => ({ todoistTaskId, itemType: "task" as const })),
-    ...eblastTodoistOrphanIds.map((todoistTaskId) => ({ todoistTaskId, itemType: "eblast" as const })),
-  ];
+    for (const task of childTasks) {
+      if (!task.todoistTaskId) continue;
+      await supersedeSync(tx, { itemType: "task", itemId: task.id });
+      await enqueueDelete(tx, { itemType: "task", todoistTaskId: task.todoistTaskId, reason: "delete" });
+    }
+    for (const eblast of childEblasts) {
+      if (!eblast.todoistTaskId) continue;
+      await supersedeSync(tx, { itemType: "eblast", itemId: eblast.id });
+      await enqueueDelete(tx, { itemType: "eblast", todoistTaskId: eblast.todoistTaskId, reason: "delete" });
+    }
 
-  if (allTodoistOrphans.length > 0) {
-    await db.insert(todoistOrphansTable).values(allTodoistOrphans);
-  }
+    await tx.delete(showsTable).where(eq(showsTable.id, params.data.showId));
+  });
 
-  await db.delete(showsTable).where(eq(showsTable.id, params.data.showId));
   res.status(204).send();
 });
 

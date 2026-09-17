@@ -37,6 +37,17 @@ export const todoistSyncEventsTable = pgTable(
     attemptCount: integer("attempt_count").notNull().default(0),
     nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull().defaultNow(),
     claimedAt: timestamp("claimed_at", { withTimezone: true }),
+    // Per-claim identity token, freshly issued each time a worker claims or reclaims this
+    // row. Distinct from `claimedAt`: a timestamp alone can't disambiguate "the worker that
+    // set claimed_at" from "whoever reclaimed it after a stale timeout" once the original
+    // worker's external (Todoist) call is in flight outside any DB transaction/row lock.
+    claimToken: text("claim_token"),
+    // Bumped every time new local intent coalesces into an already-active row. Lets a
+    // coalesce into an `in_progress` row (a worker may be mid-flight on an external Todoist
+    // call, outside any DB transaction/row lock) record "there is newer work" without
+    // touching `status`/`claimToken` and making the row claimable a second time while the
+    // first claim's external call is still running.
+    generation: integer("generation").notNull().default(1),
     payloadSnapshot: jsonb("payload_snapshot"),
     lastError: text("last_error"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

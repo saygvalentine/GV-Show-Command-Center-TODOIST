@@ -64,6 +64,20 @@
       "when": 1789168125105,
       "tag": "0008_public_thanos",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789597911396,
+      "tag": "0009_powerful_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789600168664,
+      "tag": "0010_gigantic_toad",
+      "breakpoints": true
     }
   ]
 }

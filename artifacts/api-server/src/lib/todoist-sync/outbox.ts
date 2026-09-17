@@ -110,6 +110,13 @@ interface EnqueueDeleteParams {
 // commits — so identity for this job is `todoistTaskId` alone. Relies on
 // `todoist_sync_events_delete_active` (item_type, todoist_task_id) WHERE
 // item_id IS NULL AND operation = 'delete' AND status IN ('pending', 'in_progress').
+//
+// Unlike `enqueueSync`, `generation` is never bumped here and is left out of `set`
+// entirely (so it keeps whatever value the row already has). `enqueueSync`'s bumped
+// generation exists so a later finalize/reclaim step can tell that newer local state
+// needs to be re-read — but a delete has no local row left to re-read (`itemId` is
+// null): every repeated delete intent for the same `todoistTaskId` is the same
+// idempotent end state, not newer work a worker would need to notice.
 export async function enqueueDelete(tx: OutboxTx, params: EnqueueDeleteParams): Promise<void> {
   const reason = params.reason ?? "delete";
   await tx
@@ -128,7 +135,6 @@ export async function enqueueDelete(tx: OutboxTx, params: EnqueueDeleteParams): 
       targetWhere: sql`${todoistSyncEventsTable.itemId} is null and ${todoistSyncEventsTable.operation} = 'delete' and ${todoistSyncEventsTable.status} in ('pending', 'in_progress')`,
       set: {
         reason,
-        generation: sql`${todoistSyncEventsTable.generation} + 1`,
         updatedAt: new Date(),
         status: sql`case when ${todoistSyncEventsTable.status} = 'in_progress' then ${todoistSyncEventsTable.status} else 'pending' end`,
         claimToken: sql`case when ${todoistSyncEventsTable.status} = 'in_progress' then ${todoistSyncEventsTable.claimToken} else null end`,

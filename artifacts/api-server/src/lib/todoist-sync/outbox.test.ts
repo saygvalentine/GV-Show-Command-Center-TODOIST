@@ -244,7 +244,7 @@ describe("enqueueDelete", () => {
     expect(rows[0].generation).toBe(1);
   });
 
-  it("repeated deletes for the same remote task coalesce onto a single active row, incrementing generation", async () => {
+  it("repeated deletes for the same remote task coalesce onto a single active row without incrementing generation", async () => {
     await db.transaction(async (tx) => {
       await enqueueDelete(tx, { itemType: "task", todoistTaskId: TEST_TODOIST_ID });
       await enqueueDelete(tx, { itemType: "task", todoistTaskId: TEST_TODOIST_ID });
@@ -265,11 +265,38 @@ describe("enqueueDelete", () => {
     expect(rows[0].operation).toBe("delete");
     expect(rows[0].itemId).toBeNull();
     expect(rows[0].claimToken).toBeNull();
-    // 1 (insert) + 1 coalesce.
-    expect(rows[0].generation).toBe(2);
+    // A delete has no local row left to re-read, so unlike enqueueSync, repeated
+    // delete intent is the same idempotent end state and never bumps generation.
+    expect(rows[0].generation).toBe(1);
   });
 
-  it("coalescing into a pending delete row with prior failed attempts fully resets retry/error state, increments generation, and preserves one active row", async () => {
+  it("repeated delete enqueues across several separate committed transactions never increment generation", async () => {
+    await db.transaction(async (tx) => {
+      await enqueueDelete(tx, { itemType: "task", todoistTaskId: TEST_TODOIST_ID });
+    });
+    await db.transaction(async (tx) => {
+      await enqueueDelete(tx, { itemType: "task", todoistTaskId: TEST_TODOIST_ID });
+    });
+    await db.transaction(async (tx) => {
+      await enqueueDelete(tx, { itemType: "task", todoistTaskId: TEST_TODOIST_ID });
+    });
+
+    const rows = await db
+      .select()
+      .from(todoistSyncEventsTable)
+      .where(
+        and(
+          eq(todoistSyncEventsTable.itemType, "task"),
+          eq(todoistSyncEventsTable.todoistTaskId, TEST_TODOIST_ID),
+          isNull(todoistSyncEventsTable.itemId),
+        ),
+      );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].generation).toBe(1);
+  });
+
+  it("coalescing into a pending delete row with prior failed attempts fully resets retry/error state, preserves generation, and preserves one active row", async () => {
     await db.transaction(async (tx) => {
       await enqueueDelete(tx, { itemType: "task", todoistTaskId: TEST_TODOIST_ID, reason: "delete" });
     });
@@ -315,11 +342,11 @@ describe("enqueueDelete", () => {
     expect(row.attemptCount).toBe(0);
     expect(row.lastError).toBeNull();
     expect(row.reason).toBe("unlink");
-    expect(row.generation).toBe(2);
+    expect(row.generation).toBe(1);
     expect(row.nextAttemptAt.getTime()).toBeGreaterThanOrEqual(before);
   });
 
-  it("coalescing into an in_progress delete row leaves status, claim, and attempt state untouched, only bumping generation and reason", async () => {
+  it("coalescing into an in_progress delete row leaves status, claim, attempt state, and generation untouched, only updating reason", async () => {
     await db.transaction(async (tx) => {
       await enqueueDelete(tx, { itemType: "task", todoistTaskId: TEST_TODOIST_ID, reason: "delete" });
     });
@@ -369,7 +396,9 @@ describe("enqueueDelete", () => {
     expect(row.nextAttemptAt.getTime()).toBe(seededNextAttemptAt.getTime());
     expect(row.lastError).toBe("Todoist API error 500: boom");
     expect(row.reason).toBe("unlink");
-    expect(row.generation).toBe(2);
+    // A worker may have an external Todoist DELETE in flight for this row — repeated
+    // delete intent must not look like newer work requiring re-finalization.
+    expect(row.generation).toBe(1);
   });
 
   it("a rolled-back delete enqueue leaves no event", async () => {

@@ -13,6 +13,7 @@ import presetTasksRouter from "./presetTasks";
 import googleCalendarRouter from "./google-calendar";
 import todoistRouter from "./todoist";
 import todoistSettingsRouter from "./todoist-settings";
+import todoistDrainRouter from "./todoist-drain";
 
 const router: IRouter = Router();
 
@@ -30,6 +31,7 @@ router.use("/preset-tasks", presetTasksRouter);
 router.use("/export/google-calendar", googleCalendarRouter);
 // Mounted ahead of the general Todoist router so the more specific path wins deterministically.
 router.use("/export/todoist/settings", todoistSettingsRouter);
+router.use("/export/todoist/drain", todoistDrainRouter);
 router.use("/export/todoist", todoistRouter);
 
 export default router;

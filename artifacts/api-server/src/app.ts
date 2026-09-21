@@ -1,4 +1,10 @@
-import express, { type Express, type Request, type Response, type NextFunction } from "express";
+import express, {
+  type Express,
+  type Request,
+  type Response,
+  type NextFunction,
+  type ErrorRequestHandler,
+} from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
@@ -28,6 +34,24 @@ app.use(
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// `express.json()`/`express.urlencoded()` tag a malformed-body error with
+// `type === "entity.parse.failed"` (see body-parser's `lib/read.js`). Positioned here —
+// after the parsers, before the API router — this only ever sees errors the parsers
+// themselves raised (an error from inside the router propagates forward from a later
+// position and never reaches back to this earlier layer), and it only claims that one
+// specific error shape; anything else (including other body-parser errors, e.g. an
+// unsupported charset) is passed on unchanged via `next(err)` to the generic handler
+// below, app-wide, before requests are dispatched to `/api/*` — so every mounted route
+// (including `/api/export/todoist/drain`) gets this same 400 instead of the generic 500.
+const malformedBodyHandler: ErrorRequestHandler = (err, _req, res, next) => {
+  if (err && (err as { type?: string }).type === "entity.parse.failed") {
+    res.status(400).json({ error: "Invalid JSON body" });
+    return;
+  }
+  next(err);
+};
+app.use(malformedBodyHandler);
 
 app.use("/api", router);
 
